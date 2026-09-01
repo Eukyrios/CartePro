@@ -3,3 +3,63 @@
 @source "../.flowbite-react/class-list.json";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic design tokens (Flowbite-style naming) used by the auth modal. */
+@theme inline {
+  --color-neutral-primary-soft: var(--surface-primary-soft);
+  --color-neutral-primary-medium: var(--surface-primary-medium);
+  --color-neutral-secondary-medium: var(--surface-secondary-medium);
+  --color-neutral-tertiary-medium: var(--surface-tertiary-medium);
+
+  --color-default: var(--border-default);
+  --color-default-medium: var(--border-default-medium);
+
+  --color-heading: var(--text-heading);
+  --color-body: var(--text-body);
+  --color-body-subtle: var(--text-body-subtle);
+  --color-fg-brand: var(--brand-fg);
+  --color-fg-danger: var(--danger-fg);
+
+  --color-brand: var(--brand-base);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-medium: var(--brand-medium);
+  --color-brand-soft: var(--brand-soft);
+
+  --radius-base: 0.5rem;
+}
+
+:root {
+  --surface-primary-soft: var(--color-white);
+  --surface-primary-medium: var(--color-white);
+  --surface-secondary-medium: var(--color-gray-50);
+  --surface-tertiary-medium: var(--color-gray-100);
+  --border-default: var(--color-gray-200);
+  --border-default-medium: var(--color-gray-300);
+  --text-heading: var(--color-gray-900);
+  --text-body: var(--color-gray-500);
+  --text-body-subtle: var(--color-gray-400);
+  --brand-fg: var(--color-primary-600);
+  --danger-fg: var(--color-red-600);
+  --brand-base: var(--color-primary-700);
+  --brand-strong: var(--color-primary-800);
+  --brand-medium: var(--color-primary-300);
+  --brand-soft: var(--color-primary-100);
+}
+
+.dark {
+  --surface-primary-soft: var(--color-gray-800);
+  --surface-primary-medium: var(--color-gray-700);
+  --surface-secondary-medium: var(--color-gray-700);
+  --surface-tertiary-medium: var(--color-gray-600);
+  --border-default: var(--color-gray-700);
+  --border-default-medium: var(--color-gray-600);
+  --text-heading: var(--color-white);
+  --text-body: var(--color-gray-400);
+  --text-body-subtle: var(--color-gray-400);
+  --brand-fg: var(--color-primary-500);
+  --danger-fg: var(--color-red-500);
+  --brand-base: var(--color-primary-600);
+  --brand-strong: var(--color-primary-700);
+  --brand-medium: var(--color-primary-800);
+  --brand-soft: var(--color-primary-800);
+}
