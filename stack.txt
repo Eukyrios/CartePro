@@ -1,0 +1,7 @@
+Flask:
+Alchemy: https://flask-sqlalchemy.readthedocs.io/en/stable/
+flask login: https://flask-login.readthedocs.io/en/latest/
+
+Postgre
+
+    

@@ -3,26 +3,29 @@ version: '3.8'
 services:
   web:
     build: ./app
-    ports:
-      - "5432:5432"
     depends_on:
       - db
     environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/clientdb
+
       - DB_HOST=db
-      - DB_NAME=taskdb
+      - DB_NAME=clientdb
       - DB_USER=postgres
       - DB_PASS=postgres
+      - DB_PORT=5432
 
   db:
     image: postgres:14
     restart: always
     environment:
-      POSTGRES_DB: taskdb
+      POSTGRES_DB: clientdb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
 
 volumes:
   pgdata:

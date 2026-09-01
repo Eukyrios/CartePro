@@ -1,43 +1,35 @@
-from flask import Flask, request, jsonify
-import psycopg2
-import os
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from models import db, User, login_manager
+from auth import login, logout, register
+from routes import index, dashboard, admin_panel, partenaire_panel
 
-app = Flask(__name__)
+def create_app():
+    app = Flask(__name__)
+    app.config["SECRET_KEY"] = "change-me-en-prod"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-DB_HOST = os.environ.get("DB_HOST", "db")
-DB_NAME = os.environ.get("DB_NAME", "taskdb")
-DB_USER = os.environ.get("DB_USER", "postgres")
-DB_PASS = os.environ.get("DB_PASS", "postgres")
+    # Initialiser extensions
+    db.init_app(app)
+    login_manager.init_app(app)
 
-def get_db_connection():
-    return psycopg2.connect(
-        host=DB_HOST,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS
-    )
+    # Enregistrer les routes
+    app.add_url_rule("/", view_func=index)
+    app.add_url_rule("/login", view_func=login, methods=["GET", "POST"])
+    app.add_url_rule("/logout", view_func=logout)
+    app.add_url_rule("/register", view_func=register, methods=["GET", "POST"])
+    app.add_url_rule("/dashboard", view_func=dashboard)
+    app.add_url_rule("/admin", view_func=admin_panel)
+    app.add_url_rule("/partenaire", view_func=partenaire_panel)
 
-@app.route('/tasks', methods=['GET'])
-def get_tasks():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT id, description FROM tasks;')
-    tasks = cur.fetchall()
-    cur.close()
-    conn.close()
-    return jsonify(tasks)
+    # Créer les tables si elles n'existent pas
+    with app.app_context():
+        db.create_all()
 
-@app.route('/tasks', methods=['POST'])
-def add_task():
-    data = request.get_json()
-    description = data.get('description', '')
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('INSERT INTO tasks (description) VALUES (%s);', (description,))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify({'message': 'Task added!'}), 201
+    return app
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5432)
+if __name__ == "__main__":
+    app = create_app()
+    app.run(debug=True)
