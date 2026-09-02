@@ -2,15 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  DarkThemeToggle,
-  Navbar,
-  NavbarBrand,
-  NavbarCollapse,
-  NavbarLink,
-  NavbarToggle,
-} from "flowbite-react";
+import { DarkThemeToggle, Navbar, NavbarBrand } from "flowbite-react";
 import AuthButtons from "@/components/auth/AuthButtons";
 import AuthModal from "@/components/auth/AuthModal";
 import UserMenu from "./UserMenu";
@@ -26,22 +18,10 @@ type Props = {
   onLogout?: () => void;
 };
 
-/** The landing page's numbered section anchors, in order. */
-const SECTION_LINKS = [
-  { index: "01", label: "Fonctionnement", href: "#fonctionnement" },
-  { index: "02", label: "Le réseau", href: "#reseau" },
-  { index: "03", label: "Confiance", href: "#confiance" },
-];
-
 export default function TopBar({ onLogin, onLogout }: Props) {
   const { profile, ready, signIn, signOut } = useAccount();
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");
-  const pathname = usePathname();
-
-  // The anchors only resolve on the landing page, so they are only offered
-  // there rather than pointing at fragments that do not exist.
-  const onLanding = pathname === "/";
 
   function openModal(m: AuthMode) {
     setMode(m);
@@ -81,7 +61,7 @@ export default function TopBar({ onLogin, onLogout }: Props) {
             },
           },
         }}
-        className="bg-cp-page border-cp-border relative z-40 border-b px-[3.2vw] py-0 lg:h-[76px]"
+        className="bg-cp-page border-cp-border relative z-40 snap-start border-b px-[3.2vw] py-0 lg:h-[76px]"
       >
         <NavbarBrand
           as={Link}
@@ -113,24 +93,7 @@ export default function TopBar({ onLogin, onLogout }: Props) {
               onSignupClick={() => openModal("signup")}
             />
           )}
-
-          {onLanding && <NavbarToggle className="text-cp-fg" />}
         </div>
-
-        {onLanding && (
-          <NavbarCollapse className="lg:order-2">
-            {SECTION_LINKS.map((link) => (
-              <NavbarLink
-                key={link.href}
-                href={link.href}
-                className="text-cp-fg hover:text-cp-accent border-0 p-2 text-[10px] font-extrabold tracking-[0.08em] uppercase lg:p-0"
-              >
-                <span className="text-cp-accent mr-[7px]">{link.index}</span>
-                {link.label}
-              </NavbarLink>
-            ))}
-          </NavbarCollapse>
-        )}
       </Navbar>
 
       <AuthModal

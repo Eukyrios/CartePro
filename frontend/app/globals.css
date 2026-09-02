@@ -206,3 +206,128 @@
     transform: none;
   }
 }
+
+/*
+ * Smooth anchor travel, as in the maquette, and section snapping while
+ * scrolling.
+ *
+ * Snapping is scoped to the landing page: it marks itself with .snap-sections
+ * so the settings and dashboard routes keep ordinary scrolling.
+ *
+ * `mandatory` gives the one-section-per-swipe feel: proximity only engages if
+ * a swipe happens to end near a boundary, which small swipes do not. The catch
+ * is that mandatory forces the scroll to rest on a snap point, so a section
+ * taller than the viewport would have its lower half unreachable — hence the
+ * short-viewport guard below, where content is the most likely to overflow.
+ */
+html {
+  scroll-behavior: smooth;
+}
+
+html:has(.snap-sections) {
+  scroll-snap-type: y mandatory;
+}
+
+/* Too short to guarantee a section fits: fall back to ordinary scrolling
+   rather than risk stranding content between snap points. */
+@media (max-height: 700px) {
+  html:has(.snap-sections) {
+    scroll-snap-type: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  html:has(.snap-sections) {
+    scroll-snap-type: none;
+  }
+}
+
+/*
+ * The mock QR that dissolves into a payment confirmation on hover.
+ *
+ * Written as plain CSS rather than Tailwind `group-hover:` variants: those
+ * utilities were not emitted for the SVG modules, so the effect silently did
+ * nothing. `transform-box: fill-box` is the SVG-specific part — without it a
+ * module's transform-origin refers to the SVG's user-space origin, so each
+ * square would fly towards the corner instead of shrinking in place.
+ */
+.qr-dissolve .qr-module {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 0.3s ease-out,
+    scale 0.3s ease-out;
+}
+
+.qr-dissolve:hover .qr-module,
+.qr-dissolve:focus .qr-module {
+  opacity: 0;
+  scale: 0;
+}
+
+/* Held back until the code has mostly cleared, so the two do not overlap. */
+.qr-dissolve .qr-reveal {
+  opacity: 0;
+  transition: opacity 0.3s ease-out 0.42s;
+}
+
+.qr-dissolve:hover .qr-reveal,
+.qr-dissolve:focus .qr-reveal {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-dissolve .qr-module,
+  .qr-dissolve .qr-reveal {
+    transition: none;
+  }
+}
+
+/*
+ * Side timeline. Written as plain CSS for the same reason as the QR above:
+ * Tailwind's `group-hover:` variants were not emitted for these children, so
+ * the reveal silently did nothing.
+ */
+.rail-item .rail-label {
+  opacity: 0;
+  transform: translateX(4px);
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out;
+}
+
+.rail-item:hover .rail-label,
+.rail-item:focus-visible .rail-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.rail-item .rail-bar {
+  width: 1rem;
+  opacity: 0.4;
+  transition:
+    width 0.3s ease-out,
+    opacity 0.3s ease-out;
+}
+
+.rail-item:hover .rail-bar,
+.rail-item:focus-visible .rail-bar {
+  width: 1.5rem;
+  opacity: 0.8;
+}
+
+/* The screen you are on stays drawn long, hovered or not. */
+.rail-item[aria-current="true"] .rail-bar {
+  width: 2rem;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-item .rail-label,
+  .rail-item .rail-bar {
+    transition: none;
+  }
+}

@@ -29,13 +29,13 @@ export default function HowItWorksSection() {
   return (
     <section
       id="fonctionnement"
-      className="border-cp-border grid gap-9 border-b px-6 py-16 lg:grid-cols-[100px_1fr] lg:gap-[65px] lg:px-[7vw] lg:py-[110px]"
+      className="border-cp-border grid min-h-screen snap-start content-center gap-9 border-b px-6 py-16 lg:grid-cols-[100px_1fr] lg:gap-[65px] lg:px-[7vw] lg:py-[110px]"
     >
-      <SectionRail index="01" name="FONCTIONNEMENT" />
+      <SectionRail index="01" />
 
       <div className="max-w-[1150px]">
         <Eyebrow>LE PARCOURS</Eyebrow>
-        <h2 className="mt-[22px] mb-12 text-[clamp(55px,7vw,105px)] leading-[0.82] font-black tracking-[-0.08em] lg:mb-[70px]">
+        <h2 className="mt-[22px] mb-12 text-[clamp(58px,8vw,120px)] leading-[0.82] font-black tracking-[-0.08em] lg:mb-[70px]">
           Trois gestes.
           <br />
           <em className="text-cp-accent font-serif font-normal">

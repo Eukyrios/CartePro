@@ -64,11 +64,18 @@ export function Eyebrow({
  * top, the section name at the bottom. Collapses to a single row on mobile,
  * as in the original.
  */
-export function SectionRail({ index, name }: { index: string; name: string }) {
+export function SectionRail({
+  index,
+  name,
+}: {
+  index: string;
+  /** Omitted when the rail should carry only its number. */
+  name?: string;
+}) {
   return (
     <div className="flex flex-row justify-between gap-4 text-[9px] font-black tracking-[0.14em] md:w-[100px] md:flex-col">
       <span className="text-cp-accent text-[17px]">{index}</span>
-      <span>{name}</span>
+      {name && <span>{name}</span>}
     </div>
   );
 }

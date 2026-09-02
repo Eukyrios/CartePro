@@ -6,7 +6,7 @@ import { HR } from "flowbite-react";
  */
 export default function StatementSection() {
   return (
-    <section className="border-cp-border grid items-center gap-6 border-b px-6 py-14 lg:grid-cols-[100px_1fr_22%] lg:gap-10 lg:px-[7vw] lg:py-[65px]">
+    <section className="border-cp-border grid min-h-screen snap-start content-center items-center gap-6 border-b px-6 py-14 lg:grid-cols-[100px_1fr_22%] lg:gap-10 lg:px-[7vw] lg:py-[65px]">
       <div className="text-cp-accent text-[60px] leading-none font-black tracking-[-0.1em] lg:text-[90px]">
         A
       </div>

@@ -27,7 +27,7 @@ export default function NetworkSection() {
   return (
     <section
       id="reseau"
-      className="border-cp-border grid gap-9 border-b px-6 py-16 lg:grid-cols-[100px_1fr] lg:gap-[65px] lg:px-[7vw] lg:py-[110px]"
+      className="border-cp-border grid min-h-screen snap-start content-center gap-9 border-b px-6 py-16 lg:grid-cols-[100px_1fr] lg:gap-[65px] lg:px-[7vw] lg:py-[110px]"
     >
       <SectionRail index="02" name="LE RÉSEAU" />
 

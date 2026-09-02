@@ -29,7 +29,7 @@ export default function Footer() {
   return (
     <FlowbiteFooter
       container={false}
-      className="bg-cp-ink mt-auto min-h-[230px] items-end rounded-none px-6 py-10 text-white shadow-none lg:px-[7vw] lg:py-[42px]"
+      className="bg-cp-ink mt-auto min-h-[230px] items-end rounded-none px-6 py-10 text-white shadow-none lg:h-[230px] lg:px-[7vw] lg:py-[42px]"
     >
       <div className="grid w-full gap-8 lg:grid-cols-3 lg:items-end lg:gap-0">
         <Link
