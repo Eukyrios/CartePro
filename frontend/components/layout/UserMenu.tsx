@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 /** The signed-in person shown in the menu header. */
 export type AuthUser = {
   name: string;
@@ -12,10 +13,10 @@ type Props = {
   onSignOut: () => void;
 };
 
-/** Navigation entries listed above the sign-out action. */
+/** Navigation entries listed above the sign-out action, in display order. */
 const MENU_LINKS = [
   { label: "Tableau de bord", href: "#" },
-  { label: "Paramètres", href: "#" },
+  { label: "Paramètres", href: "/parametres" },
   { label: "Revenus", href: "#" },
 ];
 
@@ -84,9 +85,13 @@ export default function UserMenu({ user, onSignOut }: Props) {
           <ul className="text-body p-2 text-sm font-medium">
             {MENU_LINKS.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className={ITEM_CLASS}>
+                <Link
+                  href={link.href}
+                  onClick={() => setDropdownOpen(false)}
+                  className={ITEM_CLASS}
+                >
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
             <li>

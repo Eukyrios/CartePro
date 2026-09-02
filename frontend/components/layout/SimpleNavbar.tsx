@@ -7,24 +7,21 @@ import { DarkThemeToggle } from "flowbite-react";
 import AuthButtons from "@/components/auth/AuthButtons";
 import AuthModal from "@/components/auth/AuthModal";
 import UserMenu from "./UserMenu";
+import {
+  displayNameOf,
+  useAccount,
+} from "@/components/profile/AccountProvider";
 import type { AuthMode, AuthSubmitPayload } from "@/components/auth/AuthModal";
-import type { AuthUser } from "./UserMenu";
 
 type Props = {
-  isLoggedIn?: boolean;
   onLogin?: () => void;
   onLogout?: () => void;
 };
 
-export default function SimpleNavbar({
-  isLoggedIn = false,
-  onLogin,
-  onLogout,
-}: Props) {
+export default function SimpleNavbar({ onLogin, onLogout }: Props) {
+  const { profile, ready, signIn, signOut } = useAccount();
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [user, setUser] = useState<AuthUser | null>(null);
 
   function openModal(m: AuthMode) {
     setMode(m);
@@ -39,21 +36,13 @@ export default function SimpleNavbar({
     // Replace with real auth calls as needed. The password is redacted here: it
     // must never be logged or stored in clear, only hashed server-side.
     console.log({ ...payload, password: "[redacted]" });
-    // Simulate sign-in: set user and mark logged in
-    const { mode, username, email, partner } = payload;
-    const displayName =
-      partner?.raisonSociale ||
-      (mode === "signup" && username ? username : email.split("@")[0]);
-    setUser({ name: displayName, email });
-    setLoggedIn(true);
-    if (mode === "login" && onLogin) onLogin();
-    if (mode === "signup" && onLogin) onLogin();
+    signIn(payload);
+    if (onLogin) onLogin();
     closeModal();
   }
 
   function handleSignOut() {
-    setLoggedIn(false);
-    setUser(null);
+    signOut();
     if (onLogout) onLogout();
   }
 
@@ -77,8 +66,13 @@ export default function SimpleNavbar({
           <div className="relative flex items-center gap-2">
             <DarkThemeToggle aria-label="Changer de thème" />
 
-            {loggedIn && user ? (
-              <UserMenu user={user} onSignOut={handleSignOut} />
+            {/* Held back until the stored session is known, so a signed-in
+                visitor never sees the auth buttons flash first. */}
+            {!ready ? null : profile ? (
+              <UserMenu
+                user={{ name: displayNameOf(profile), email: profile.email }}
+                onSignOut={handleSignOut}
+              />
             ) : (
               <AuthButtons
                 onLoginClick={() => openModal("login")}

@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeInit } from "../.flowbite-react/init";
 import "./globals.css";
 import SimpleNavbar from "@/components/layout/SimpleNavbar";
+import AccountProvider from "@/components/profile/AccountProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,8 +40,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeInit />
-        <SimpleNavbar />
-        {children}
+        <AccountProvider>
+          <SimpleNavbar />
+          {children}
+        </AccountProvider>
       </body>
     </html>
   );

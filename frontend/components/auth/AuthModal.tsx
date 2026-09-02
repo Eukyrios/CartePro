@@ -47,7 +47,7 @@ export type AuthFormApi = {
   validatePartner: () => boolean;
 };
 
-const EMPTY_PARTNER: PartnerFields = {
+export const EMPTY_PARTNER: PartnerFields = {
   raisonSociale: "",
   siren: "",
   objetSocial: "",
