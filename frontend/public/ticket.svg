@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Golden funfair ticket">
+  <defs>
+    <linearGradient id="ticketGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE7A0" />
+      <stop offset=".45" stop-color="#F3C33C" />
+      <stop offset="1" stop-color="#D89211" />
+    </linearGradient>
+  </defs>
+
+  <g transform="rotate(-10 24 24)">
+    <rect
+      x="4"
+      y="12"
+      width="40"
+      height="24"
+      rx="2"
+      fill="url(#ticketGold)"
+      stroke="#B77B0B"
+      stroke-width="1.8"
+    />
+    <line
+      x1="33"
+      y1="14.6"
+      x2="33"
+      y2="33.4"
+      stroke="#B77B0B"
+      stroke-width="1.6"
+      stroke-linecap="round"
+      stroke-dasharray="2.4 2.6"
+    />
+  </g>
+</svg>

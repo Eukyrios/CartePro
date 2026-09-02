@@ -1,0 +1,47 @@
+import { ThemeModeScript } from "flowbite-react";
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeInit } from "../.flowbite-react/init";
+import "./globals.css";
+import SimpleNavbar from "@/components/layout/SimpleNavbar";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Ticket Tout",
+  description: "Plateforme de billetterie pour les partenaires et les employés",
+  // Vector icon so browsers get the crisp ticket; app/favicon.ico stays as the
+  // legacy fallback for clients that only request /favicon.ico.
+  icons: {
+    icon: [{ url: "/ticket.svg", type: "image/svg+xml" }],
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="fr" suppressHydrationWarning>
+      <head>
+        <ThemeModeScript />
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeInit />
+        <SimpleNavbar />
+        {children}
+      </body>
+    </html>
+  );
+}
