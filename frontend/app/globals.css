@@ -26,6 +26,30 @@
   --color-primary-900: #142a4c;
   --color-primary-950: #0d1b32;
 
+  /*
+   * Flowbite's components hard-code `gray-*` (bg-white dark:bg-gray-800, and
+   * so on), and those are `dark:` variants — an unprefixed `bg-cp-*` of ours
+   * does not conflict with them in tailwind-merge, so the component always won
+   * in dark mode. Retinting the ramp itself is what actually reaches them:
+   * every Flowbite surface, border and muted text then sits on the brand hue
+   * (~220deg) instead of neutral grey, and the dark steps line up with the
+   * cp-* tokens below.
+   */
+  --color-gray-50: #f5f7fa;
+  --color-gray-100: #eaeef5;
+  --color-gray-200: #d7dee9;
+  --color-gray-300: #b9c4d6;
+  --color-gray-400: #8d9ab3;
+  /* Darkened from a first pass at #6b7890, which measured 4.45:1 on white —
+     just under AA for body text. This clears it on the page and on the
+     tinted panels. */
+  --color-gray-500: #636e85;
+  --color-gray-600: #4a5670;
+  --color-gray-700: #2b3a58;
+  --color-gray-800: #131c2e;
+  --color-gray-900: #0a0f1b;
+  --color-gray-950: #060a13;
+
   --font-sans: Arial, Helvetica, sans-serif;
   --font-serif: Georgia, "Times New Roman", serif;
 }
@@ -90,29 +114,41 @@
   --cp-accent: #1b3a6b;
 }
 
+/*
+ * Dark theme, tinted toward the brand hue rather than neutral grey — the same
+ * idea as a themed Discord: everything sits on one hue (~220deg) and separates
+ * by elevation instead of by colour.
+ *
+ * Three levels, darkest to lightest: page (the ground), surface (cards and the
+ * bars), raised (inputs and hovers). Body text is deliberately not pure white;
+ * full-contrast white on a dark ground reads as glare over long passages.
+ */
 .dark {
-  --surface-primary-soft: var(--color-gray-800);
-  --surface-primary-medium: var(--color-gray-700);
-  --surface-secondary-medium: var(--color-gray-700);
-  --surface-tertiary-medium: var(--color-gray-600);
-  --border-default: var(--color-gray-700);
-  --border-default-medium: var(--color-gray-600);
-  --text-heading: var(--color-white);
-  --text-body: var(--color-gray-400);
-  --text-body-subtle: var(--color-gray-400);
-  --brand-fg: var(--color-primary-500);
-  --danger-fg: var(--color-red-500);
+  /* Flowbite-facing tokens, so its Card/TextInput/Table/Navbar follow suit. */
+  --surface-primary-soft: #131c2e;
+  --surface-primary-medium: #172035;
+  --surface-secondary-medium: #1b2740;
+  --surface-tertiary-medium: #22314f;
+  --border-default: #1f2b44;
+  --border-default-medium: #2b3a58;
+  --text-heading: #eaf0fb;
+  --text-body: #97a6c2;
+  --text-body-subtle: #7b8aa8;
+  --brand-fg: var(--color-primary-400);
+  --danger-fg: var(--color-red-400);
   --brand-base: var(--color-primary-600);
   --brand-strong: var(--color-primary-700);
   --brand-medium: var(--color-primary-800);
   --brand-soft: var(--color-primary-800);
-  --cp-page: #0a0a0b;
-  --cp-surface: #16161a;
-  --cp-border: #2a2a2e;
-  --cp-fg: #ffffff;
-  --cp-muted: #a1a1a6;
-  --cp-ink: #0a0a0b;
-  --cp-accent: #6186b3;
+  /* Maquette surfaces. */
+  --cp-page: #0a0f1b;
+  --cp-surface: #131c2e;
+  --cp-border: #22304c;
+  --cp-fg: #eaf0fb;
+  --cp-muted: #97a6c2;
+  /* The footer stays the deepest step, below the page itself. */
+  --cp-ink: #060a13;
+  --cp-accent: #86aae8;
 }
 
 /*

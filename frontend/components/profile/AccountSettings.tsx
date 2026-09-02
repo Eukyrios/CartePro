@@ -16,6 +16,7 @@ import {
   SidebarItems,
   Spinner,
 } from "flowbite-react";
+import CardStyleForm from "./CardStyleForm";
 import DeleteAccountCard from "./DeleteAccountCard";
 import ProfileForm from "./ProfileForm";
 import {
@@ -54,18 +55,31 @@ const TrashIcon: FC<ComponentProps<"svg">> = (props) => (
   </svg>
 );
 
+const PaletteIcon: FC<ComponentProps<"svg">> = (props) => (
+  <svg {...props} fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+    <path
+      fillRule="evenodd"
+      d="M10 2a8 8 0 100 16 2 2 0 002-2v-.5a1.5 1.5 0 011.5-1.5H16a2 2 0 002-2 8 8 0 00-8-8zM5.5 11a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm2-4a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm2.5 3a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
 /**
  * Sections listed in the side panel, in display order. Labels are kept short
  * enough to fit the rail: the pane beside it carries the full heading.
  */
-type SectionId = "profil" | "securite" | "danger";
+type SectionId = "profil" | "style" | "securite" | "danger";
 
 const SECTIONS: ReadonlyArray<{
   id: SectionId;
   label: string;
   icon: FC<ComponentProps<"svg">>;
+  /** Employé only — a partenaire has no card to style. */
+  employeeOnly?: boolean;
 }> = [
   { id: "profil", label: "Profil", icon: UserIcon },
+  { id: "style", label: "Style", icon: PaletteIcon, employeeOnly: true },
   { id: "securite", label: "Sécurité", icon: LockIcon },
   { id: "danger", label: "Zone de danger", icon: TrashIcon },
 ];
@@ -105,6 +119,13 @@ export default function AccountSettings() {
   const profileTitle = isPartner
     ? "Informations de l'entreprise"
     : "Mon profil";
+  const sections = SECTIONS.filter(
+    (entry) => !entry.employeeOnly || !isPartner,
+  );
+  // Guards the case where the audience changes while the pane is open.
+  const shown = sections.some((entry) => entry.id === section)
+    ? section
+    : "profil";
 
   return (
     <>
@@ -144,13 +165,13 @@ export default function AccountSettings() {
         >
           <SidebarItems>
             <SidebarItemGroup>
-              {SECTIONS.map((entry) => (
+              {sections.map((entry) => (
                 <SidebarItem
                   key={entry.id}
                   as="button"
                   icon={entry.icon}
-                  active={section === entry.id}
-                  aria-current={section === entry.id ? "page" : undefined}
+                  active={shown === entry.id}
+                  aria-current={shown === entry.id ? "page" : undefined}
                   onClick={() => setSection(entry.id)}
                   // justify-start overrides the theme's justify-center, which
                   // would otherwise centre each row and leave the icons on
@@ -165,7 +186,7 @@ export default function AccountSettings() {
         </Sidebar>
 
         <div className="min-w-0 flex-1">
-          {section === "profil" && (
+          {shown === "profil" && (
             <Card>
               <h2 className="text-heading text-lg font-semibold">
                 {profileTitle}
@@ -174,7 +195,20 @@ export default function AccountSettings() {
             </Card>
           )}
 
-          {section === "securite" && (
+          {shown === "style" && (
+            <Card>
+              <h2 className="text-heading text-lg font-semibold">
+                Style de la carte
+              </h2>
+              <p className="text-body text-sm">
+                Personnalise la carte affichée sur ton espace : couleur, motif,
+                texte et effet métallisé.
+              </p>
+              <CardStyleForm profile={profile} onSave={updateProfile} />
+            </Card>
+          )}
+
+          {shown === "securite" && (
             <Card>
               <h2 className="text-heading text-lg font-semibold">
                 Connexion et sécurité
@@ -190,7 +224,7 @@ export default function AccountSettings() {
             </Card>
           )}
 
-          {section === "danger" && (
+          {shown === "danger" && (
             <Card>
               <h2 className="text-heading text-lg font-semibold">
                 Zone de danger

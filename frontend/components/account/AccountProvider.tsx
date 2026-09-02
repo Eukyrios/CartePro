@@ -15,16 +15,38 @@ import type {
 } from "@/components/auth/AuthModal";
 import type { PartnerFields } from "@/components/auth/SignupPartnerFields";
 
+/** Background texture printed on the card. */
+export type CardPattern = "none" | "waves" | "dots" | "grid";
+
+/** How an employé has styled their card. */
+export type CardStyle = {
+  /** Card background, as a hex colour. */
+  color: string;
+  /** Colour of the text printed on it. */
+  text: string;
+  pattern: CardPattern;
+  /** 0 = matte, 100 = full metallic sheen. */
+  metalness: number;
+};
+
+export const DEFAULT_CARD_STYLE: CardStyle = {
+  color: "#1b3a6b",
+  text: "#ffffff",
+  pattern: "waves",
+  metalness: 20,
+};
+
 /**
- * Everything an account holds, whatever its audience. `partner` stays on the
- * type even for an employé so the shape is stable; only the matching field set
- * is ever rendered.
+ * Everything an account holds, whatever its audience. `partner` and `cardStyle`
+ * stay on the type for both audiences so the shape is stable; only the matching
+ * field set is ever rendered.
  */
 export type Profile = {
   audience: AuthAudience;
   username: string;
   email: string;
   partner: PartnerFields;
+  cardStyle: CardStyle;
 };
 
 type Account = {
@@ -50,7 +72,14 @@ const STORAGE_KEY = "ticket-tout.profile";
 function readStored(): Profile | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Profile) : null;
+    if (!raw) return null;
+    const stored = JSON.parse(raw) as Profile;
+    // A session stored before the card style existed has no `cardStyle`, and a
+    // partially written one may miss individual keys.
+    return {
+      ...stored,
+      cardStyle: { ...DEFAULT_CARD_STYLE, ...(stored.cardStyle ?? {}) },
+    };
   } catch {
     // Private windows and browsers set to block site data throw on access.
     return null;
@@ -113,6 +142,7 @@ export default function AccountProvider({
           mode === "signup" && username ? username : email.split("@")[0],
         email,
         partner: partner ?? EMPTY_PARTNER,
+        cardStyle: DEFAULT_CARD_STYLE,
       });
     },
     [persist],

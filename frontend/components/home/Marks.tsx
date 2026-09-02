@@ -8,21 +8,28 @@ type LogoMarkProps = {
   /** Wrapper classes: size and the two colours (block + bar). */
   className?: string;
   barClassName?: string;
+  /** For colours that are not known at build time, such as a picked hex. */
+  style?: React.CSSProperties;
+  barStyle?: React.CSSProperties;
 };
 
 /** Three skewed bars in a skewed square — the CartePro monogram. */
 export function LogoMark({
   className = "size-7 bg-primary-700",
   barClassName = "bg-white",
+  style,
+  barStyle,
 }: LogoMarkProps) {
   return (
     <span
       aria-hidden="true"
+      style={style}
       className={`inline-flex shrink-0 -skew-x-[8deg] items-center justify-center gap-[2px] ${className}`}
     >
       {[0, 1, 2].map((bar) => (
         <i
           key={bar}
+          style={barStyle}
           className={`block h-[15px] w-[3px] -skew-y-[25deg] ${barClassName}`}
         />
       ))}
