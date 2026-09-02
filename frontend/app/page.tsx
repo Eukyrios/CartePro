@@ -1,9 +1,16 @@
 import Image from "next/image";
 
+/**
+ * TODO: placeholder. This is the landing page and should present the project;
+ * only the decorative background exists so far. The background colour and the
+ * page chrome come from the root layout.
+ */
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-24 dark:bg-gray-900">
-      <div className="absolute inset-0 size-full">
+    <main className="relative flex flex-1 flex-col items-center justify-center px-4 py-24">
+      {/* Scoped to this main (hence `relative` above) and clipped, so the
+          decoration cannot spill over the top or bottom bars. */}
+      <div className="absolute inset-0 size-full overflow-hidden">
         <div className="relative h-full w-full select-none">
           <Image
             className="absolute right-0 min-w-dvh dark:hidden"

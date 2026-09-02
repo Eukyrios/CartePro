@@ -10,7 +10,7 @@ import UserMenu from "./UserMenu";
 import {
   displayNameOf,
   useAccount,
-} from "@/components/profile/AccountProvider";
+} from "@/components/account/AccountProvider";
 import type { AuthMode, AuthSubmitPayload } from "@/components/auth/AuthModal";
 
 type Props = {
@@ -18,7 +18,7 @@ type Props = {
   onLogout?: () => void;
 };
 
-export default function SimpleNavbar({ onLogin, onLogout }: Props) {
+export default function TopBar({ onLogin, onLogout }: Props) {
   const { profile, ready, signIn, signOut } = useAccount();
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");

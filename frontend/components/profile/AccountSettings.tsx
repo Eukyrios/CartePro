@@ -18,7 +18,10 @@ import {
 } from "flowbite-react";
 import DeleteAccountCard from "./DeleteAccountCard";
 import ProfileForm from "./ProfileForm";
-import { displayNameOf, useAccount } from "./AccountProvider";
+import {
+  displayNameOf,
+  useAccount,
+} from "@/components/account/AccountProvider";
 import type { ComponentProps, FC } from "react";
 
 const UserIcon: FC<ComponentProps<"svg">> = (props) => (

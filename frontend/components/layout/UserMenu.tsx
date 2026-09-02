@@ -15,9 +15,8 @@ type Props = {
 
 /** Navigation entries listed above the sign-out action, in display order. */
 const MENU_LINKS = [
-  { label: "Tableau de bord", href: "#" },
+  { label: "Tableau de bord", href: "/tableau-de-bord" },
   { label: "Paramètres", href: "/parametres" },
-  { label: "Revenus", href: "#" },
 ];
 
 const ITEM_CLASS =

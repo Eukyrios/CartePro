@@ -5,7 +5,7 @@ import { Alert, Button } from "flowbite-react";
 import ProfileEmployeeFields from "./ProfileEmployeeFields";
 import ProfilePartnerFields from "./ProfilePartnerFields";
 import { validatePartnerFields } from "@/components/auth/SignupPartnerFields";
-import type { Profile } from "./AccountProvider";
+import type { Profile } from "@/components/account/AccountProvider";
 import type {
   PartnerErrors,
   PartnerFields,
