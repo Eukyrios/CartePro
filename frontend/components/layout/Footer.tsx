@@ -1,38 +1,68 @@
+import Link from "next/link";
+import {
+  Footer as FlowbiteFooter,
+  FooterCopyright,
+  FooterLink,
+  FooterLinkGroup,
+} from "flowbite-react";
+import { LogoMark } from "@/components/home/Marks";
+
 /**
- * Bottom bar shown on every page, mounted once in the root layout. The
- * container matches TopBar's so its content lines up with the logo above it.
- *
- * TODO: the entries below are placeholders — fill in the real contact details
- * and point the legal links at the actual pages once they exist.
+ * TODO: the links are placeholders — point them at the real contact and legal
+ * pages once those exist.
  */
 const FOOTER_LINKS = [
   { label: "Contact", href: "#" },
   { label: "Conditions d'utilisation", href: "#" },
 ];
 
+/**
+ * Bottom bar shown on every page, mounted once in the root layout. Black in
+ * both themes, as in the maquette, where it closes the page rather than being
+ * a themed surface.
+ *
+ * The brand is a plain link rather than Flowbite's FooterBrand: that component
+ * requires an image `src` and always renders an <img>, while this brand is the
+ * inline logo glyph.
+ */
 export default function Footer() {
   return (
-    <footer className="bg-neutral-primary-soft border-default mt-auto border-t">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        <p className="text-body text-sm">
-          © {new Date().getFullYear()} Ticket Tout
-        </p>
+    <FlowbiteFooter
+      container={false}
+      className="bg-cp-ink mt-auto min-h-[230px] items-end rounded-none px-6 py-10 text-white shadow-none lg:px-[7vw] lg:py-[42px]"
+    >
+      <div className="grid w-full gap-8 lg:grid-cols-3 lg:items-end lg:gap-0">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 text-[18px] font-black tracking-[-0.07em] text-white"
+        >
+          <LogoMark className="size-7 bg-white" barClassName="bg-cp-ink" />
+          <span>CARTEPRO</span>
+        </Link>
 
-        <nav aria-label="Liens de bas de page">
-          <ul className="text-body flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <div className="max-w-[250px] text-[11px] leading-[1.5]">
+          <p className="mb-3">
+            Le crédit salarié, pensé comme un produit simple.
+          </p>
+          <FooterLinkGroup className="text-[11px]">
             {FOOTER_LINKS.map((link) => (
-              <li key={link.label}>
-                <a
-                  href={link.href}
-                  className="hover:text-heading hover:underline"
-                >
-                  {link.label}
-                </a>
-              </li>
+              <FooterLink
+                key={link.label}
+                href={link.href}
+                className="me-4 text-white/70 hover:text-white"
+              >
+                {link.label}
+              </FooterLink>
             ))}
-          </ul>
-        </nav>
+          </FooterLinkGroup>
+        </div>
+
+        <FooterCopyright
+          by="FRANCE"
+          year={2026}
+          className="flex flex-col text-[9px] leading-[1.6] tracking-[0.1em] text-white lg:items-end lg:justify-self-end"
+        />
       </div>
-    </footer>
+    </FlowbiteFooter>
   );
 }

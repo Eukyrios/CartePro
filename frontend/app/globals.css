@@ -4,8 +4,45 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * CartePro brand ramp, built around the maquette's #1B3A6B and deliberately
+ * overriding Flowbite's own `primary`: its Button, Navbar and link themes all
+ * resolve to primary-700/800, so redefining the ramp here brands every
+ * Flowbite component at once instead of overriding className by className.
+ *
+ * `font-sans` matches the maquette's Arial stack and `font-serif` its Georgia
+ * accents — the two typefaces the design alternates between.
+ */
+@theme {
+  --color-primary-50: #f2f5f9;
+  --color-primary-100: #dde5ef;
+  --color-primary-200: #bfcde1;
+  --color-primary-300: #93aecd;
+  --color-primary-400: #6186b3;
+  --color-primary-500: #3f6897;
+  --color-primary-600: #2c527c;
+  --color-primary-700: #1b3a6b;
+  --color-primary-800: #16305a;
+  --color-primary-900: #142a4c;
+  --color-primary-950: #0d1b32;
+
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
+}
+
 /* Semantic design tokens (Flowbite-style naming) used by the auth modal. */
 @theme inline {
+  /* Maquette surfaces. The design is light-only; the dark values below keep it
+     usable when the theme toggle is flipped rather than inventing a second
+     design for it. */
+  --color-cp-page: var(--cp-page);
+  --color-cp-surface: var(--cp-surface);
+  --color-cp-border: var(--cp-border);
+  --color-cp-fg: var(--cp-fg);
+  --color-cp-muted: var(--cp-muted);
+  --color-cp-ink: var(--cp-ink);
+  --color-cp-accent: var(--cp-accent);
+
   --color-neutral-primary-soft: var(--surface-primary-soft);
   --color-neutral-primary-medium: var(--surface-primary-medium);
   --color-neutral-secondary-medium: var(--surface-secondary-medium);
@@ -44,6 +81,13 @@
   --brand-strong: var(--color-primary-800);
   --brand-medium: var(--color-primary-300);
   --brand-soft: var(--color-primary-100);
+  --cp-page: #ffffff;
+  --cp-surface: #f4f4f2;
+  --cp-border: #d7d7d9;
+  --cp-fg: #0a0a0b;
+  --cp-muted: #555555;
+  --cp-ink: #0a0a0b;
+  --cp-accent: #1b3a6b;
 }
 
 .dark {
@@ -62,4 +106,103 @@
   --brand-strong: var(--color-primary-700);
   --brand-medium: var(--color-primary-800);
   --brand-soft: var(--color-primary-800);
+  --cp-page: #0a0a0b;
+  --cp-surface: #16161a;
+  --cp-border: #2a2a2e;
+  --cp-fg: #ffffff;
+  --cp-muted: #a1a1a6;
+  --cp-ink: #0a0a0b;
+  --cp-accent: #6186b3;
+}
+
+/*
+ * 3D tilt on hover. The markup is a card followed by eight empty divs; those
+ * divs are laid over the card as a 3x3 grid with the centre cell missing, and
+ * each one tilts the card towards itself. The hover targets have to sit after
+ * the card in the DOM, so `:has()` is what reaches back to it — a sibling
+ * combinator only ever looks forwards.
+ */
+.hover-3d {
+  position: relative;
+  display: inline-block;
+  perspective: 1000px;
+}
+
+.hover-3d > .hover-3d-card {
+  transition: transform 0.25s ease-out;
+  transform-style: preserve-3d;
+}
+
+/* The eight hover zones: transparent, above the card, 1/3 of it each way. */
+.hover-3d > div:not(.hover-3d-card) {
+  position: absolute;
+  z-index: 2;
+  width: 33.3333%;
+  height: 33.3333%;
+}
+
+.hover-3d > div:nth-child(2) {
+  top: 0;
+  left: 0;
+}
+.hover-3d > div:nth-child(3) {
+  top: 0;
+  left: 33.3333%;
+}
+.hover-3d > div:nth-child(4) {
+  top: 0;
+  right: 0;
+}
+.hover-3d > div:nth-child(5) {
+  top: 33.3333%;
+  left: 0;
+}
+.hover-3d > div:nth-child(6) {
+  top: 33.3333%;
+  right: 0;
+}
+.hover-3d > div:nth-child(7) {
+  bottom: 0;
+  left: 0;
+}
+.hover-3d > div:nth-child(8) {
+  bottom: 0;
+  left: 33.3333%;
+}
+.hover-3d > div:nth-child(9) {
+  bottom: 0;
+  right: 0;
+}
+
+.hover-3d:has(> div:nth-child(2):hover) .hover-3d-card {
+  transform: rotateX(9deg) rotateY(-9deg);
+}
+.hover-3d:has(> div:nth-child(3):hover) .hover-3d-card {
+  transform: rotateX(9deg);
+}
+.hover-3d:has(> div:nth-child(4):hover) .hover-3d-card {
+  transform: rotateX(9deg) rotateY(9deg);
+}
+.hover-3d:has(> div:nth-child(5):hover) .hover-3d-card {
+  transform: rotateY(-9deg);
+}
+.hover-3d:has(> div:nth-child(6):hover) .hover-3d-card {
+  transform: rotateY(9deg);
+}
+.hover-3d:has(> div:nth-child(7):hover) .hover-3d-card {
+  transform: rotateX(-9deg) rotateY(-9deg);
+}
+.hover-3d:has(> div:nth-child(8):hover) .hover-3d-card {
+  transform: rotateX(-9deg);
+}
+.hover-3d:has(> div:nth-child(9):hover) .hover-3d-card {
+  transform: rotateX(-9deg) rotateY(9deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hover-3d > .hover-3d-card,
+  .hover-3d:has(> div:hover) .hover-3d-card {
+    transition: none;
+    transform: none;
+  }
 }
