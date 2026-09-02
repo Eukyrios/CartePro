@@ -39,7 +39,7 @@ def register():
             flash("Cet email est déjà utilisé.", "error")
             return redirect(url_for("register"))
 
-        # En prod, ne pas laisser le rôle libre ; forcer "user" et gérer admin/partenaire via admin panel ou script
+        # A tej.
         if role not in ("user", "admin", "partenaire"):
             role = "user"
 

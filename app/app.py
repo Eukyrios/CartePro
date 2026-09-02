@@ -1,21 +1,19 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, login_manager
+from models import db, User, Transaction,login_manager
 from auth import login, logout, register
 from routes import index, dashboard, admin_panel, partenaire_panel
 
 def create_app():
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = "change-me-en-prod"
+    app.config["SECRET_KEY"] = "change-me-in-prod"
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Initialiser extensions
     db.init_app(app)
     login_manager.init_app(app)
 
-    # Enregistrer les routes
     app.add_url_rule("/", view_func=index)
     app.add_url_rule("/login", view_func=login, methods=["GET", "POST"])
     app.add_url_rule("/logout", view_func=logout)
@@ -29,6 +27,14 @@ def create_app():
         db.create_all()
 
     return app
+
+def get_user_transactions(user: User):
+    return (
+        Transaction.query
+        .filter_by(user_id=user.id)
+        .order_by(Transaction.created_at.desc())
+        .all()
+    )
 
 if __name__ == "__main__":
     app = create_app()
