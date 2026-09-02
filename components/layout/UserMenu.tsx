@@ -1,13 +1,28 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { AuthUser } from "./types";
+/** The signed-in person shown in the menu header. */
+export type AuthUser = {
+  name: string;
+  email: string;
+};
 
 type Props = {
   user: AuthUser;
   onSignOut: () => void;
 };
 
+/** Navigation entries listed above the sign-out action. */
+const MENU_LINKS = [
+  { label: "Tableau de bord", href: "#" },
+  { label: "Paramètres", href: "#" },
+  { label: "Revenus", href: "#" },
+];
+
+const ITEM_CLASS =
+  "hover:bg-neutral-tertiary-medium hover:text-heading block w-full rounded-md p-2";
+
+/** Avatar button and the dropdown it toggles, for a signed-in user. */
 export default function UserMenu({ user, onSignOut }: Props) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -53,7 +68,7 @@ export default function UserMenu({ user, onSignOut }: Props) {
             clipRule="evenodd"
           />
         </svg>
-        <span className="sr-only">User dropdown</span>
+        <span className="sr-only">Menu utilisateur</span>
       </button>
 
       {dropdownOpen && (
@@ -67,30 +82,13 @@ export default function UserMenu({ user, onSignOut }: Props) {
             <div className="truncate">{user.email}</div>
           </div>
           <ul className="text-body p-2 text-sm font-medium">
-            <li>
-              <a
-                href="#"
-                className="hover:bg-neutral-tertiary-medium hover:text-heading block w-full rounded-md p-2"
-              >
-                Dashboard
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="hover:bg-neutral-tertiary-medium hover:text-heading block w-full rounded-md p-2"
-              >
-                Settings
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="hover:bg-neutral-tertiary-medium hover:text-heading block w-full rounded-md p-2"
-              >
-                Earnings
-              </a>
-            </li>
+            {MENU_LINKS.map((link) => (
+              <li key={link.label}>
+                <a href={link.href} className={ITEM_CLASS}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
             <li>
               <button
                 type="button"
@@ -100,7 +98,7 @@ export default function UserMenu({ user, onSignOut }: Props) {
                 }}
                 className="hover:bg-neutral-tertiary-medium text-fg-danger block w-full rounded-md p-2 text-left"
               >
-                Sign out
+                Se déconnecter
               </button>
             </li>
           </ul>

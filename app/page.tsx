@@ -7,14 +7,14 @@ export default function Home() {
         <div className="relative h-full w-full select-none">
           <Image
             className="absolute right-0 min-w-dvh dark:hidden"
-            alt="Pattern Light"
+            alt="Motif clair"
             src="/pattern-light.svg"
             width="803"
             height="774"
           />
           <Image
             className="absolute right-0 hidden min-w-dvh dark:block"
-            alt="Pattern Dark"
+            alt="Motif sombre"
             src="/pattern-dark.svg"
             width="803"
             height="775"

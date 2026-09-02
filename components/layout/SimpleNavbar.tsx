@@ -4,10 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { DarkThemeToggle } from "flowbite-react";
-import AuthButtons from "./AuthButtons";
-import AuthModal from "./AuthModal";
+import AuthButtons from "@/components/auth/AuthButtons";
+import AuthModal from "@/components/auth/AuthModal";
 import UserMenu from "./UserMenu";
-import type { AuthMode, AuthSubmitPayload, AuthUser } from "./types";
+import type { AuthMode, AuthSubmitPayload } from "@/components/auth/AuthModal";
+import type { AuthUser } from "./UserMenu";
 
 type Props = {
   isLoggedIn?: boolean;
@@ -35,12 +36,14 @@ export default function SimpleNavbar({
   }
 
   function handleSubmit(payload: AuthSubmitPayload) {
-    // Replace with real auth calls as needed
-    console.log(payload);
+    // Replace with real auth calls as needed. The password is redacted here: it
+    // must never be logged or stored in clear, only hashed server-side.
+    console.log({ ...payload, password: "[redacted]" });
     // Simulate sign-in: set user and mark logged in
-    const { mode, username, email } = payload;
+    const { mode, username, email, partner } = payload;
     const displayName =
-      mode === "signup" && username ? username : email.split("@")[0];
+      partner?.raisonSociale ||
+      (mode === "signup" && username ? username : email.split("@")[0]);
     setUser({ name: displayName, email });
     setLoggedIn(true);
     if (mode === "login" && onLogin) onLogin();
@@ -61,7 +64,7 @@ export default function SimpleNavbar({
           <Link href="/" className="flex items-center">
             <Image
               src="/ticket.svg"
-              alt="Ticket Tout logo"
+              alt="Logo Ticket Tout"
               width={36}
               height={36}
               className="mr-3"
@@ -72,7 +75,7 @@ export default function SimpleNavbar({
           </Link>
 
           <div className="relative flex items-center gap-2">
-            <DarkThemeToggle />
+            <DarkThemeToggle aria-label="Changer de thème" />
 
             {loggedIn && user ? (
               <UserMenu user={user} onSignOut={handleSignOut} />

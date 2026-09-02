@@ -15,9 +15,9 @@ export default function AuthButtons({ onLoginClick, onSignupClick }: Props) {
         onClick={onLoginClick}
         className="text-heading mr-3 text-sm font-medium hover:underline"
       >
-        Login
+        Connexion
       </button>
-      <Button onClick={onSignupClick}>Sign up</Button>
+      <Button onClick={onSignupClick}>Inscription</Button>
     </div>
   );
 }
