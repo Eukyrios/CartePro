@@ -14,10 +14,7 @@ type Props = {
 };
 
 /** Navigation entries listed above the sign-out action, in display order. */
-const MENU_LINKS = [
-  { label: "Tableau de bord", href: "/tableau-de-bord" },
-  { label: "Paramètres", href: "/parametres" },
-];
+const MENU_LINKS = [{ label: "Paramètres", href: "/parametres" }];
 
 const ITEM_CLASS =
   "hover:bg-neutral-tertiary-medium hover:text-heading block w-full rounded-md p-2";

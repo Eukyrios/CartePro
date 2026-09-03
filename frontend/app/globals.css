@@ -367,3 +367,41 @@ html:has(.snap-sections) {
     transition: none;
   }
 }
+
+/*
+ * The swipeable step deck.
+ *
+ * The stage carries the perspective so the cards' translateZ reads as real
+ * depth — a card pushed back shrinks and a card tilted on Y turns its edge
+ * towards you, which a flat scale() cannot do.
+ *
+ * The transition lives here rather than on the cards as a utility because the
+ * front card is positioned by an inline transform that changes on every
+ * pointer move: while a pointer is down the card has to track the finger
+ * exactly, so `data-dragging` turns the transition off, and the release turns
+ * it back on to throw the card onto the pile. Its duration rides in on
+ * --deck-ms, set from the release velocity, and the easing overshoots slightly
+ * so the card settles into the pile instead of gliding to a dead stop.
+ */
+.deck-stage {
+  /* A long lens: at 700px wide the cards behind the front one skew into
+     slivers under a short perspective. */
+  perspective: 2400px;
+}
+
+.deck-card {
+  transform-style: preserve-3d;
+  transition:
+    transform var(--deck-ms, 420ms) cubic-bezier(0.22, 1.12, 0.36, 1),
+    opacity var(--deck-ms, 420ms) ease-out;
+}
+
+.deck-card[data-dragging="true"] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-card {
+    transition: none;
+  }
+}

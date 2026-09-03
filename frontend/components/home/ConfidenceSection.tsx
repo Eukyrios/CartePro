@@ -15,14 +15,10 @@ export default function ConfidenceSection() {
       id="confiance"
       className="bg-primary-700 flex min-h-screen snap-start flex-col justify-center px-6 py-16 text-white lg:min-h-[calc(100vh-230px)] lg:px-[7vw] lg:pt-14 lg:pb-14"
     >
-      <div className="text-[9px] font-black tracking-[0.15em]">
-        <span>02 — CONFIANCE</span>
-      </div>
-
       {/* QR on the left, wording on the right. The spacing is deliberately
           tight: the section is capped at calc(100vh - 230px) so that it and the
           footer make one screen, and the QR is most of that budget. */}
-      <div className="mt-10 grid items-center gap-10 lg:mt-8 lg:grid-cols-[auto_1fr] lg:gap-16">
+      <div className="grid items-center gap-10 lg:grid-cols-[auto_1fr] lg:gap-16">
         <div className="flex flex-col gap-5">
           <PaymentQr />
           <p className="max-w-[300px] text-[11px] leading-[1.5] text-white/70">
