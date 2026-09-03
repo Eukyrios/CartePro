@@ -1,5 +1,6 @@
 "use client";
 
+import { formatEuros } from "@/components/data/ledger";
 import { LogoMark, WordMark } from "./Marks";
 import {
   DEFAULT_CARD_STYLE,
@@ -122,8 +123,15 @@ export function hexToRgba(hex: string, alpha: string) {
 export default function CreditCard3D({
   style,
   state = "rest",
+  balanceCents = 3250,
 }: {
   style?: CardStyle;
+  /**
+   * The balance to print, in cents. Defaults to the landing page's figure,
+   * which has no ledger behind it; the salarié space passes the live one, so
+   * the card is one of the surfaces a payment updates immediately.
+   */
+  balanceCents?: number;
   /**
    * "rest" is the card as carried; "payment" is the instant it is used — the
    * two states the salarié space has to show.
@@ -212,7 +220,7 @@ export default function CreditCard3D({
               {paying ? "Paiement · Simulation" : "Simulation"}
             </small>
             <strong className="block text-[12cqw] leading-[0.9] tracking-[-0.08em]">
-              32,50 €
+              {formatEuros(balanceCents)}
             </strong>
           </div>
 

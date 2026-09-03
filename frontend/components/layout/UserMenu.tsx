@@ -14,7 +14,10 @@ type Props = {
 };
 
 /** Navigation entries listed above the sign-out action, in display order. */
-const MENU_LINKS = [{ label: "Paramètres", href: "/parametres" }];
+const MENU_LINKS = [
+  { label: "Mon espace", href: "/espace" },
+  { label: "Paramètres", href: "/parametres" },
+];
 
 /** Square, uppercase micro-type rows, as everywhere else in the design. */
 const ITEM_CLASS =

@@ -533,6 +533,25 @@ html:has(.snap-sections) {
 }
 
 /*
+ * The swipeable row of partners. Same bargain as the deck below: the transform
+ * is inline and changes on every pointer move, so the transition is off while
+ * a pointer is down and back on for the release.
+ */
+.partner-row {
+  transition: transform 0.4s cubic-bezier(0.22, 0.68, 0.32, 1);
+}
+
+.partner-row[data-dragging="true"] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-row {
+    transition: none;
+  }
+}
+
+/*
  * The swipeable step deck.
  *
  * The stage carries the perspective so the cards' translateZ reads as real

@@ -47,7 +47,10 @@ export default function HeroSection() {
         {/* Faint blueprint grid behind the card. Its rules are mixed from the
             palette in globals.css, and take the ink of whichever theme is
             showing — the light theme's blue is invisible on the dark panel. */}
-        <div aria-hidden="true" className="blueprint-grid absolute inset-[7%]" />
+        <div
+          aria-hidden="true"
+          className="blueprint-grid absolute inset-[7%]"
+        />
 
         {/* Centred rather than offset-and-rotated like the original static
             card: the tilt only reads as 3D from a square-on resting position.

@@ -8,11 +8,18 @@ import { useEffect, useState } from "react";
  * first screen — and it carries no index, matching the design where only the
  * content sections are numbered.
  */
-const SECTIONS = [
+export type RailSection = {
+  id: string;
+  /** Two digits, or empty for a screen the design leaves unnumbered. */
+  index: string;
+  label: string;
+};
+
+const LANDING_SECTIONS: readonly RailSection[] = [
   { id: "accueil", index: "", label: "Accueil" },
   { id: "fonctionnement", index: "01", label: "Fonctionnement" },
   { id: "confiance", index: "02", label: "Confiance" },
-] as const;
+];
 
 /**
  * A slim timeline pinned to the side: one rule per screen, the current one
@@ -25,13 +32,18 @@ const SECTIONS = [
  *
  * Hidden below lg, where a fixed side rail would sit on top of the content.
  */
-export default function SectionNav() {
-  const [active, setActive] = useState<string>(SECTIONS[0].id);
+export default function SectionNav({
+  sections = LANDING_SECTIONS,
+}: {
+  /** Which screens the rail lists. The salarié space passes its own. */
+  sections?: readonly RailSection[];
+}) {
+  const [active, setActive] = useState<string>(sections[0].id);
 
   useEffect(() => {
-    const elements = SECTIONS.map(({ id }) =>
-      document.getElementById(id),
-    ).filter((el): el is HTMLElement => el !== null);
+    const elements = sections
+      .map(({ id }) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
     if (elements.length === 0) return;
 
     // Collapsing the root to the viewport's middle line means exactly one
@@ -47,13 +59,13 @@ export default function SectionNav() {
 
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [sections]);
 
   function goTo(id: string) {
     // Scrolling to 0 rather than to the hero keeps the header in view, which is
     // what the first snap position shows. Smoothness comes from
     // `scroll-behavior` in globals.css.
-    if (id === SECTIONS[0].id) {
+    if (id === sections[0].id) {
       window.scrollTo({ top: 0 });
       return;
     }
@@ -65,7 +77,7 @@ export default function SectionNav() {
       aria-label="Sections de la page"
       className="fixed top-1/2 right-5 z-40 hidden -translate-y-1/2 flex-col items-end gap-3.5 mix-blend-difference lg:flex"
     >
-      {SECTIONS.map(({ id, index, label }) => (
+      {sections.map(({ id, index, label }) => (
         <button
           key={id}
           type="button"
