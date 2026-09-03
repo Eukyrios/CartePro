@@ -1,0 +1,18 @@
+# Caches
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Environnements virtuels
+venv/
+.venv/
+env/
+
+# Variables d'environnement (Sécurité critique)
+.env
+
+# Base de données locale SQLite
+instance/
+*.db
+*.sqlite3
