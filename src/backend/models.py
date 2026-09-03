@@ -3,7 +3,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
 
 db = SQLAlchemy()
-login_manager.login_view = "login"
 
 class User(db.Model):
     __tablename__ = "users"
@@ -15,6 +14,9 @@ class User(db.Model):
     audience = db.Column(db.String(20), nullable=False, default="employee")
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # --- NOUVEAUTÉ : Le solde ---
+    solde = db.Column(db.Float, default=50.0, nullable=False) # 50€ offerts à l'inscription par exemple
 
     # Champs spécifiques partenaire (optionnels)
     company_name = db.Column(db.String(120), nullable=True)
@@ -31,5 +33,16 @@ class User(db.Model):
     def __repr__(self):
         return f"<User {self.email} ({self.role})>"
 
-def load_user(user_id):
-    return User.query.get(int(user_id))
+# --- NOUVEAUTÉ : La table des transactions ---
+class Transaction(db.Model):
+    __tablename__ = "transactions"
+    id = db.Column(db.Integer, primary_key=True)
+    salarie_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    partenaire_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    montant = db.Column(db.Float, nullable=False)
+    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    statut = db.Column(db.String(20), default="validee") # "validee" ou "annulee"
+
+    # Relations pour accéder facilement aux objets User liés
+    salarie = db.relationship("User", foreign_keys=[salarie_id])
+    partenaire = db.relationship("User", foreign_keys=[partenaire_id])

@@ -1,10 +1,11 @@
+from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from sqlalchemy import inspect, text
 import os
 
 # 1. Importations de la base de données et de l'authentification (Partie de ton mate)
-from models import db, login_manager
+from models import db
 from auth import (
     api_change_password,
     api_delete_account,
@@ -79,6 +80,7 @@ def _upgrade_existing_database():
         "audience": "VARCHAR(20) NOT NULL DEFAULT 'employee'",
         "partner_data": "JSON NOT NULL DEFAULT '{}'",
         "card_style": "JSON NOT NULL DEFAULT '{}'",
+        "solde": "FLOAT NOT NULL DEFAULT 50.0",
     }
     for name, definition in additions.items():
         if name not in columns:
