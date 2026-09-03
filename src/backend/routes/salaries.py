@@ -1,0 +1,49 @@
+from flask import Blueprint, jsonify, request
+from datetime import datetime, timedelta, timezone
+import jwt
+import qrcode
+import io
+import base64
+
+salaries_bp = Blueprint('salaries', __name__)
+SECRET_KEY = "cle_secrete_partagee_avec_le_mate" # À déplacer dans config.py ou .env
+
+@salaries_bp.route('/<int:user_id>/solde', methods=['GET'])
+def get_solde_positif(user_id):
+    # TODO: Ton mate liera ça à sa requête DB
+    solde_brut = 32.50 
+    
+    return jsonify({
+        "status": "success",
+        "solde_numerique": solde_brut,
+        "affichage_positif": f"{solde_brut:.2f}€ à dépenser chez vos partenaires préférés !"
+    }), 200
+
+@salaries_bp.route('/paiement/qr', methods=['POST'])
+def generer_qr_code():
+    data = request.json
+    user_id = data.get('user_id')
+    
+    # Expiration fixée à 30 minutes
+    payload = {
+        "user_id": user_id,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=30)
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+    
+    # Génération de l'image
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(token)
+    qr.make(fit=True)
+    img = qr.make_image(fill='black', back_color='white')
+    
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    qr_b64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    
+    return jsonify({
+        "status": "success",
+        "qr_image_base64": qr_b64,
+        "raw_token_for_testing": token,
+        "expiration": "30 minutes"
+    }), 201
