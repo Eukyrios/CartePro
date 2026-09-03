@@ -1,4 +1,4 @@
-# CartePro — prototype
+# Ticket Tout — prototype
 
 Bundle autonome produit par la CI. Rien à installer : les dépendances du
 serveur sont déjà dans `node_modules/`.
@@ -22,10 +22,10 @@ PORT=8080 HOSTNAME=0.0.0.0 node server.js
 
 Déjà remplis, un par type d'utilisateur. Le même mot de passe pour les deux :
 
-| Type       | Identifiant               | Mot de passe |
-| ---------- | ------------------------- | ------------ |
-| Employé    | `employe@cartepro.fr`     | `Demo1234!`  |
-| Partenaire | `partenaire@cartepro.fr`  | `Demo1234!`  |
+| Type       | Identifiant                | Mot de passe |
+| ---------- | -------------------------- | ------------ |
+| Employé    | `employe@tickettout.fr`    | `Demo1234!`  |
+| Partenaire | `partenaire@tickettout.fr` | `Demo1234!`  |
 
 Les identifiants sont aussi rappelés dans la fenêtre de connexion, avec un
 bouton « Remplir ces identifiants ».

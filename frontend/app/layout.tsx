@@ -10,11 +10,12 @@ export const metadata: Metadata = {
   title: "Ticket Tout",
   description:
     "Ticket Tout — le crédit salarié à utiliser chez vos partenaires",
-  // Vector icon so browsers get the crisp ticket; app/favicon.ico stays as the
-  // legacy fallback for clients that only request /favicon.ico.
-  icons: {
-    icon: [{ url: "/ticket.svg", type: "image/svg+xml" }],
-  },
+  /*
+   * No `icons` here on purpose: app/icon.svg and app/favicon.ico are picked up
+   * by the file convention, which also fingerprints them for cache-busting. An
+   * explicit entry overrides that convention wholesale — which is how the old
+   * /ticket.svg kept winning over both.
+   */
 };
 
 export default function RootLayout({

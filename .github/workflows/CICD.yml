@@ -42,7 +42,7 @@ jobs:
       - name: Assemble the runnable bundle
         run: |
           set -euo pipefail
-          BUNDLE="$RUNNER_TEMP/cartepro"
+          BUNDLE="$RUNNER_TEMP/ticket-tout"
           mkdir -p "$BUNDLE"
           cp -r .next/standalone/. "$BUNDLE"/
           cp -r .next/static "$BUNDLE"/.next/static
@@ -60,9 +60,9 @@ jobs:
       - name: Publish the build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cartepro-app
+          name: ticket-tout-app
           # Absolute: the job's working-directory applies to `run` steps only.
-          path: ${{ runner.temp }}/cartepro
+          path: ${{ runner.temp }}/ticket-tout
           if-no-files-found: error
           retention-days: 30
 
