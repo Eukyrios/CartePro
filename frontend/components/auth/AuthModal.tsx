@@ -169,16 +169,16 @@ export default function AuthModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div
-        className={`bg-neutral-primary-soft border-default rounded-base pointer-events-auto relative z-50 max-h-[90vh] w-full overflow-y-auto border p-6 shadow-xs ${
+        className={`bg-cp-page border-cp-fg pointer-events-auto relative z-50 max-h-[90vh] w-full overflow-y-auto rounded-none border-2 p-7 sm:p-8 ${
           partnerSignup ? "max-w-5xl" : "max-w-sm"
         }`}
       >
         <button
           type="button"
           onClick={onClose}
-          className="text-body hover:bg-neutral-secondary-medium hover:text-heading rounded-base absolute end-3 top-3 inline-flex h-8 w-8 items-center justify-center bg-transparent"
+          className="text-cp-muted hover:bg-cp-surface hover:text-cp-fg absolute end-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-none bg-transparent"
         >
           <svg
             className="h-4 w-4"
@@ -198,9 +198,34 @@ export default function AuthModal({
           <span className="sr-only">Fermer la fenêtre</span>
         </button>
 
+        {/* Flowbite's underline tabs are grey-on-grey with rounded tops and
+            body-weight text. Themed here rather than replaced, because the tab
+            list is the one part of this dialog doing real work (roving focus
+            and panel wiring). Every override carries its `dark:` twin: without
+            one, the component's own dark variant wins over ours. */}
         <Tabs
           aria-label="Type de compte"
           variant="underline"
+          theme={{
+            tablist: {
+              variant: {
+                underline:
+                  "border-cp-border dark:border-cp-border -mb-px flex-wrap gap-7 border-b-2",
+              },
+              tabitem: {
+                base: "flex items-center justify-center rounded-none px-0 pt-0 pb-3.5 text-[10px] font-black tracking-[0.16em] uppercase first:ml-0 focus:outline-none disabled:cursor-not-allowed",
+                variant: {
+                  underline: {
+                    base: "rounded-none",
+                    active: {
+                      on: "border-cp-accent text-cp-accent dark:border-cp-accent dark:text-cp-accent rounded-none border-b-2",
+                      off: "text-cp-muted hover:border-cp-fg hover:text-cp-fg dark:text-cp-muted dark:hover:border-cp-fg dark:hover:text-cp-fg rounded-none border-b-2 border-transparent",
+                    },
+                  },
+                },
+              },
+            },
+          }}
           onActiveTabChange={(index) => setAudience(AUDIENCES[index])}
         >
           {/* Only the active panel holds the form: Flowbite renders every

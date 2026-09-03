@@ -11,9 +11,15 @@ type Props = Omit<
   label: string;
   value: string;
   onChange: (value: string) => void;
-  options: readonly string[];
+  /**
+   * What to offer. Pairs rather than plain strings, so the stored value can
+   * outlive a rename of its label.
+   */
+  options: readonly { value: string; label: string }[];
   /** Empty first entry, shown until a choice is made. */
   placeholder: string;
+  /** Shown in place of the placeholder when there is nothing to offer. */
+  emptyLabel?: string;
   /** Wrapper layout only: the select's own styling is fixed by INPUT_CLASS. */
   className?: string;
 };
@@ -26,9 +32,13 @@ export default function SelectField({
   onChange,
   options,
   placeholder,
+  emptyLabel = "Aucune option disponible",
   className,
   ...selectProps
 }: Props) {
+  // A list served from data can legitimately be empty. Say so and disable the
+  // control, rather than offering a select that silently opens onto nothing.
+  const empty = options.length === 0;
   return (
     <div className={className}>
       <label htmlFor={id} className={LABEL_CLASS}>
@@ -38,13 +48,14 @@ export default function SelectField({
         {...selectProps}
         id={id}
         value={value}
+        disabled={selectProps.disabled ?? empty}
         onChange={(e) => onChange(e.target.value)}
         className={INPUT_CLASS}
       >
-        <option value="">{placeholder}</option>
+        <option value="">{empty ? emptyLabel : placeholder}</option>
         {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>

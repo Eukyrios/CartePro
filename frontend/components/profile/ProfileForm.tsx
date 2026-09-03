@@ -1,11 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Alert, Button } from "flowbite-react";
 import ProfileEmployeeFields from "./ProfileEmployeeFields";
 import ProfilePartnerFields from "./ProfilePartnerFields";
 import { validatePartnerFields } from "@/components/auth/SignupPartnerFields";
 import type { Profile } from "@/components/account/AccountProvider";
+import {
+  BTN_OUTLINE,
+  BTN_SOLID,
+  NOTE_POSITIVE,
+} from "@/components/ui/surfaces";
 import type {
   PartnerErrors,
   PartnerFields,
@@ -95,18 +99,16 @@ export default function ProfileForm({ profile, onSave }: Props) {
       )}
 
       {saved && (
-        <Alert color="success" className="mt-6">
-          Modifications enregistrées.
-        </Alert>
+        <p className={`${NOTE_POSITIVE} mt-7`}>Modifications enregistrées.</p>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <Button type="submit" disabled={!dirty}>
+      <div className="mt-7 flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={!dirty} className={BTN_SOLID}>
           Enregistrer les modifications
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          color="light"
+          className={BTN_OUTLINE}
           disabled={!dirty}
           onClick={() => {
             setDraft(profile);
@@ -115,7 +117,7 @@ export default function ProfileForm({ profile, onSave }: Props) {
           }}
         >
           Annuler
-        </Button>
+        </button>
       </div>
     </form>
   );

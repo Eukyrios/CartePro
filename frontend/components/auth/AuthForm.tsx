@@ -2,6 +2,8 @@
 
 import type React from "react";
 import { demoAccountFor } from "@/components/account/demoAccounts";
+import { Arrow, Eyebrow } from "@/components/home/Marks";
+import { BTN_SOLID, MICRO } from "@/components/ui/surfaces";
 import SigninFields from "./SigninFields";
 import SignupClientFields from "./SignupClientFields";
 import SignupPartnerFields from "./SignupPartnerFields";
@@ -53,7 +55,10 @@ export default function AuthForm({
 
   return (
     <form onSubmit={onSubmit}>
-      <h5 className="text-heading mb-6 text-xl font-semibold">
+      {/* Eyebrow over a heavy tight heading, as every section of the landing
+          page opens. */}
+      <Eyebrow>{mode === "login" ? "CONNEXION" : "INSCRIPTION"}</Eyebrow>
+      <h5 className="text-cp-fg mt-3.5 mb-7 text-[26px] leading-[0.92] font-black tracking-[-0.05em]">
         {headingFor(audience, mode)}
       </h5>
 
@@ -66,9 +71,9 @@ export default function AuthForm({
       )}
 
       {demo && (
-        <div className="border-default bg-neutral-secondary-medium rounded-base mt-4 border p-3">
-          <p className="text-heading text-xs font-semibold">{demo.label}</p>
-          <p className="text-body mt-1 font-mono text-xs break-all">
+        <div className="border-cp-accent bg-cp-surface mt-5 border-l-2 px-4 py-3.5">
+          <p className={`text-cp-accent ${MICRO}`}>{demo.label}</p>
+          <p className="text-cp-fg mt-2 font-mono text-[12px] break-all">
             {demo.profile.email} · {demo.password}
           </p>
           {/* One tap on a tablet beats typing a password into a demo. */}
@@ -78,7 +83,7 @@ export default function AuthForm({
               setValue("email", demo.profile.email);
               setValue("password", demo.password);
             }}
-            className="text-fg-brand mt-2 text-xs font-medium hover:underline"
+            className="text-cp-fg decoration-cp-accent mt-2.5 text-[10px] font-black tracking-[0.12em] uppercase underline underline-offset-4 hover:decoration-2"
           >
             Remplir ces identifiants
           </button>
@@ -92,38 +97,36 @@ export default function AuthForm({
             type="checkbox"
             checked={values.remember}
             onChange={(e) => setValue("remember", e.target.checked)}
-            className="border-default-medium bg-neutral-secondary-medium focus:ring-brand-soft h-4 w-4 rounded-xs border focus:ring-2"
+            className="border-cp-border bg-cp-page text-cp-accent focus:ring-cp-accent size-4 rounded-none border focus:ring-1"
           />
           <label
             htmlFor="checkbox-remember"
-            className="text-heading ms-2 text-sm font-medium"
+            className="text-cp-fg ms-2.5 text-[12px]"
           >
             Se souvenir de moi
           </label>
         </div>
         <a
           href="#"
-          className="text-fg-brand ms-auto text-sm font-medium hover:underline"
+          className={`text-cp-accent ms-auto hover:underline ${MICRO}`}
         >
           Mot de passe oublié&nbsp;?
         </a>
       </div>
 
-      <button
-        type="submit"
-        className="bg-brand hover:bg-brand-strong focus:ring-brand-medium rounded-base mb-3 box-border w-full border border-transparent px-4 py-2.5 text-sm leading-5 font-medium text-white shadow-xs focus:ring-4 focus:outline-none"
-      >
+      <button type="submit" className={`${BTN_SOLID} mb-4 w-full`}>
         {submitLabelFor(audience, mode)}
+        <Arrow />
       </button>
 
-      <div className="text-body text-sm font-medium">
+      <div className="text-cp-muted text-[12px]">
         {mode === "login" ? (
           <>
             Pas encore inscrit&nbsp;?{" "}
             <button
               type="button"
               onClick={() => onModeChange("signup")}
-              className="text-fg-brand hover:underline"
+              className="text-cp-fg font-black underline underline-offset-4 hover:no-underline"
             >
               Créer un compte
             </button>
@@ -134,7 +137,7 @@ export default function AuthForm({
             <button
               type="button"
               onClick={() => onModeChange("login")}
-              className="text-fg-brand hover:underline"
+              className="text-cp-fg font-black underline underline-offset-4 hover:no-underline"
             >
               Se connecter
             </button>

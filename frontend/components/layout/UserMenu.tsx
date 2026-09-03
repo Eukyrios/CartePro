@@ -16,8 +16,9 @@ type Props = {
 /** Navigation entries listed above the sign-out action, in display order. */
 const MENU_LINKS = [{ label: "Paramètres", href: "/parametres" }];
 
+/** Square, uppercase micro-type rows, as everywhere else in the design. */
 const ITEM_CLASS =
-  "hover:bg-neutral-tertiary-medium hover:text-heading block w-full rounded-md p-2";
+  "hover:bg-cp-surface hover:text-cp-fg block w-full rounded-none px-4 py-3 text-[9px] font-black tracking-[0.16em] uppercase";
 
 /** Avatar button and the dropdown it toggles, for a signed-in user. */
 export default function UserMenu({ user, onSignOut }: Props) {
@@ -50,21 +51,9 @@ export default function UserMenu({ user, onSignOut }: Props) {
         aria-haspopup="menu"
         aria-expanded={dropdownOpen}
         onClick={() => setDropdownOpen((s) => !s)}
-        className="bg-neutral-secondary-medium relative h-10 w-10 cursor-pointer overflow-hidden rounded-full focus:outline-none"
+        className="bg-cp-accent focus-visible:outline-cp-fg relative size-10 cursor-pointer rounded-full text-[15px] font-black text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
       >
-        <svg
-          className="text-body-subtle absolute top-0 -left-1 h-12 w-12"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <path
-            fillRule="evenodd"
-            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <span aria-hidden="true">{user.name.charAt(0).toUpperCase()}</span>
         <span className="sr-only">Menu utilisateur</span>
       </button>
 
@@ -72,13 +61,17 @@ export default function UserMenu({ user, onSignOut }: Props) {
         <div
           id="userDropdown"
           aria-labelledby="avatarButton"
-          className="bg-neutral-primary-medium border-default-medium rounded-base absolute top-full right-0 z-50 mt-2 w-44 border shadow-lg"
+          className="bg-cp-page border-cp-fg absolute top-full right-0 z-50 mt-2 w-52 rounded-none border-2"
         >
-          <div className="border-default-medium text-heading border-b px-4 py-3 text-sm">
-            <div className="font-medium">{user.name}</div>
-            <div className="truncate">{user.email}</div>
+          <div className="border-cp-border border-b px-4 py-3.5">
+            <div className="text-cp-fg truncate text-[13px] font-black tracking-[-0.03em]">
+              {user.name}
+            </div>
+            <div className="text-cp-muted truncate text-[11px]">
+              {user.email}
+            </div>
           </div>
-          <ul className="text-body p-2 text-sm font-medium">
+          <ul className="text-cp-muted">
             {MENU_LINKS.map((link) => (
               <li key={link.label}>
                 <Link
@@ -97,7 +90,7 @@ export default function UserMenu({ user, onSignOut }: Props) {
                   setDropdownOpen(false);
                   onSignOut();
                 }}
-                className="hover:bg-neutral-tertiary-medium text-fg-danger block w-full rounded-md p-2 text-left"
+                className={`${ITEM_CLASS} border-cp-border text-fg-danger border-t text-left`}
               >
                 Se déconnecter
               </button>

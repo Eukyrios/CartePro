@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "flowbite-react";
 import { Arrow } from "@/components/home/Marks";
+import { BTN_SOLID, MICRO } from "@/components/ui/surfaces";
 
 type Props = {
   onLoginClick: () => void;
@@ -14,19 +14,16 @@ export default function AuthButtons({ onLoginClick, onSignupClick }: Props) {
       <button
         type="button"
         onClick={onLoginClick}
-        className="text-cp-fg hidden text-[11px] font-extrabold hover:underline sm:block"
+        className={`text-cp-fg hidden hover:underline sm:block ${MICRO}`}
       >
         Se connecter
       </button>
-      {/* h-auto: Flowbite's size prop pins a fixed height, which would
-          override the design's padding. */}
-      <Button
-        onClick={onSignupClick}
-        className="group h-auto rounded-none px-4 py-3 text-[11px] font-extrabold"
-      >
+      {/* Flowbite's Button is a field of primary-700, which the charter does
+          not allow for a button, so this uses the shared ink-filled one. */}
+      <button type="button" onClick={onSignupClick} className={BTN_SOLID}>
         Créer un compte
         <Arrow />
-      </Button>
+      </button>
     </div>
   );
 }

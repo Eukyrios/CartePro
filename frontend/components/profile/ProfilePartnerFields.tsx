@@ -1,7 +1,7 @@
 "use client";
 
 import { HelperText, Label, Select, TextInput } from "flowbite-react";
-import { PARTNER_CATEGORIES } from "@/components/auth/SignupPartnerFields";
+import { partnerCategories } from "@/components/data/partnerCategories";
 import type { ProfileFormApi } from "./ProfileForm";
 
 type Props = {
@@ -75,10 +75,14 @@ export default function ProfilePartnerFields({ form }: Props) {
           onChange={(e) => setPartnerValue("categorie", e.target.value)}
           required
         >
-          <option value="">Sélectionner une catégorie</option>
-          {PARTNER_CATEGORIES.map((categorie) => (
-            <option key={categorie} value={categorie}>
-              {categorie}
+          <option value="">
+            {partnerCategories().length === 0
+              ? "Aucune catégorie disponible"
+              : "Sélectionner une catégorie"}
+          </option>
+          {partnerCategories().map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {entry.label}
             </option>
           ))}
         </Select>

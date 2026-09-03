@@ -17,7 +17,15 @@ import type { PartnerFields } from "@/components/auth/SignupPartnerFields";
 import { findDemoAccount } from "./demoAccounts";
 
 /** Background texture printed on the card. */
-export type CardPattern = "none" | "waves" | "dots" | "grid";
+export type CardPattern =
+  | "none"
+  | "waves"
+  | "dots"
+  | "grid"
+  | "stripes"
+  | "crosshatch"
+  | "rings"
+  | "checker";
 
 /** How an employé has styled their card. */
 export type CardStyle = {

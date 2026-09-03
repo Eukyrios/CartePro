@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Arrow } from "./Marks";
+import { Arrow, LogoMark } from "./Marks";
 
 export type Step = {
   index: string;
@@ -141,9 +141,9 @@ export default function StepsDeck({ steps }: { steps: readonly Step[] }) {
                    most recent on top, then the cards still to come. A card
                    being dealt therefore flies over the pile, not under it. */
                 zIndex: isFront ? 100 : delta < 0 ? 90 + delta : 50 - delta,
-                opacity: delta < 0 ? 1 + delta * 0.3 : 1,
               }}
-              className={`deck-card border-cp-fg bg-cp-page absolute inset-0 flex flex-col justify-between border-2 p-9 select-none sm:p-12 lg:p-14 ${
+              /* overflow-hidden keeps the oversized index inside the card. */
+              className={`deck-card border-cp-fg bg-cp-page absolute inset-0 overflow-hidden border-2 p-9 select-none sm:p-12 lg:p-14 ${
                 isFront
                   ? "cursor-grab active:cursor-grabbing"
                   : "pointer-events-none"
@@ -153,20 +153,47 @@ export default function StepsDeck({ steps }: { steps: readonly Step[] }) {
               onPointerUp={isFront ? handlePointerUp : undefined}
               onPointerCancel={isFront ? () => setDrag(null) : undefined}
             >
-              <div className="flex items-start justify-between">
-                <span className="text-cp-accent text-xs font-black tracking-[0.16em]">
+              {/* The fade belongs to what is printed on the card, not to the
+                  card: an opacity on the article itself made the whole thing
+                  translucent — background included — so the cards underneath
+                  showed through the pile. The card stays opaque and only its
+                  contents dim with depth. */}
+              <div
+                style={{ opacity: delta < 0 ? 1 + delta * 0.3 : 1 }}
+                className="relative flex h-full flex-col justify-between"
+              >
+                {/* The step number again, oversized and nearly transparent:
+                    the card is tall enough that the middle was a void between
+                    the meta row and the title. */}
+                <span
+                  aria-hidden="true"
+                  className="text-cp-fg pointer-events-none absolute inset-y-0 right-0 flex items-center text-[clamp(150px,22vw,290px)] leading-none font-black tracking-[-0.09em] opacity-[0.055]"
+                >
                   {step.index}
                 </span>
-                <Arrow className="text-cp-accent ml-0" />
-              </div>
 
-              <div>
-                <h3 className="mb-4 text-[clamp(36px,4.4vw,60px)] leading-[0.9] font-black tracking-[-0.055em]">
-                  {step.title}
-                </h3>
-                <p className="text-cp-muted m-0 max-w-[540px] text-[17px] leading-[1.55]">
-                  {step.body}
-                </p>
+                <div className="relative flex items-start justify-between">
+                  <span className="text-cp-accent flex items-center gap-2.5 text-xs font-black tracking-[0.16em]">
+                    {/* Inline bar sizing rather than classes: LogoMark's own
+                        h-/w- utilities would otherwise win by emit order. */}
+                    <LogoMark
+                      className="bg-cp-accent size-5"
+                      barClassName="bg-cp-page"
+                      barStyle={{ height: 11, width: 2 }}
+                    />
+                    {step.index}
+                  </span>
+                  <Arrow className="text-cp-accent ml-0" />
+                </div>
+
+                <div className="relative">
+                  <h3 className="mb-4 text-[clamp(36px,4.4vw,60px)] leading-[0.9] font-black tracking-[-0.055em]">
+                    {step.title}
+                  </h3>
+                  <p className="text-cp-muted m-0 max-w-[540px] text-[17px] leading-[1.55]">
+                    {step.body}
+                  </p>
+                </div>
               </div>
             </article>
           );

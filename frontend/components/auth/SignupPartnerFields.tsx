@@ -1,5 +1,6 @@
 "use client";
 
+import { partnerCategories } from "@/components/data/partnerCategories";
 import SelectField from "@/components/ui/SelectField";
 import TextField from "@/components/ui/TextField";
 import type { AuthFormApi } from "./AuthModal";
@@ -18,20 +19,6 @@ export type PartnerFields = {
 
 /** Validation messages keyed by the field they belong to. */
 export type PartnerErrors = Partial<Record<keyof PartnerFields, string>>;
-
-/**
- * Partner categories. Spec says this list lives in the database, so this is a
- * placeholder to be replaced by a fetch once the backend exists.
- */
-export const PARTNER_CATEGORIES = [
-  "Restauration",
-  "Culture",
-  "Loisirs",
-  "Commerce",
-  "Hébergement",
-  "Bien-être",
-  "Autre",
-];
 
 /**
  * Form-level SIREN check: 9 digits validated with the Luhn checksum.
@@ -134,7 +121,11 @@ export default function SignupPartnerFields({ form }: Props) {
         label="Catégorie"
         value={partner.categorie}
         onChange={(value) => setPartnerValue("categorie", value)}
-        options={PARTNER_CATEGORIES}
+        options={partnerCategories().map((entry) => ({
+          value: entry.id,
+          label: entry.label,
+        }))}
+        emptyLabel="Aucune catégorie disponible"
         placeholder="Sélectionner une catégorie"
         required
       />

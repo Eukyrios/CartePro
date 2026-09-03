@@ -9,7 +9,9 @@
  *
  * The confirmation is real text in the DOM, so it reaches assistive technology
  * whether or not the dissolve ever plays, and the panel is focusable so the
- * effect is reachable without a pointer.
+ * effect is reachable from the keyboard. Only keyboard focus reveals it: the
+ * CSS keys off `:focus-visible`, so clicking the code does not leave it
+ * dissolved once the pointer moves away.
  */
 
 /** Modules per side. 21 is a real QR version-1 grid, which is why it reads. */
@@ -55,7 +57,17 @@ export default function PaymentQr() {
     <div
       tabIndex={0}
       aria-label="QR de paiement de démonstration : 10,00 € payés via ce QR"
-      className="qr-dissolve bg-cp-page relative size-[min(74vw,42vh)] max-w-[460px] cursor-pointer rounded-2xl p-[5%] outline-none focus-visible:ring-4 focus-visible:ring-white/40"
+      /* White in both themes, whatever the block behind it does: a QR is a
+         thing to be read, not a themed surface. The previous `bg-cp-page`
+         followed the theme while the modules stayed brand blue, which left
+         dark blue on a near-black ground in dark mode.
+
+         One width and an aspect ratio, not `size-*` plus a `max-w`: that pair
+         caps the width at 460px while leaving the height on min(74vw,42vh),
+         so the panel stretched into a portrait rectangle on any viewport where
+         that expression came out above the cap. Folding the cap into the min()
+         and deriving the height keeps it square everywhere. */
+      className="qr-dissolve relative aspect-square w-[min(74vw,42vh,460px)] cursor-pointer rounded-2xl bg-white p-[5%] outline-none focus-visible:ring-4 focus-visible:ring-white/40"
     >
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
@@ -80,13 +92,13 @@ export default function PaymentQr() {
       </svg>
 
       <div className="qr-reveal pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
-        <span className="text-cp-muted text-[clamp(8px,1vw,12px)] font-black tracking-[0.14em]">
+        <span className="text-[clamp(8px,1vw,12px)] font-black tracking-[0.14em] text-gray-500">
           SIMULATION
         </span>
         <strong className="text-primary-700 mt-2 block text-[clamp(30px,4.4vw,66px)] leading-none tracking-[-0.05em]">
           10,00 €
         </strong>
-        <span className="text-cp-muted mt-3 text-[clamp(10px,1.1vw,15px)] leading-[1.4]">
+        <span className="mt-3 text-[clamp(10px,1.1vw,15px)] leading-[1.4] text-gray-500">
           payés via ce QR chez le partenaire
         </span>
       </div>

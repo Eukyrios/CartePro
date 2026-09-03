@@ -26,14 +26,16 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
+        {/* Both faces are declared in globals.css: Marianne from the State's
+            @gouvfr/dsfr package, Spectral from Google Fonts. */}
         <ThemeModeScript />
       </head>
       {/* The column layout keeps the bottom bar at the foot of short pages,
           and the background is painted here rather than per page: left to the
           browser's default canvas it can disagree with the theme the tokens
           are using, which leaves white dark-mode headings sitting on white.
-          Typography comes from --font-sans / --font-serif in globals.css, the
-          Arial and Georgia pairing the design alternates between. */}
+          Typography comes from --font-heading / --font-body in globals.css:
+          Marianne for headings and chrome, Spectral for body copy. */}
       <body className="bg-cp-page text-cp-fg flex min-h-screen flex-col antialiased">
         <ThemeInit />
         <AccountProvider>

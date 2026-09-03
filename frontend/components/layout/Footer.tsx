@@ -37,10 +37,14 @@ export default function Footer() {
           className="flex items-center gap-2.5 text-[18px] font-black tracking-[-0.07em] text-white"
         >
           <LogoMark className="size-7 bg-white" barClassName="bg-cp-ink" />
-          {/* The brand accent is near-black in the light palette, which the
-              always-black footer would swallow, so the T takes a light step of
-              the same ramp. */}
-          <WordMark tClassName="text-primary-300" />
+          {/* Both tones step up the ramp here: the footer is near-black in
+              both themes, so the deep blue of the T would be swallowed by it.
+              The T stays the darker of the two, the words the paler, which is
+              the pairing everywhere else. */}
+          <WordMark
+            tClassName="text-primary-500"
+            wordClassName="text-primary-200"
+          />
         </Link>
 
         <div className="max-w-[250px] text-[11px] leading-[1.5]">

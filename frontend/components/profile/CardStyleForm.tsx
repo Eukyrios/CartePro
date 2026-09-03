@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Alert, Button, RangeSlider } from "flowbite-react";
+import {
+  BTN_OUTLINE,
+  BTN_SOLID,
+  NOTE_POSITIVE,
+} from "@/components/ui/surfaces";
 import CreditCard3D, {
   hexToRgba,
   patternLayer,
@@ -22,6 +26,10 @@ const PATTERNS: { value: CardPattern; label: string }[] = [
   { value: "waves", label: "Vagues" },
   { value: "dots", label: "Points" },
   { value: "grid", label: "Grille" },
+  { value: "stripes", label: "Rayures" },
+  { value: "crosshatch", label: "Croisillons" },
+  { value: "rings", label: "Cercles" },
+  { value: "checker", label: "Damier" },
   { value: "none", label: "Aucun" },
 ];
 
@@ -40,7 +48,7 @@ const TEXT_PRESETS = ["#ffffff", "#0a0a0b", "#f5d0a9", "#bfdbfe"];
 /** The tick drawn on the chosen tile. */
 function CheckMark() {
   return (
-    <span className="bg-primary-700 absolute -end-1 -top-1 flex size-5 items-center justify-center rounded-full text-white shadow">
+    <span className="bg-cp-accent absolute -end-1 -top-1 flex size-4 items-center justify-center text-white">
       <svg viewBox="0 0 20 20" fill="currentColor" className="size-3">
         <path
           fillRule="evenodd"
@@ -63,11 +71,11 @@ function SettingBlock({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-default-medium border-t pt-6">
-      <h3 className="text-heading text-xs font-bold tracking-[0.08em] uppercase">
+    <div className="border-cp-border border-t pt-6">
+      <h3 className="text-cp-fg text-[9px] font-black tracking-[0.16em] uppercase">
         {title}
       </h3>
-      {hint && <p className="text-body mt-1 text-xs">{hint}</p>}
+      {hint && <p className="text-cp-muted mt-1.5 text-[11px]">{hint}</p>}
       <div className="mt-4">{children}</div>
     </div>
   );
@@ -95,8 +103,8 @@ function SwatchGrid({
             onClick={() => onChange(preset)}
             aria-label={preset}
             aria-pressed={selected}
-            className={`border-default-medium relative size-11 cursor-pointer rounded-lg border transition ${
-              selected ? "ring-primary-700 ring-2 ring-offset-2" : ""
+            className={`border-cp-border relative size-11 cursor-pointer rounded-none border transition ${
+              selected ? "outline-cp-fg outline-2 outline-offset-2" : ""
             }`}
             style={{ backgroundColor: preset }}
           >
@@ -106,12 +114,12 @@ function SwatchGrid({
       })}
 
       {/* Custom colour, styled as one more tile rather than a bare input. */}
-      <label className="border-default-medium hover:bg-neutral-secondary-medium relative flex size-11 cursor-pointer items-center justify-center rounded-lg border border-dashed">
+      <label className="border-cp-border hover:bg-cp-surface relative flex size-11 cursor-pointer items-center justify-center rounded-none border border-dashed">
         <span className="sr-only">{name} personnalisée</span>
         <svg
           viewBox="0 0 20 20"
           fill="currentColor"
-          className="text-body size-4"
+          className="text-cp-muted size-4"
         >
           <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
         </svg>
@@ -158,11 +166,13 @@ export default function CardStyleForm({ profile, onSave }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-2">
-      {/* Preview first, as the thing every control below is changing. */}
-      <div className="bg-neutral-secondary-medium border-default-medium flex justify-center rounded-lg border p-6">
+      {/* Preview first, as the thing every control below is changing. One card
+          only: this panel styles the card, so the resting state is what needs
+          checking. The payment state belongs to the salarié space, next to the
+          wording that explains it. The draft is passed explicitly so the
+          preview shows unsaved edits rather than the stored style. */}
+      <div className="bg-cp-surface border-cp-border flex justify-center rounded-none border p-6">
         <div className="w-full max-w-[380px]">
-          {/* The draft is passed explicitly so the preview shows unsaved edits
-              rather than the stored style the card would otherwise read. */}
           <CreditCard3D style={draft} />
         </div>
       </div>
@@ -202,8 +212,8 @@ export default function CardStyleForm({ profile, onSave }: Props) {
                   type="button"
                   onClick={() => set("pattern", pattern.value)}
                   aria-pressed={selected}
-                  className={`border-default-medium relative w-24 cursor-pointer overflow-hidden rounded-lg border text-left transition ${
-                    selected ? "ring-primary-700 ring-2 ring-offset-2" : ""
+                  className={`border-cp-border relative w-24 cursor-pointer overflow-hidden rounded-none border text-left transition ${
+                    selected ? "outline-cp-fg outline-2 outline-offset-2" : ""
                   }`}
                 >
                   {/* Each tile previews its own texture in the chosen colours. */}
@@ -214,7 +224,7 @@ export default function CardStyleForm({ profile, onSave }: Props) {
                       ...patternLayer(pattern.value, draft.text),
                     }}
                   />
-                  <span className="text-body block px-2 py-1.5 text-[11px] font-medium">
+                  <span className="text-cp-fg block px-2 py-1.5 text-[9px] font-black tracking-[0.12em] uppercase">
                     {pattern.label}
                   </span>
                   {selected && <CheckMark />}
@@ -226,21 +236,25 @@ export default function CardStyleForm({ profile, onSave }: Props) {
 
         <SettingBlock title="Effet métallisé">
           <div className="flex flex-wrap items-center gap-4">
-            <RangeSlider
+            {/* A bare range input rather than Flowbite's RangeSlider, which
+                brings a rounded grey track and its own dark variant. */}
+            <input
               id="card-metalness"
-              className="min-w-[220px] flex-1"
+              type="range"
+              aria-label="Effet métallisé"
+              className="accent-cp-accent bg-cp-border h-1 min-w-[220px] flex-1 appearance-none rounded-none"
               min={0}
               max={100}
               step={5}
               value={draft.metalness}
               onChange={(e) => set("metalness", Number(e.target.value))}
             />
-            <span className="text-heading w-12 text-right text-sm font-medium tabular-nums">
+            <span className="text-cp-fg w-12 text-right text-[13px] font-black tabular-nums">
               {draft.metalness}%
             </span>
             <span
               aria-hidden="true"
-              className="border-default-medium h-8 w-20 rounded border"
+              className="border-cp-border h-8 w-20 rounded-none border"
               style={{
                 backgroundColor: draft.color,
                 backgroundImage: `linear-gradient(105deg, transparent 28%, ${hexToRgba(
@@ -250,25 +264,21 @@ export default function CardStyleForm({ profile, onSave }: Props) {
               }}
             />
           </div>
-          <p className="text-body mt-2 text-xs">
+          <p className="text-cp-muted mt-2.5 text-[11px]">
             0 % pour une carte mate, 100 % pour un reflet métallique marqué.
           </p>
         </SettingBlock>
       </div>
 
-      {saved && (
-        <Alert color="success" className="mt-6">
-          Style enregistré.
-        </Alert>
-      )}
+      {saved && <p className={`${NOTE_POSITIVE} mt-7`}>Style enregistré.</p>}
 
-      <div className="border-default-medium mt-6 flex flex-wrap items-center gap-3 border-t pt-6">
-        <Button type="submit" disabled={!dirty}>
+      <div className="border-cp-border mt-7 flex flex-wrap items-center gap-3 border-t pt-7">
+        <button type="submit" disabled={!dirty} className={BTN_SOLID}>
           Enregistrer le style
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          color="light"
+          className={BTN_OUTLINE}
           disabled={!dirty}
           onClick={() => {
             setDraft(profile.cardStyle);
@@ -276,17 +286,17 @@ export default function CardStyleForm({ profile, onSave }: Props) {
           }}
         >
           Annuler
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          color="light"
+          className={BTN_OUTLINE}
           onClick={() => {
             setSaved(false);
             setDraft(DEFAULT_CARD_STYLE);
           }}
         >
           Réinitialiser
-        </Button>
+        </button>
       </div>
     </form>
   );

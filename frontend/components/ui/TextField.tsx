@@ -2,15 +2,24 @@
 
 import type { ComponentProps } from "react";
 
-/** Shared control styling, so every field in the app looks identical. */
-export const LABEL_CLASS = "text-heading mb-2.5 block text-sm font-medium";
+/**
+ * Shared control styling, so every field in the app looks identical — and the
+ * single place the auth dialog and /parametres get their look from.
+ *
+ * Square and flat, to match the rest of the design: a hairline rule that goes
+ * to the full-strength foreground on focus, an uppercase micro-label above,
+ * and no rounding or shadow anywhere.
+ */
+export const LABEL_CLASS =
+  "text-cp-fg mb-2 block text-[9px] font-black tracking-[0.16em] uppercase";
 
 export const INPUT_CLASS =
-  "bg-neutral-secondary-medium border-default-medium text-heading rounded-base focus:ring-brand focus:border-brand shadow-xs placeholder:text-body block w-full border px-3 py-2.5 text-sm";
+  "bg-cp-page border-cp-border text-cp-fg placeholder:text-cp-muted focus:border-cp-fg focus:ring-cp-fg block w-full rounded-none border px-3.5 py-3 text-sm outline-none focus:ring-1";
 
-export const ERROR_CLASS = "text-fg-danger mt-1.5 block text-xs font-medium";
+export const ERROR_CLASS =
+  "text-fg-danger mt-2 block text-[10px] font-black tracking-[0.1em] uppercase";
 
-export const HINT_CLASS = "text-body mt-1.5 block text-xs";
+export const HINT_CLASS = "text-cp-muted mt-2 block text-[11px] leading-[1.45]";
 
 type Props = Omit<
   ComponentProps<"input">,

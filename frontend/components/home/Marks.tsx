@@ -42,6 +42,8 @@ type WordMarkProps = {
   className?: string;
   /** Colour of the shared T. Defaults to the brand accent. */
   tClassName?: string;
+  /** Colour of "icket" and "out". Defaults to the pale step of the ramp. */
+  wordClassName?: string;
   /** For colours that are not known at build time, such as the card's ink. */
   style?: React.CSSProperties;
 };
@@ -51,10 +53,20 @@ type WordMarkProps = {
  * initial of both words at once — "icket" on the upper line, "out" on the
  * lower.
  *
+ * "out" is set larger than "icket" — the word the brand leans on — and tucked
+ * back towards the stem, which the upper line cannot do without running into
+ * the crossbar.
+ *
  * The sizes are in em so the mark scales from whatever font-size the wrapper
- * carries, and the two boxes are matched on purpose: the T is 2.42em tall with
- * 0.76 leading (1.84em of box) against two 0.9em lines (1.8em), which is what
- * lines the letter up with the stack instead of overhanging it.
+ * carries, and the two boxes are matched on purpose: the T is 2.68em tall with
+ * 0.74 leading (1.98em of box) against 0.86em + 1.12em of stacked lines (1.98em
+ * likewise), which is what keeps the letter spanning both lines exactly instead
+ * of overhanging them.
+ *
+ * Two tones: the T takes the deep brand blue and the two words a pale step of
+ * the same ramp. Both flip with the theme — cp-accent is near-black blue on a
+ * light ground and a light blue on a dark one — so the pairing keeps the same
+ * relationship either way rather than inverting into two identical blues.
  *
  * Split across three elements, so the visual parts are hidden from assistive
  * technology and the name is exposed once, in full, instead of being read out
@@ -63,6 +75,7 @@ type WordMarkProps = {
 export function WordMark({
   className = "",
   tClassName = "text-cp-accent",
+  wordClassName = "text-primary-300 dark:text-primary-400",
   style,
 }: WordMarkProps) {
   return (
@@ -72,16 +85,21 @@ export function WordMark({
     >
       <span
         aria-hidden="true"
-        className={`text-[2.42em] leading-[0.76] tracking-[-0.06em] ${tClassName}`}
+        className={`text-[2.68em] leading-[0.74] tracking-[-0.06em] ${tClassName}`}
       >
         T
       </span>
       <span
         aria-hidden="true"
-        className="flex flex-col text-[1em] leading-[0.9] tracking-[-0.05em]"
+        className={`flex flex-col items-start tracking-[-0.05em] ${wordClassName}`}
       >
-        <span>icket</span>
-        <span>out</span>
+        <span className="text-[1em] leading-[0.86]">icket</span>
+        {/* Tucked back under the crossbar: nothing overhangs the lower line, so
+            "out" can sit against the stem where "icket" cannot. The offset is
+            in this span's own em — 1.44 of the wrapper's — so -0.35em here is
+            roughly half a wrapper em to the left, landing just clear of the
+            stem's right edge. */}
+        <span className="-ml-[0.35em] text-[1.44em] leading-[0.78]">out</span>
       </span>
       <span className="sr-only">Ticket Tout</span>
     </span>
