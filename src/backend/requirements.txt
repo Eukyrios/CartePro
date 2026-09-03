@@ -1,0 +1,13 @@
+Flask
+Flask-JWT-Extended
+PyJWT
+qrcode[pil]
+python-dotenv
+pyOpenSSL
+Flask-Talisman
+Flask-CORS
+Faker
+pytest
+Flask-SQLAlchemy
+Flask-Login
+Werkzeug
