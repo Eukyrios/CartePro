@@ -1,6 +1,6 @@
 "use client";
 
-import { LogoMark } from "./Marks";
+import { LogoMark, WordMark } from "./Marks";
 import {
   DEFAULT_CARD_STYLE,
   useAccount,
@@ -113,9 +113,9 @@ export default function CreditCard3D({ style }: { style?: CardStyle }) {
                 style={{ backgroundColor: card.text }}
                 barStyle={{ backgroundColor: card.color }}
               />
-              <span className="text-[2.9cqw] font-black tracking-[0.14em]">
-                CARTEPRO
-              </span>
+              {/* The card's ink is chosen by the employé, so the shared T
+                  follows it rather than the brand accent. */}
+              <WordMark className="text-[2.9cqw]" tClassName="text-inherit" />
             </div>
             <div className="text-[12cqw] leading-none opacity-10">❁</div>
           </div>

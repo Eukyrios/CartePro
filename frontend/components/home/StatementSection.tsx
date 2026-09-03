@@ -12,7 +12,7 @@ export default function StatementSection() {
       </div>
 
       <p className="m-0 max-w-[850px] text-[clamp(22px,3vw,38px)] leading-[1.08] tracking-[-0.045em]">
-        CartePro transforme une aide employeur en une expérience simple :{" "}
+        Ticket Tout transforme une aide employeur en une expérience simple :{" "}
         <strong className="font-black">
           un solde clair, des choix libres, des partenaires identifiés.
         </strong>

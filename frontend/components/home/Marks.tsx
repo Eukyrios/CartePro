@@ -1,5 +1,5 @@
 /**
- * The two recurring graphic marks of the CartePro design: the skewed logo glyph
+ * The recurring graphic marks of the Ticket Tout design: the skewed logo glyph
  * and the diagonal arrow that trails every call to action. Both are pure
  * decoration, so both are hidden from assistive technology.
  */
@@ -13,7 +13,7 @@ type LogoMarkProps = {
   barStyle?: React.CSSProperties;
 };
 
-/** Three skewed bars in a skewed square — the CartePro monogram. */
+/** Three skewed bars in a skewed square — the Ticket Tout monogram. */
 export function LogoMark({
   className = "size-7 bg-primary-700",
   barClassName = "bg-white",
@@ -33,6 +33,57 @@ export function LogoMark({
           className={`block h-[15px] w-[3px] -skew-y-[25deg] ${barClassName}`}
         />
       ))}
+    </span>
+  );
+}
+
+type WordMarkProps = {
+  /** Wrapper classes. The whole mark is sized in em, so set the type size here. */
+  className?: string;
+  /** Colour of the shared T. Defaults to the brand accent. */
+  tClassName?: string;
+  /** For colours that are not known at build time, such as the card's ink. */
+  style?: React.CSSProperties;
+};
+
+/**
+ * The "Ticket Tout" wordmark: one oversized T, two lines tall, serving as the
+ * initial of both words at once — "icket" on the upper line, "out" on the
+ * lower.
+ *
+ * The sizes are in em so the mark scales from whatever font-size the wrapper
+ * carries, and the two boxes are matched on purpose: the T is 2.42em tall with
+ * 0.76 leading (1.84em of box) against two 0.9em lines (1.8em), which is what
+ * lines the letter up with the stack instead of overhanging it.
+ *
+ * Split across three elements, so the visual parts are hidden from assistive
+ * technology and the name is exposed once, in full, instead of being read out
+ * as "T icket out".
+ */
+export function WordMark({
+  className = "",
+  tClassName = "text-cp-accent",
+  style,
+}: WordMarkProps) {
+  return (
+    <span
+      style={style}
+      className={`inline-flex items-center gap-[0.06em] font-black ${className}`}
+    >
+      <span
+        aria-hidden="true"
+        className={`text-[2.42em] leading-[0.76] tracking-[-0.06em] ${tClassName}`}
+      >
+        T
+      </span>
+      <span
+        aria-hidden="true"
+        className="flex flex-col text-[1em] leading-[0.9] tracking-[-0.05em]"
+      >
+        <span>icket</span>
+        <span>out</span>
+      </span>
+      <span className="sr-only">Ticket Tout</span>
     </span>
   );
 }

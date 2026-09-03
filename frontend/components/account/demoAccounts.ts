@@ -3,7 +3,7 @@ import type { Profile } from "./AccountProvider";
 
 /**
  * Demonstration accounts shipped in the build's starting data: one per type of
- * user, filled in as if the person had been using CartePro for a while, so the
+ * user, filled in as if the person had been using Ticket Tout for a while, so the
  * app can be opened and shown without registering anything first.
  *
  * The type is imported for its shape only, so this module stays plain data with
@@ -30,7 +30,7 @@ const EMPLOYEE: DemoAccount = {
   profile: {
     audience: "employee",
     username: "Camille Fontaine",
-    email: "employe@cartepro.fr",
+    email: "employe@tickettout.fr",
     /* An employé has no establishment behind them, so the partner block stays
        empty — the settings page only renders the fields of its own audience. */
     partner: {
@@ -63,7 +63,7 @@ const PARTNER: DemoAccount = {
   profile: {
     audience: "partner",
     username: "Chapelier Fontaine",
-    email: "partenaire@cartepro.fr",
+    email: "partenaire@tickettout.fr",
     partner: {
       raisonSociale: "Chapelier Fontaine",
       siren: "404833048",

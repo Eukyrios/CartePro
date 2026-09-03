@@ -5,7 +5,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * CartePro brand ramp, built around the maquette's #1B3A6B and deliberately
+ * Ticket Tout brand ramp, built around the maquette's #1B3A6B and deliberately
  * overriding Flowbite's own `primary`: its Button, Navbar and link themes all
  * resolve to primary-700/800, so redefining the ramp here brands every
  * Flowbite component at once instead of overriding className by className.

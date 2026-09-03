@@ -17,7 +17,7 @@ export default function HeroSection() {
       {/* Vertical rail. Sideways text has no mobile equivalent, so it is
           dropped there exactly as the original does. */}
       <div className="border-cp-border hidden items-center justify-between border-r px-3.5 py-6 text-[8px] font-black tracking-[0.14em] [writing-mode:vertical-rl] lg:flex">
-        <span>CARTEPRO / 2026</span>
+        <span>TICKET TOUT / 2026</span>
         <span>FRANCE</span>
       </div>
 
@@ -38,7 +38,7 @@ export default function HeroSection() {
 
           <p className="mt-8 mb-0 max-w-[420px] text-sm leading-[1.55]">
             Un crédit mis à disposition par votre employeur, à utiliser chez les
-            partenaires CartePro.
+            partenaires Ticket Tout.
           </p>
         </div>
       </div>

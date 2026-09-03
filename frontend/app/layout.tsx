@@ -7,8 +7,9 @@ import TopBar from "@/components/layout/TopBar";
 import AccountProvider from "@/components/account/AccountProvider";
 
 export const metadata: Metadata = {
-  title: "CartePro",
-  description: "CartePro — le crédit salarié à utiliser chez vos partenaires",
+  title: "Ticket Tout",
+  description:
+    "Ticket Tout — le crédit salarié à utiliser chez vos partenaires",
   // Vector icon so browsers get the crisp ticket; app/favicon.ico stays as the
   // legacy fallback for clients that only request /favicon.ico.
   icons: {

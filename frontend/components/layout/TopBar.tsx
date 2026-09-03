@@ -6,7 +6,7 @@ import { DarkThemeToggle, Navbar, NavbarBrand } from "flowbite-react";
 import AuthButtons from "@/components/auth/AuthButtons";
 import AuthModal from "@/components/auth/AuthModal";
 import UserMenu from "./UserMenu";
-import { LogoMark } from "@/components/home/Marks";
+import { LogoMark, WordMark } from "@/components/home/Marks";
 import {
   displayNameOf,
   useAccount,
@@ -69,9 +69,7 @@ export default function TopBar({ onLogin, onLogout }: Props) {
           className="text-cp-fg gap-2.5 text-[17px] font-black tracking-[-0.07em]"
         >
           <LogoMark />
-          <span>
-            CARTE<span className="text-cp-accent">PRO</span>
-          </span>
+          <WordMark />
         </NavbarBrand>
 
         <div className="flex items-center gap-4 lg:order-3 lg:gap-[22px]">

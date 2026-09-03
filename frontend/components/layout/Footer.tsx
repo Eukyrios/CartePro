@@ -5,7 +5,7 @@ import {
   FooterLink,
   FooterLinkGroup,
 } from "flowbite-react";
-import { LogoMark } from "@/components/home/Marks";
+import { LogoMark, WordMark } from "@/components/home/Marks";
 
 /**
  * TODO: the links are placeholders — point them at the real contact and legal
@@ -37,7 +37,10 @@ export default function Footer() {
           className="flex items-center gap-2.5 text-[18px] font-black tracking-[-0.07em] text-white"
         >
           <LogoMark className="size-7 bg-white" barClassName="bg-cp-ink" />
-          <span>CARTEPRO</span>
+          {/* The brand accent is near-black in the light palette, which the
+              always-black footer would swallow, so the T takes a light step of
+              the same ramp. */}
+          <WordMark tClassName="text-primary-300" />
         </Link>
 
         <div className="max-w-[250px] text-[11px] leading-[1.5]">
