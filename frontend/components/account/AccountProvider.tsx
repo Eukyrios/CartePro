@@ -14,6 +14,7 @@ import type {
   AuthSubmitPayload,
 } from "@/components/auth/AuthModal";
 import type { PartnerFields } from "@/components/auth/SignupPartnerFields";
+import { findDemoAccount } from "./demoAccounts";
 
 /** Background texture printed on the card. */
 export type CardPattern = "none" | "waves" | "dots" | "grid";
@@ -133,9 +134,21 @@ export default function AccountProvider({
 
   const signIn = useCallback(
     (payload: AuthSubmitPayload) => {
+      const { audience, mode, username, email, password, partner } = payload;
+
+      // A demonstration account signs in to its seeded profile, filled in and
+      // ready to show. Everything else falls through to the mock below, which
+      // still accepts any credentials until the backend exists.
+      if (mode === "login") {
+        const demo = findDemoAccount(email, password);
+        if (demo) {
+          persist(demo.profile);
+          return;
+        }
+      }
+
       // Signing in carries no partner details, so those stay empty until the
       // backend can supply them; the settings page is what fills them in.
-      const { audience, mode, username, email, partner } = payload;
       persist({
         audience,
         username:

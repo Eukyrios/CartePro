@@ -13,7 +13,7 @@ env:
 
 jobs:
   frontend:
-    name: Check frontend build
+    name: Build frontend and publish the artifact
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -35,6 +35,36 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # `output: "standalone"` writes the server plus only the node_modules it
+      # traced, but deliberately leaves out .next/static and public — Next
+      # expects a CDN to serve those, so a runnable bundle has to add them back.
+      - name: Assemble the runnable bundle
+        run: |
+          set -euo pipefail
+          BUNDLE="$RUNNER_TEMP/cartepro"
+          mkdir -p "$BUNDLE"
+          cp -r .next/standalone/. "$BUNDLE"/
+          cp -r .next/static "$BUNDLE"/.next/static
+          cp -r public "$BUNDLE"/public
+          cp ../.github/artifact/RUN.md "$BUNDLE"/RUN.md
+          # Stamp the commit the bundle was built from, so the download can be
+          # matched to a revision without reading the run.
+          printf '\n---\n\nCommit `%s` — construit le %s.\n' \
+            "$GITHUB_SHA" "$(date -u '+%Y-%m-%d %H:%M UTC')" >> "$BUNDLE"/RUN.md
+          node -e "require('fs').accessSync('$BUNDLE/server.js')"
+          du -sh "$BUNDLE"
+
+      # The bundle is what gets demonstrated, so it is published from every
+      # build: an artifact only exists on the run that uploaded it.
+      - name: Publish the build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cartepro-app
+          # Absolute: the job's working-directory applies to `run` steps only.
+          path: ${{ runner.temp }}/cartepro
+          if-no-files-found: error
+          retention-days: 30
 
   mirror:
     if: github.repository == 'Eukyrios/CartePro' && github.ref == 'refs/heads/main'

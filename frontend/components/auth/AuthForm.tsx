@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { demoAccountFor } from "@/components/account/demoAccounts";
 import SigninFields from "./SigninFields";
 import SignupClientFields from "./SignupClientFields";
 import SignupPartnerFields from "./SignupPartnerFields";
@@ -46,6 +47,10 @@ export default function AuthForm({
 }: Props) {
   const { values, setValue } = form;
 
+  // The demonstration account for this tab, offered on sign-in only: there is
+  // one per audience, and registering does not need it.
+  const demo = mode === "login" ? demoAccountFor(audience) : null;
+
   return (
     <form onSubmit={onSubmit}>
       <h5 className="text-heading mb-6 text-xl font-semibold">
@@ -58,6 +63,26 @@ export default function AuthForm({
         <SignupPartnerFields form={form} />
       ) : (
         <SignupClientFields form={form} />
+      )}
+
+      {demo && (
+        <div className="border-default bg-neutral-secondary-medium rounded-base mt-4 border p-3">
+          <p className="text-heading text-xs font-semibold">{demo.label}</p>
+          <p className="text-body mt-1 font-mono text-xs break-all">
+            {demo.profile.email} · {demo.password}
+          </p>
+          {/* One tap on a tablet beats typing a password into a demo. */}
+          <button
+            type="button"
+            onClick={() => {
+              setValue("email", demo.profile.email);
+              setValue("password", demo.password);
+            }}
+            className="text-fg-brand mt-2 text-xs font-medium hover:underline"
+          >
+            Remplir ces identifiants
+          </button>
+        </div>
       )}
 
       <div className="my-6 flex items-start">
