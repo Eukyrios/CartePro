@@ -4,14 +4,22 @@ import jwt
 import qrcode
 import io
 import base64
+import os
+from models import User
 
 salaries_bp = Blueprint('salaries', __name__)
-SECRET_KEY = "cle_secrete_partagee_avec_le_mate" # À déplacer dans config.py ou .env
+SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-en-dev")
 
 @salaries_bp.route('/<int:user_id>/solde', methods=['GET'])
 def get_solde_positif(user_id):
-    # TODO: Ton mate liera ça à sa requête DB
-    solde_brut = 32.50 
+    # 1. On cherche le salarié dans la base de données
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({"status": "error", "message": "Utilisateur introuvable"}), 404
+        
+    # 2. On récupère son vrai solde
+    solde_brut = user.solde 
     
     return jsonify({
         "status": "success",
