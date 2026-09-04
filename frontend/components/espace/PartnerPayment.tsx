@@ -5,14 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CardStage from "@/components/home/CardStage";
 import CreditCard3D from "@/components/home/CreditCard3D";
-import {
-  balanceCents,
-  cancelToken,
-  formatEuros,
-  issueToken,
-  payWithToken,
-  tokenState,
-} from "@/components/data/ledger";
+import { formatEuros } from "@/components/data/ledger";
+import { api } from "@/lib/api";
+import { useAccount } from "@/components/account/AccountProvider";
 import { partnerCategoryLabel } from "@/components/data/partnerCategories";
 import PartnerPhoto from "@/components/partners/PartnerPhoto";
 import {
@@ -24,7 +19,6 @@ import {
   SIMULATION_NOTICE,
 } from "@/components/ui/surfaces";
 import TokenQr from "./TokenQr";
-import { useLedger } from "./useLedger";
 import type { Partner } from "@/components/data/partners";
 
 function mmss(msLeft: number) {
@@ -53,23 +47,23 @@ function mmss(msLeft: number) {
  */
 export default function PartnerPayment({ partner }: { partner: Partner }) {
   const router = useRouter();
-  const ledger = useLedger();
-  const balance = balanceCents(ledger);
-  const token = ledger.token;
+  const { profile, refreshAccount } = useAccount();
+  const balance = profile?.balanceCents ?? 0;
+  const [token, setToken] = useState<{ id: string; raw: string; expiresAt: number } | null>(null);
 
   const [refusal, setRefusal] = useState<string | null>(null);
   const [paid, setPaid] = useState<string | null>(null);
   // The token expiring is a change on screen, so a clock has to drive it.
   const [now, setNow] = useState(() => Date.now());
 
-  const status = tokenState(token, now);
+  const status = !token ? "none" : now >= token.expiresAt ? "expired" : "active";
   /* Judged before the press as well as inside the ledger: a button that can
      only ever be refused should say so rather than look broken when nothing
      happens. The ledger still has the last word — the balance can change
      between this render and the click. */
   const affordable = partner.amountCents <= balance;
   // A token issued for another partner is not this page's business.
-  const mine = token?.amountCents === partner.amountCents ? status : "none";
+  const mine = token ? status : "none";
 
   useEffect(() => {
     if (status !== "active") return;
@@ -77,36 +71,33 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
     return () => window.clearInterval(id);
   }, [status]);
 
-  // A token belongs to the visit that issued it: leaving must not leave a
-  // valid code behind.
-  useEffect(
-    () => () => {
-      if (tokenState(ledger.token) === "active") cancelToken();
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  function generate() {
+  async function generate() {
     setPaid(null);
-    const result = issueToken(partner.amountCents);
-    setRefusal(result.ok ? null : result.reason);
-    setNow(Date.now());
+    try {
+      const result = await api<{ raw_token_for_testing: string; expiration: string }>("/api/salaries/paiement/qr", { method: "POST" });
+      setToken({ id: result.raw_token_for_testing.slice(-16), raw: result.raw_token_for_testing, expiresAt: Date.parse(result.expiration) });
+      setRefusal(null);
+      setNow(Date.now());
+    } catch (error) {
+      setRefusal(error instanceof Error ? error.message : "Impossible de générer le QR.");
+    }
   }
 
-  function pay() {
+  async function pay() {
     if (!token) return;
-    const result = payWithToken(token.id, {
-      id: partner.id,
-      name: partner.name,
-    });
-    if (result.ok) {
+    try {
+      const result = await api<{ details: { nouveau_solde_salarie: number } }>("/api/transactions/valider", {
+        method: "POST",
+        body: JSON.stringify({ qr_token: token.raw, montant: partner.amountCents / 100, partenaire_id: partner.id }),
+      });
+      await refreshAccount();
+      setToken(null);
       setPaid(
-        `${formatEuros(result.transaction.amountCents)} chez ${partner.name}. Solde mis à jour.`,
+        `${formatEuros(partner.amountCents)} chez ${partner.name}. Solde mis à jour.`,
       );
       setRefusal(null);
-    } else {
-      setRefusal(result.reason);
+    } catch (error) {
+      setRefusal(error instanceof Error ? error.message : "Le paiement a échoué.");
       setPaid(null);
     }
   }
@@ -201,7 +192,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
           <div className="border-t-cp-fg mt-6 grid items-start gap-6 border-t-2 pt-5 sm:grid-cols-[minmax(0,1fr)_170px]">
             <div>
               <p className={SIMULATION_NOTICE}>
-                Simulation — ce QR ne débite rien de réel
+                Paiement réel enregistré en base de données
               </p>
 
               {/* The partner's price, stated rather than asked for. */}
@@ -266,7 +257,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
                   className="border-cp-border bg-cp-page aspect-square w-full rounded-2xl border bg-[linear-gradient(to_right,rgba(27,58,107,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(27,58,107,0.10)_1px,transparent_1px)] bg-[length:14px_14px] dark:bg-[linear-gradient(to_right,rgba(234,240,251,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,240,251,0.12)_1px,transparent_1px)]"
                 />
               ) : (
-                <TokenQr tokenId={token!.id} dimmed={mine !== "active"} />
+                    <TokenQr tokenId={token!.id} dimmed={mine !== "active"} />
               )}
               <p className={`text-cp-fg mt-3 min-h-[2.4em] ${MICRO}`}>
                 {mine === "none" && "En attente du QR"}

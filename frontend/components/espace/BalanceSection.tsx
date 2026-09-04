@@ -1,9 +1,9 @@
 "use client";
 
 import CreditCard3D from "@/components/home/CreditCard3D";
-import { balanceCents, formatEuros } from "@/components/data/ledger";
+import { formatEuros } from "@/components/data/ledger";
 import { SIMULATION_NOTICE } from "@/components/ui/surfaces";
-import { useLedger } from "./useLedger";
+import { useAccount } from "@/components/account/AccountProvider";
 
 /**
  * The first screen of the space: the greeting, the card, and what there is
@@ -17,8 +17,8 @@ import { useLedger } from "./useLedger";
  * The simulation notice is here in the open, because a monetary value is.
  */
 export default function BalanceSection({ firstName }: { firstName: string }) {
-  const ledger = useLedger();
-  const balance = balanceCents(ledger);
+  const { profile } = useAccount();
+  const balance = profile?.balanceCents ?? 0;
 
   return (
     <section
