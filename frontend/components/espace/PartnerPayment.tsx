@@ -86,7 +86,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
   async function pay() {
     if (!token) return;
     try {
-      const result = await api<{ details: { nouveau_solde_salarie: number } }>("/api/transactions/valider", {
+      await api<{ details: { nouveau_solde_salarie: number } }>("/api/transactions/valider", {
         method: "POST",
         body: JSON.stringify({ qr_token: token.raw, montant: partner.amountCents / 100, partenaire_id: partner.id }),
       });
