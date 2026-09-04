@@ -16,9 +16,13 @@ def catalogue():
         data_json = p.partner_data if isinstance(p.partner_data, dict) else {}
         
         catalogue.append({
-            "id": p.id,
+            "id": str(p.id),
             "nom": p.company_name or p.username or "Partenaire sans nom",
             "secteur": data_json.get("secteur", "Non défini"),
+            "adresse": data_json.get("adresse", ""),
+            "ville": data_json.get("ville", ""),
+            "codePostal": data_json.get("codePostal", ""),
+            "amountCents": int(data_json.get("amountCents", 0) or 0),
             "featured": data_json.get("featured", False)
         })
         

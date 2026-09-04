@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from sqlalchemy import inspect, text
 import os
@@ -24,6 +25,7 @@ from routes.transactions import transactions_bp
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     
     # Configuration globale (Fusion de vos deux environnements)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-en-dev")

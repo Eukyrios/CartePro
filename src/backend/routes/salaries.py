@@ -5,17 +5,19 @@ import qrcode
 import io
 import base64
 import os
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from models import User
 
 salaries_bp = Blueprint('salaries', __name__)
 SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-en-dev")
 
 @salaries_bp.route('/<int:user_id>/solde', methods=['GET'])
+@jwt_required()
 def get_solde_positif(user_id):
     # 1. On cherche le salarié dans la base de données
     user = User.query.get(user_id)
     
-    if not user:
+    if not user or user.id != int(get_jwt_identity()):
         return jsonify({"status": "error", "message": "Utilisateur introuvable"}), 404
         
     # 2. On récupère son vrai solde
@@ -28,9 +30,9 @@ def get_solde_positif(user_id):
     }), 200
 
 @salaries_bp.route('/paiement/qr', methods=['POST'])
+@jwt_required()
 def generer_qr_code():
-    data = request.json
-    user_id = data.get('user_id')
+    user_id = int(get_jwt_identity())
     
     # Expiration fixée à 30 minutes
     payload = {
@@ -53,5 +55,5 @@ def generer_qr_code():
         "status": "success",
         "qr_image_base64": qr_b64,
         "raw_token_for_testing": token,
-        "expiration": "30 minutes"
+        "expiration": (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
     }), 201
