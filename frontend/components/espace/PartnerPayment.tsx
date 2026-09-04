@@ -264,7 +264,6 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
                 {mine === "active" && (
                   <>Valable {mmss(token!.expiresAt - now)} — usage unique</>
                 )}
-                {mine === "used" && "QR déjà utilisé"}
                 {mine === "expired" && "QR expiré"}
               </p>
             </div>

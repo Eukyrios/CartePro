@@ -80,23 +80,6 @@ const AccountContext = createContext<Account | null>(null);
  */
 const STORAGE_KEY = "ticket-tout.profile";
 
-function readStored(): Profile | null {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const stored = JSON.parse(raw) as Profile;
-    // A session stored before the card style existed has no `cardStyle`, and a
-    // partially written one may miss individual keys.
-    return {
-      ...stored,
-      cardStyle: { ...DEFAULT_CARD_STYLE, ...(stored.cardStyle ?? {}) },
-    };
-  } catch {
-    // Private windows and browsers set to block site data throw on access.
-    return null;
-  }
-}
-
 function writeStored(profile: Profile | null) {
   try {
     if (profile) {
