@@ -1,31 +1,38 @@
 #!/bin/bash
 
+# Ce que `make dev` exécute : le back et le front ensemble, arrêtés ensemble.
+#
+# Chaque serveur démarre dans un sous-shell, depuis un chemin calculé à partir
+# de l'emplacement de ce script. La version précédente enchaînait des `cd`
+# relatifs suivis de `cd ../..` : le jour où le backend est passé de
+# `src/backend` à `backend/`, ce retour remontait d'un cran de trop, le `cd
+# frontend` échouait sans bruit, et `npm run dev` s'exécutait dans le dossier
+# parent du dépôt — d'où un « Missing script: dev » incompréhensible.
+set -u
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Intercepte le Ctrl+C pour couper proprement les processus enfants
 trap "echo -e '\n Arrêt des serveurs...'; kill 0" SIGINT
 
-echo "Démarrage du Backend ..."
-cd src/backend
 # L'interpréteur du venv, appelé par son chemin. Et surtout : on s'arrête ici
-# si aucun venv n'existe. La version précédente avalait l'échec avec un
+# si aucun venv n'existe. Une version plus ancienne avalait l'échec avec un
 # 2>/dev/null, lançait le python système sans Flask, et le backend mourait sur
 # un ModuleNotFoundError perdu dans les logs du front — l'interface se
 # contentant d'afficher « La requête a échoué » sur chaque appel d'API.
-if [ -x .venv-1/bin/python ]; then
-  BACKEND_PY=.venv-1/bin/python
-elif [ -x venv/bin/python ]; then
-  BACKEND_PY=venv/bin/python
+if [ -x "$ROOT/backend/.venv-1/bin/python" ]; then
+  BACKEND_PY="$ROOT/backend/.venv-1/bin/python"
+elif [ -x "$ROOT/backend/venv/bin/python" ]; then
+  BACKEND_PY="$ROOT/backend/venv/bin/python"
 else
   echo "Aucun environnement Python : lancez 'make install' d'abord." >&2
   exit 1
 fi
-"$BACKEND_PY" app.py &
-cd ../..
+
+echo "Démarrage du Backend ..."
+(cd "$ROOT/backend" && "$BACKEND_PY" app.py) &
 
 echo "Démarrage du Frontend..."
-# ATTENTION : Ajuste "src/frontend" si ton dossier front a un autre nom
-cd frontend 
-npm run dev &
-cd ../..
+(cd "$ROOT/frontend" && npm run dev) &
 
 echo "========================================="
 echo "Projet Ticket Tout en ligne !"

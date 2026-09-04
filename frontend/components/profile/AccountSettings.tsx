@@ -10,16 +10,15 @@ import {
   displayNameOf,
   useAccount,
 } from "@/components/account/AccountProvider";
-import {
-  BTN_OUTLINE,
-  CHIP_OFFICIAL,
-  CHIP_PLAIN,
-  MICRO,
-  NOTE_INFO,
-  PANEL,
-  PANEL_HEADING,
-  PANEL_LEAD,
-} from "@/components/ui/surfaces";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Button from "@/components/ui/Button";
+import Chip from "@/components/ui/Chip";
+import Display from "@/components/ui/Display";
+import EmptyState from "@/components/ui/EmptyState";
+import IdentityStrip from "@/components/ui/IdentityStrip";
+import Note from "@/components/ui/Note";
+import Panel from "@/components/ui/Panel";
+import { MICRO } from "@/components/ui/surfaces";
 import type { ComponentProps, FC } from "react";
 
 const UserIcon: FC<ComponentProps<"svg">> = (props) => (
@@ -106,22 +105,18 @@ export default function AccountSettings() {
   // The stored session is only readable after mount, so hold the page back
   // rather than flashing the signed-out prompt at someone who is signed in.
   if (!ready) {
-    return (
-      <p className={`text-cp-muted py-24 text-center ${MICRO}`}>
-        Chargement du compte…
-      </p>
-    );
+    return <EmptyState variant="page">Chargement du compte…</EmptyState>;
   }
 
   if (!profile) {
     return (
-      <div className={NOTE_INFO}>
+      <Note as="div">
         <strong className="font-black">Connexion requise.</strong> Connecte-toi
         pour accéder aux paramètres de ton compte.{" "}
         <Link href="/" className="font-black underline underline-offset-4">
           Retour à l&apos;accueil
         </Link>
-      </div>
+      </Note>
     );
   }
 
@@ -151,59 +146,35 @@ export default function AccountSettings() {
 
   return (
     <>
-      {/* The trail reads like the hero's meta rows: micro-type, accent slash. */}
-      <nav aria-label="Fil d'Ariane" className={`mb-9 flex gap-2 ${MICRO}`}>
-        <Link href="/" className="text-cp-muted hover:text-cp-fg">
-          Accueil
-        </Link>
-        <span className="text-cp-accent" aria-hidden="true">
-          /
-        </span>
-        <span className="text-cp-fg">Paramètres</span>
-      </nav>
+      <Breadcrumb
+        trail={[{ label: "Accueil", href: "/" }, { label: "Paramètres" }]}
+        className="mb-9"
+      />
 
-      <h1 className="mb-5 text-[clamp(38px,5.4vw,64px)] leading-[0.84] font-black tracking-[-0.07em]">
+      <Display level={1} accent="du compte." className="mb-5">
         Paramètres
-        <br />
-        <em className="text-cp-accent font-serif font-normal">du compte.</em>
-      </h1>
+      </Display>
       <p className="text-cp-muted mb-10 max-w-[520px] text-sm leading-[1.55]">
         {isPartner
           ? "Gère les informations de ton entreprise et ton compte."
           : "Gère les informations de ton profil et ton compte."}
       </p>
 
-      {/* Identity strip: rules above and below rather than a floating card, so
-          it reads as part of the page's grid. */}
-      <div className="border-t-cp-fg border-b-cp-border mb-10 flex flex-wrap items-center gap-5 border-t-2 border-b py-5">
-        <span
-          aria-hidden="true"
-          className="bg-cp-accent flex size-11 shrink-0 items-center justify-center rounded-full text-[16px] font-black text-white"
-        >
-          {displayNameOf(profile).charAt(0).toUpperCase()}
-        </span>
-        <div className="min-w-0">
-          <div className="text-cp-fg truncate text-[15px] font-black tracking-[-0.03em]">
-            {displayNameOf(profile)}
-          </div>
-          <div className="text-cp-muted truncate text-[12px]">
-            {profile.email}
-          </div>
-        </div>
-        {/* Deux pastilles distinctes, et c'est délibéré : le type de compte est
-            un fait neutre, le conventionnement est un statut que le Ministère
-            accorde. Les confondre — comme le faisait la pastille ochre unique —
-            revenait à décorer tout compte partenaire d'un label officiel qu'il
-            n'a peut-être pas. */}
-        <span className={`ms-auto ${CHIP_PLAIN}`}>
-          {isPartner ? "Partenaire" : "Employé"}
-        </span>
+      {/* Deux pastilles distinctes, et c'est délibéré : le type de compte est
+          un fait neutre, le conventionnement est un statut que le Ministère
+          accorde. Les confondre — comme le faisait la pastille ochre unique —
+          revenait à décorer tout compte partenaire d'un label officiel qu'il
+          n'a peut-être pas. */}
+      <IdentityStrip
+        name={displayNameOf(profile)}
+        email={profile.email}
+        className="mb-10"
+      >
+        <Chip className="ms-auto">{isPartner ? "Partenaire" : "Employé"}</Chip>
         {official && (
-          <span className={CHIP_OFFICIAL}>
-            Partenaire Officiel du Ministère
-          </span>
+          <Chip tone="official">Partenaire Officiel du Ministère</Chip>
         )}
-      </div>
+      </IdentityStrip>
 
       <div className="flex flex-col gap-8 md:flex-row md:items-start">
         <nav
@@ -217,7 +188,9 @@ export default function AccountSettings() {
                 <li key={entry.id}>
                   <button
                     type="button"
-                    aria-current={active ? "page" : undefined}
+                    /* "true" et non "page" : commuter un panneau ne change pas
+                       de document, et le rail de sections dit déjà "true". */
+                    aria-current={active ? "true" : undefined}
                     onClick={() => setSection(entry.id)}
                     className={`border-cp-border flex w-full cursor-pointer items-center gap-3 border-b py-3.5 text-left ${MICRO} ${
                       active
@@ -244,42 +217,50 @@ export default function AccountSettings() {
 
         <div className="min-w-0 flex-1">
           {shown === "profil" && (
-            <section className={PANEL}>
-              <h2 className={PANEL_HEADING}>{profileTitle}</h2>
+            <Panel as="section">
+              <Display level={2} scale="panel">
+                {profileTitle}
+              </Display>
               <ProfileForm profile={profile} onSave={updateProfile} />
-            </section>
+            </Panel>
           )}
 
           {shown === "style" && (
-            <section className={PANEL}>
-              <h2 className={PANEL_HEADING}>Style de la carte</h2>
-              <p className={PANEL_LEAD}>
+            <Panel as="section">
+              <Display level={2} scale="panel">
+                Style de la carte
+              </Display>
+              <Panel.Lead>
                 Personnalise la carte affichée sur ton espace : couleur, motif,
                 texte et effet métallisé.
-              </p>
+              </Panel.Lead>
               <CardStyleForm profile={profile} onSave={updateProfile} />
-            </section>
+            </Panel>
           )}
 
           {shown === "securite" && (
-            <section className={PANEL}>
-              <h2 className={PANEL_HEADING}>Connexion et sécurité</h2>
-              <p className={PANEL_LEAD}>
+            <Panel as="section">
+              <Display level={2} scale="panel">
+                Connexion et sécurité
+              </Display>
+              <Panel.Lead>
                 L&apos;adresse email sert d&apos;identifiant de connexion et se
                 modifie depuis «&nbsp;{profileTitle}&nbsp;». Le changement de
                 mot de passe arrivera avec le backend.
-              </p>
-              <button type="button" disabled className={`${BTN_OUTLINE} mt-7`}>
+              </Panel.Lead>
+              <Button disabled className="mt-7">
                 Changer le mot de passe
-              </button>
-            </section>
+              </Button>
+            </Panel>
           )}
 
           {shown === "danger" && (
-            <section className={PANEL}>
-              <h2 className={PANEL_HEADING}>Zone de danger</h2>
+            <Panel as="section">
+              <Display level={2} scale="panel">
+                Zone de danger
+              </Display>
               <DeleteAccountCard onConfirm={deleteAccount} />
-            </section>
+            </Panel>
           )}
         </div>
       </div>

@@ -6,8 +6,8 @@
 # python. Activer un venv ne sert de toute façon à rien quand on appelle son
 # python directement.
 BACKEND_PY := $(firstword $(wildcard \
-	$(CURDIR)/src/backend/venv/bin/python \
-	$(CURDIR)/src/backend/.venv-1/bin/python) python3)
+	$(CURDIR)/backend/venv/bin/python \
+	$(CURDIR)/backend/.venv-1/bin/python) python3)
 
 # Lance le front et le back en même temps
 dev:
@@ -17,9 +17,9 @@ dev:
 # dépendances du front. À lancer une fois, avant `make dev`.
 install:
 	@echo "🐍 Environnement Python du backend..."
-	@cd src/backend && python3 -m venv venv
-	@src/backend/venv/bin/pip install --quiet --upgrade pip
-	@src/backend/venv/bin/pip install --quiet -r src/backend/requirements.txt
+	@cd backend && python3 -m venv venv
+	@backend/venv/bin/pip install --quiet --upgrade pip
+	@backend/venv/bin/pip install --quiet -r backend/requirements.txt
 	@echo "📦 Dépendances du frontend..."
 	@cd frontend && npm ci
 	@echo "✅ Prêt : make dev"
@@ -29,7 +29,7 @@ install:
 # l'interface est effacé. À passer avant de se créer un compte, pas après.
 seed:
 	@echo "🌱 Génération du jeu de données..."
-	@cd src/backend && $(BACKEND_PY) seed.py
+	@cd backend && $(BACKEND_PY) seed.py
 
 # (Optionnel) Nettoie les fichiers temporaires
 clean:

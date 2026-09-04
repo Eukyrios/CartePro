@@ -1,5 +1,6 @@
 "use client";
 
+import { MICRO } from "./surfaces";
 import type { ComponentProps } from "react";
 
 /**
@@ -10,8 +11,9 @@ import type { ComponentProps } from "react";
  * to the full-strength foreground on focus, an uppercase micro-label above,
  * and no rounding or shadow anywhere.
  */
-export const LABEL_CLASS =
-  "text-cp-fg mb-2 block text-[9px] font-black tracking-[0.16em] uppercase";
+/* Bâti sur MICRO, et non recopié : c'était la même recette moins `font-sans`,
+   donc le libellé prenait la serif dans tout élément qui l'hérite. */
+export const LABEL_CLASS = `text-cp-fg mb-2 block ${MICRO}`;
 
 export const INPUT_CLASS =
   "bg-cp-page border-cp-border text-cp-fg placeholder:text-cp-muted focus:border-cp-fg focus:ring-cp-fg block w-full rounded-none border px-3.5 py-3 text-sm outline-none focus:ring-1";
@@ -66,14 +68,25 @@ export default function TextField({
         }
         className={INPUT_CLASS}
         aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
+        /* L'indication aussi, pas seulement l'erreur : « Sert d'identifiant de
+           connexion. » était invisible aux lecteurs d'écran sur tous les
+           écrans, faute d'être référencée ici. */
+        aria-describedby={
+          [error && `${id}-error`, hint && `${id}-hint`]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
       />
       {error && (
         <span id={`${id}-error`} className={ERROR_CLASS}>
           {error}
         </span>
       )}
-      {hint && <span className={HINT_CLASS}>{hint}</span>}
+      {hint && (
+        <span id={`${id}-hint`} className={HINT_CLASS}>
+          {hint}
+        </span>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { allPartners, partnerById } from "@/components/data/partners";
 import PartnerPayment from "@/components/espace/PartnerPayment";
 import type { Metadata } from "next";
+import PageMain from "@/components/ui/PageMain";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -27,8 +28,8 @@ export default async function PartnerPaymentPage({ params }: Props) {
   if (!partner) notFound();
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8">
+    <PageMain>
       <PartnerPayment partner={partner} />
-    </main>
+    </PageMain>
   );
 }

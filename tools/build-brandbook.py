@@ -5,14 +5,14 @@ Le tableau de contrastes n'est pas saisi à la main : il est repris de
 tools/contrast.py, qui lit lui-même la palette dans globals.css. Une valeur
 changée dans le CSS traverse donc le book au prochain assemblage.
 
-    python3 tools/build-brandbook.py            # écrit brandbook/brand-book.html
+    python3 tools/build-brandbook.py            # écrit docs/brand-book/brand-book.html
 """
 import json
 import pathlib
 import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / "brandbook/brand-book.html"
+OUT = ROOT / "docs/brand-book/brand-book.html"
 
 rows = json.loads(
     subprocess.run(
@@ -43,12 +43,12 @@ HTML = f"""<!doctype html>
 <meta charset="utf-8" />
 <title>Ticket Tout — brand book</title>
 <style>
-  @font-face {{ font-family: "Marianne"; font-weight: 400; src: url("../frontend/public/fonts/Marianne-Regular.woff2") format("woff2"); }}
-  @font-face {{ font-family: "Marianne"; font-weight: 500; src: url("../frontend/public/fonts/Marianne-Medium.woff2") format("woff2"); }}
-  @font-face {{ font-family: "Marianne"; font-weight: 700; src: url("../frontend/public/fonts/Marianne-Bold.woff2") format("woff2"); }}
-  @font-face {{ font-family: "Spectral"; font-weight: 400; src: url("../frontend/public/fonts/Spectral-400-normal-latin.woff2") format("woff2"); }}
-  @font-face {{ font-family: "Spectral"; font-weight: 400; font-style: italic; src: url("../frontend/public/fonts/Spectral-400-italic-latin.woff2") format("woff2"); }}
-  @font-face {{ font-family: "Spectral"; font-weight: 600; src: url("../frontend/public/fonts/Spectral-600-normal-latin.woff2") format("woff2"); }}
+  @font-face {{ font-family: "Marianne"; font-weight: 400; src: url("../../frontend/public/fonts/Marianne-Regular.woff2") format("woff2"); }}
+  @font-face {{ font-family: "Marianne"; font-weight: 500; src: url("../../frontend/public/fonts/Marianne-Medium.woff2") format("woff2"); }}
+  @font-face {{ font-family: "Marianne"; font-weight: 700; src: url("../../frontend/public/fonts/Marianne-Bold.woff2") format("woff2"); }}
+  @font-face {{ font-family: "Spectral"; font-weight: 400; src: url("../../frontend/public/fonts/Spectral-400-normal-latin.woff2") format("woff2"); }}
+  @font-face {{ font-family: "Spectral"; font-weight: 400; font-style: italic; src: url("../../frontend/public/fonts/Spectral-400-italic-latin.woff2") format("woff2"); }}
+  @font-face {{ font-family: "Spectral"; font-weight: 600; src: url("../../frontend/public/fonts/Spectral-600-normal-latin.woff2") format("woff2"); }}
 
   :root {{
     --bleu: #1b3a6b; --bleu-600: #2c527c; --bleu-300: #93aecd; --bleu-100: #dde5ef;
@@ -110,7 +110,7 @@ HTML = f"""<!doctype html>
 <section class="page couv">
   <div class="tete"><span class="micro">Ministère du Job et Bonheur</span><span class="micro">Document de travail</span></div>
   <div>
-    <img src="../frontend/public/logo/mark-white.svg" style="height:18mm" alt="Ticket Tout" />
+    <img src="../../frontend/public/logo/mark-white.svg" style="height:18mm" alt="Ticket Tout" />
     <h1 style="margin-top:12mm">Ticket&nbsp;Tout<br /><em style="font-family:Spectral,serif;font-weight:400;color:var(--bleu-300)">brand book applicable.</em></h1>
     <p style="margin-top:8mm;max-width:52ch;color:rgba(255,255,255,.86)">
       Règles d'usage de la marque « Ticket Tout » à l'intérieur de la charte
@@ -132,9 +132,9 @@ HTML = f"""<!doctype html>
     <code>frontend/public/logo/</code>.
   </p>
   <div class="grille3" style="margin-top:5mm">
-    <figure><div style="background:#fff;border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../frontend/public/logo/mark-blue.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version principale</strong><br />mark-blue.svg — bleu #1B3A6B sur fond clair</figcaption></figure>
-    <figure><div style="background:var(--bleu);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../frontend/public/logo/mark-white.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version monochrome</strong><br />mark-white.svg — réservé blanc sur fond bleu ou noir</figcaption></figure>
-    <figure><div style="background:var(--papier);border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../frontend/app/icon.svg" style="width:22mm;height:22mm;border:0" alt="" /></div><figcaption><strong>Version favicon</strong><br />app/icon.svg — 1081×1081, blanc sur pastille bleue</figcaption></figure>
+    <figure><div style="background:#fff;border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/mark-blue.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version principale</strong><br />mark-blue.svg — bleu #1B3A6B sur fond clair</figcaption></figure>
+    <figure><div style="background:var(--bleu);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/mark-white.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version monochrome</strong><br />mark-white.svg — réservé blanc sur fond bleu ou noir</figcaption></figure>
+    <figure><div style="background:var(--papier);border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/app/icon.svg" style="width:22mm;height:22mm;border:0" alt="" /></div><figcaption><strong>Version favicon</strong><br />app/icon.svg — 1081×1081, blanc sur pastille bleue</figcaption></figure>
   </div>
   <h3>Zone de protection et tailles minimales</h3>
   <p>
@@ -548,7 +548,7 @@ HTML = f"""<!doctype html>
       propre règle typographique. Les pages sont donc composées en HTML puis
       photographiées à 192&nbsp;dpi, ce qui est exactement l'usage que la
       licence autorise. La source composable reste
-      <code>brandbook/brand-book.html</code>.
+      <code>docs/brand-book/brand-book.html</code>.
     </li>
   </ul>
 

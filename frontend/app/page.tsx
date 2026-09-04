@@ -1,4 +1,4 @@
-import HomeSwitch from "@/components/home/HomeSwitch";
+import HomeSwitch from "@/components/landing/HomeSwitch";
 
 export default function Home() {
   // Which page "/" is depends on the signed-in account, which is only readable

@@ -1,0 +1,88 @@
+import { cx } from "./cx";
+import type { ReactNode } from "react";
+
+/**
+ * One full-height screen of a scroll-snapping page.
+ *
+ * Ten of these were written out by hand, and they had drifted on six axes at
+ * once: `min-h-screen` against `calc(100vh-76px)` against `calc(100dvh-76px)`,
+ * `py-16` against `py-14` against `py-3`, the bottom rule present or missing,
+ * `snap-start` present or missing, grid against flex. What varies here is a
+ * prop; what does not is in the base.
+ *
+ * `dvh` everywhere and `vh` nowhere: on a mobile browser with a collapsing
+ * toolbar, `100vh` is taller than the visible viewport, so the bottom of the
+ * screen is cut off. That was already fixed on the payment page and still wrong
+ * on the hero.
+ */
+const HEIGHTS = {
+  /** A full viewport: the normal case inside a snapping page. */
+  screen: "min-h-dvh",
+  /** Under the 76px top bar, for a page that is one screen and not a rail. */
+  "below-bar": "min-h-[calc(100dvh-76px)]",
+  /** Leaves the 230px footer visible at the end of the landing page. */
+  "screen-minus-footer": "min-h-dvh lg:min-h-[calc(100dvh-230px)]",
+} as const;
+
+const GAPS = { 0: "", 6: "gap-6", 9: "gap-9", 10: "gap-10" } as const;
+
+type Props = {
+  children: ReactNode;
+  /** The scroll-snap anchor and the id the section rail scrolls to. */
+  id?: string;
+  height?: keyof typeof HEIGHTS;
+  /** False for a screen that is not inside a `.snap-sections` container. */
+  snap?: boolean;
+  /** The 2px bottom rule that separates one screen from the next. */
+  rule?: boolean;
+  /** "center" packs the content in the middle; "stretch" lets it fill. */
+  align?: "center" | "stretch";
+  layout?: "grid" | "flex";
+  /** "tight" is for a screen capped under the bar, where 4rem pushes content off. */
+  density?: "normal" | "tight";
+  /** "page" screens carry their own horizontal gutter; "container" inherit it. */
+  gutter?: "container" | "page";
+  gap?: keyof typeof GAPS;
+  /**
+   * Additive only. This component owns padding, min-height, the rule, the snap
+   * anchor and the display mode — pass grid *templates*, backgrounds and ink.
+   */
+  className?: string;
+  "aria-labelledby"?: string;
+};
+
+export default function Screen({
+  children,
+  id,
+  height = "screen",
+  snap = true,
+  rule = true,
+  align = "center",
+  layout = "grid",
+  density = "normal",
+  gutter = "container",
+  gap = 0,
+  className,
+  ...rest
+}: Props) {
+  return (
+    <section
+      {...rest}
+      id={id}
+      className={cx(
+        layout === "grid" ? "grid" : "flex flex-col",
+        HEIGHTS[height],
+        snap && "snap-start",
+        rule && "border-cp-border border-b",
+        align === "center" &&
+          (layout === "grid" ? "content-center" : "justify-center"),
+        density === "tight" ? "py-3" : "py-16",
+        gutter === "page" && "px-6 lg:px-[7vw] lg:py-[110px]",
+        GAPS[gap],
+        className,
+      )}
+    >
+      {children}
+    </section>
+  );
+}

@@ -1,15 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import {
-  BTN_OUTLINE,
-  BTN_SOLID,
-  NOTE_POSITIVE,
-} from "@/components/ui/surfaces";
+import React from "react";
+import Button from "@/components/ui/Button";
+import Micro from "@/components/ui/Micro";
+import Note from "@/components/ui/Note";
+import { useDraft } from "@/components/forms/useDraft";
 import CreditCard3D, {
   hexToRgba,
   patternLayer,
-} from "@/components/home/CreditCard3D";
+} from "@/components/card/CreditCard3D";
 import { DEFAULT_CARD_STYLE } from "@/components/account/AccountProvider";
 import type {
   CardPattern,
@@ -72,9 +71,7 @@ function SettingBlock({
 }) {
   return (
     <div className="border-cp-border border-t pt-6">
-      <h3 className="text-cp-fg text-[9px] font-black tracking-[0.16em] uppercase">
-        {title}
-      </h3>
+      <Micro as="h3">{title}</Micro>
       {hint && <p className="text-cp-muted mt-1.5 text-[11px]">{hint}</p>}
       <div className="mt-4">{children}</div>
     </div>
@@ -143,25 +140,26 @@ function SwatchGrid({
  * committed until Enregistrer.
  */
 export default function CardStyleForm({ profile, onSave }: Props) {
-  const [draft, setDraft] = useState<CardStyle>(profile.cardStyle);
-  const [saved, setSaved] = useState(false);
-
-  const dirty = JSON.stringify(draft) !== JSON.stringify(profile.cardStyle);
-
-  // Follow the saved style if it changes underneath.
-  useEffect(() => {
-    setDraft(profile.cardStyle);
-  }, [profile.cardStyle]);
+  const {
+    draft,
+    set: setDraft,
+    reset,
+    submit,
+    saved,
+    error,
+    saving,
+    dirty,
+  } = useDraft<CardStyle>(profile.cardStyle, (style) =>
+    onSave({ ...profile, cardStyle: style }),
+  );
 
   function set<K extends keyof CardStyle>(key: K, value: CardStyle[K]) {
-    setSaved(false);
     setDraft((current) => ({ ...current, [key]: value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSave({ ...profile, cardStyle: draft });
-    setSaved(true);
+    await submit();
   }
 
   return (
@@ -224,9 +222,7 @@ export default function CardStyleForm({ profile, onSave }: Props) {
                       ...patternLayer(pattern.value, draft.text),
                     }}
                   />
-                  <span className="text-cp-fg block px-2 py-1.5 text-[9px] font-black tracking-[0.12em] uppercase">
-                    {pattern.label}
-                  </span>
+                  <Micro className="block px-2 py-1.5">{pattern.label}</Micro>
                   {selected && <CheckMark />}
                 </button>
               );
@@ -270,33 +266,27 @@ export default function CardStyleForm({ profile, onSave }: Props) {
         </SettingBlock>
       </div>
 
-      {saved && <p className={`${NOTE_POSITIVE} mt-7`}>Style enregistré.</p>}
+      {saved && (
+        <Note tone="positive" role="status" className="mt-7">
+          Style enregistré.
+        </Note>
+      )}
+      {error && (
+        <Note tone="danger" role="alert" className="mt-7">
+          {error}
+        </Note>
+      )}
 
       <div className="border-cp-border mt-7 flex flex-wrap items-center gap-3 border-t pt-7">
-        <button type="submit" disabled={!dirty} className={BTN_SOLID}>
-          Enregistrer le style
-        </button>
-        <button
-          type="button"
-          className={BTN_OUTLINE}
-          disabled={!dirty}
-          onClick={() => {
-            setDraft(profile.cardStyle);
-            setSaved(false);
-          }}
-        >
+        <Button type="submit" variant="solid" disabled={!dirty || saving}>
+          {saving ? "Enregistrement…" : "Enregistrer le style"}
+        </Button>
+        <Button disabled={!dirty || saving} onClick={reset}>
           Annuler
-        </button>
-        <button
-          type="button"
-          className={BTN_OUTLINE}
-          onClick={() => {
-            setSaved(false);
-            setDraft(DEFAULT_CARD_STYLE);
-          }}
-        >
+        </Button>
+        <Button onClick={() => setDraft(DEFAULT_CARD_STYLE)}>
           Réinitialiser
-        </button>
+        </Button>
       </div>
     </form>
   );

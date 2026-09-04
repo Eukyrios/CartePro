@@ -5,7 +5,8 @@ import {
   FooterLink,
   FooterLinkGroup,
 } from "flowbite-react";
-import BrandLogo from "@/components/home/BrandLogo";
+import BrandLogo from "@/components/brand/BrandLogo";
+import { MICRO } from "@/components/ui/surfaces";
 
 /**
  * TODO: the links are placeholders — point them at the real contact and legal
@@ -58,7 +59,7 @@ export default function Footer() {
         <FooterCopyright
           by="FRANCE"
           year={2026}
-          className="flex flex-col text-[9px] leading-[1.6] tracking-[0.1em] text-white lg:items-end lg:justify-self-end"
+          className={`flex flex-col leading-[1.6] text-white lg:items-end lg:justify-self-end ${MICRO}`}
         />
       </div>
     </FlowbiteFooter>

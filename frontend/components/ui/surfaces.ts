@@ -14,8 +14,11 @@
  * and the deletion dialog — and themed there with `dark:` included.
  */
 
+/** The box itself, without padding — see Panel.tsx's `padding="none"`. */
+export const PANEL_BOX = "border-cp-fg bg-cp-page border-2";
+
 /** Flat bordered box holding one section of a screen. */
-export const PANEL = "border-cp-fg bg-cp-page border-2 p-6 sm:p-8";
+export const PANEL = `${PANEL_BOX} p-6 sm:p-8`;
 
 export const PANEL_HEADING =
   "text-cp-fg text-[24px] leading-[0.95] font-black tracking-[-0.05em] sm:text-[30px]";
@@ -26,6 +29,29 @@ export const PANEL_LEAD =
 /** Uppercase micro-label: eyebrows, rail entries, badges, button faces. */
 export const MICRO =
   "font-sans text-[9px] font-black tracking-[0.16em] uppercase";
+
+/**
+ * The display type scale — five steps, and the only place a `clamp()` for a
+ * heading may be written.
+ *
+ * There were nine, of which two repeated: every screen invented its own step,
+ * so `Ma carte` and `Mes opérations` sat at 38px and 34px on the same
+ * scrolling page, which reads as a mistake rather than as a hierarchy.
+ *
+ * Leading tightens as the size grows, which is the actual rule the nine
+ * accidental steps were groping towards. No colour here: a heading inherits its
+ * ink, which is what lets the same scale serve the white-on-blue section.
+ *
+ * `hero` is deliberately unharmonised — one element, on one screen, whose grid
+ * column is dimensioned around it.
+ */
+export const DISPLAY = {
+  hero: "text-[clamp(68px,10vw,160px)] leading-[0.79] tracking-[-0.09em]",
+  page: "text-[clamp(44px,6.8vw,112px)] leading-[0.82] tracking-[-0.08em]",
+  section: "text-[clamp(34px,4.4vw,58px)] leading-[0.86] tracking-[-0.07em]",
+  card: "text-[clamp(36px,4.4vw,60px)] leading-[0.9] tracking-[-0.055em]",
+  panel: "text-[24px] leading-[0.95] tracking-[-0.05em] sm:text-[30px]",
+} as const;
 
 const BTN =
   "group inline-flex items-center justify-center rounded-none border-2 px-5 py-3 font-sans text-[10px] font-black tracking-[0.14em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-30";

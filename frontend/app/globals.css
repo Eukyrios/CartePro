@@ -339,6 +339,19 @@
 }
 
 /*
+ * The same grid at a tighter pitch, for a frame that holds one object rather
+ * than a whole panel — the QR's waiting place.
+ *
+ * It replaces an inline pair of hardcoded rgba() gradients that had been
+ * written out in a component: those froze the light theme's #1B3A6B and the
+ * dark theme's #EAF0FB into the markup, so the frame stopped following the
+ * palette the moment either token moved.
+ */
+.blueprint-grid--fine {
+  background-size: 18px 18px;
+}
+
+/*
  * Measured contrast, every text/background pair the interface actually uses.
  * RGAA AA is 4.5:1 for body text, 3:1 for large text. Recomputed whenever a
  * value above changes; ratios are WCAG relative luminance.

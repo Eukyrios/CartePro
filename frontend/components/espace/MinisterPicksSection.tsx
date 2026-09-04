@@ -1,7 +1,10 @@
-import Link from "next/link";
 import { ministerPicks } from "@/components/data/ministerPicks";
-import PartnerPhoto from "@/components/partners/PartnerPhoto";
-import { CHIP_OFFICIAL, MICRO } from "@/components/ui/surfaces";
+import Chip from "@/components/ui/Chip";
+import Display from "@/components/ui/Display";
+import Micro from "@/components/ui/Micro";
+import PartnerTile from "@/components/ui/PartnerTile";
+import Screen from "@/components/ui/Screen";
+import Slash from "@/components/ui/Slash";
 
 /**
  * « Coup de cœur du Ministre » : la sélection, et les mots du Ministre sur
@@ -26,19 +29,12 @@ export default function MinisterPicksSection() {
   if (picks.length === 0) return null;
 
   return (
-    <section
-      id="coup-de-coeur"
-      className="border-cp-border grid min-h-screen snap-start content-center border-b py-16"
-    >
+    <Screen id="coup-de-coeur">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h2 className="text-[clamp(34px,4.4vw,58px)] leading-[0.86] font-black tracking-[-0.07em]">
+        <Display level={2} accent="du Ministre.">
           Coup de cœur
-          <br />
-          <em className="text-cp-accent font-serif font-normal">
-            du Ministre.
-          </em>
-        </h2>
-        <span className={CHIP_OFFICIAL}>Choisi par le Ministère</span>
+        </Display>
+        <Chip tone="official">Choisi par le Ministère</Chip>
       </div>
 
       {/* Quatre colonnes quand la place le permet, deux, puis une. Les tuiles
@@ -47,29 +43,25 @@ export default function MinisterPicksSection() {
       <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {picks.map(({ pick, partner }) => (
           <li key={partner.id}>
-            <Link
-              href={`/espace/partenaire/${partner.id}`}
-              className="border-cp-border group hover:border-cp-fg focus-visible:outline-cp-accent flex h-full w-full cursor-pointer flex-col overflow-hidden border text-left focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              <PartnerPhoto partner={partner} />
+            <PartnerTile partner={partner}>
               <div className="flex-1 p-4">
                 <p className="text-cp-fg text-[13px] leading-[1.5] italic">
                   «&nbsp;{pick.note}&nbsp;»
                 </p>
-                <address className={`text-cp-muted mt-3 not-italic ${MICRO}`}>
+                <Micro as="address" tone="muted" className="mt-3 not-italic">
                   {partner.postcode} {partner.city}
-                </address>
+                </Micro>
               </div>
-            </Link>
+            </PartnerTile>
           </li>
         ))}
       </ul>
 
-      <p className={`text-cp-muted mt-6 ${MICRO}`}>
+      <Micro as="p" tone="muted" className="mt-6">
         {picks.length} coup{picks.length > 1 ? "s" : ""} de cœur
-        <span className="text-cp-accent px-1.5">/</span>
+        <Slash />
         sélection du Ministère
-      </p>
-    </section>
+      </Micro>
+    </Screen>
   );
 }

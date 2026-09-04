@@ -1,19 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import ProfileEmployeeFields from "./ProfileEmployeeFields";
 import ProfilePartnerFields from "./ProfilePartnerFields";
-import { validatePartnerFields } from "@/components/auth/SignupPartnerFields";
+import { validatePartnerFields } from "@/components/forms/partnerFields";
+import { useDraft } from "@/components/forms/useDraft";
+import Button from "@/components/ui/Button";
+import Note from "@/components/ui/Note";
 import type { Profile } from "@/components/account/AccountProvider";
-import {
-  BTN_OUTLINE,
-  BTN_SOLID,
-  NOTE_POSITIVE,
-} from "@/components/ui/surfaces";
 import type {
   PartnerErrors,
   PartnerFields,
-} from "@/components/auth/SignupPartnerFields";
+} from "@/components/forms/partnerFields";
 
 /** The object the profile field sets read and write through. */
 export type ProfileFormApi = {
@@ -28,39 +26,36 @@ export type ProfileFormApi = {
 
 type Props = {
   profile: Profile;
-  onSave: (profile: Profile) => void;
+  /** Asynchrone, et attendu : voir useDraft. */
+  onSave: (profile: Profile) => Promise<void> | void;
 };
 
 /**
  * Edits the signed-in profile. Changes are held in a local draft, so leaving
  * the page or hitting Annuler discards them; only Enregistrer commits.
+ *
+ * Le brouillon, l'état « enregistré » et l'erreur du serveur viennent de
+ * `useDraft` : c'est lui qui attend la promesse, de sorte qu'un refus du
+ * backend s'affiche au lieu d'être annoncé comme un succès.
  */
 export default function ProfileForm({ profile, onSave }: Props) {
-  const [draft, setDraft] = useState<Profile>(profile);
+  const { draft, set, reset, submit, saved, error, saving, dirty } = useDraft(
+    profile,
+    onSave,
+  );
   const [partnerErrors, setPartnerErrors] = useState<PartnerErrors>({});
-  const [saved, setSaved] = useState(false);
 
   const isPartner = draft.audience === "partner";
-  const dirty = JSON.stringify(draft) !== JSON.stringify(profile);
-
-  // Follow the saved profile whenever it changes underneath, so a save from
-  // elsewhere is not overwritten by a stale draft.
-  useEffect(() => {
-    setDraft(profile);
-    setPartnerErrors({});
-  }, [profile]);
 
   function setValue<K extends keyof Profile>(field: K, value: Profile[K]) {
-    setSaved(false);
-    setDraft((current) => ({ ...current, [field]: value }));
+    set((current) => ({ ...current, [field]: value }));
   }
 
   function setPartnerValue<K extends keyof PartnerFields>(
     field: K,
     value: PartnerFields[K],
   ) {
-    setSaved(false);
-    setDraft((current) => ({
+    set((current) => ({
       ...current,
       partner: { ...current.partner, [field]: value },
     }));
@@ -70,7 +65,7 @@ export default function ProfileForm({ profile, onSave }: Props) {
     );
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (isPartner) {
@@ -79,8 +74,7 @@ export default function ProfileForm({ profile, onSave }: Props) {
       if (Object.values(errors).some(Boolean)) return;
     }
 
-    onSave(draft);
-    setSaved(true);
+    await submit();
   }
 
   const form: ProfileFormApi = {
@@ -99,25 +93,29 @@ export default function ProfileForm({ profile, onSave }: Props) {
       )}
 
       {saved && (
-        <p className={`${NOTE_POSITIVE} mt-7`}>Modifications enregistrées.</p>
+        <Note tone="positive" role="status" className="mt-7">
+          Modifications enregistrées.
+        </Note>
+      )}
+      {error && (
+        <Note tone="danger" role="alert" className="mt-7">
+          {error}
+        </Note>
       )}
 
       <div className="mt-7 flex flex-wrap items-center gap-3">
-        <button type="submit" disabled={!dirty} className={BTN_SOLID}>
-          Enregistrer les modifications
-        </button>
-        <button
-          type="button"
-          className={BTN_OUTLINE}
-          disabled={!dirty}
+        <Button type="submit" variant="solid" disabled={!dirty || saving}>
+          {saving ? "Enregistrement…" : "Enregistrer les modifications"}
+        </Button>
+        <Button
+          disabled={!dirty || saving}
           onClick={() => {
-            setDraft(profile);
+            reset();
             setPartnerErrors({});
-            setSaved(false);
           }}
         >
           Annuler
-        </button>
+        </Button>
       </div>
     </form>
   );

@@ -1,24 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import CardStage from "@/components/home/CardStage";
-import CreditCard3D from "@/components/home/CreditCard3D";
+import CardStage, { CardTag } from "@/components/card/CardStage";
+import CreditCard3D from "@/components/card/CreditCard3D";
 import { formatEuros } from "@/components/data/ledger";
-import { api } from "@/lib/api";
-import { useAccount } from "@/components/account/AccountProvider";
+import { useBalance } from "@/components/account/useBalance";
 import { partnerCategoryLabel } from "@/components/data/partnerCategories";
-import PartnerPhoto from "@/components/partners/PartnerPhoto";
-import {
-  BTN_OUTLINE,
-  BTN_SOLID,
-  MICRO,
-  NOTE_DANGER,
-  NOTE_POSITIVE,
-  SIMULATION_NOTICE,
-} from "@/components/ui/surfaces";
-import TokenQr from "./TokenQr";
+import PartnerPhoto from "@/components/ui/PartnerPhoto";
+import BlueprintFrame from "@/components/ui/BlueprintFrame";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import Button from "@/components/ui/Button";
+import Chip from "@/components/ui/Chip";
+import Display from "@/components/ui/Display";
+import IconButton from "@/components/ui/IconButton";
+import Micro from "@/components/ui/Micro";
+import Modal from "@/components/ui/Modal";
+import Note from "@/components/ui/Note";
+import QrCode from "@/components/ui/QrCode";
+import Screen from "@/components/ui/Screen";
+import SimulationNotice from "@/components/ui/SimulationNotice";
+import Slash from "@/components/ui/Slash";
+import { useQrToken } from "./useQrToken";
 import type { Partner } from "@/components/data/partners";
 
 function mmss(msLeft: number) {
@@ -29,284 +33,218 @@ function mmss(msLeft: number) {
 }
 
 /**
- * The payment screen for one partner: the amount the partner is asking, and a
+ * The payment screen for one partner: what the partner is asking, and a
  * single-use QR for it.
  *
  * The amount is the partner's, not the employé's — there is no field to type
  * one into, because a merchant sets the price. It comes from the partner data
  * for now; in production the terminal sends it.
  *
- * Everything sits in one screen and nothing moves as the QR is issued: the
- * code's frame is always there, holding the same square, so generating swaps
- * the frame's contents rather than growing the page. The card stays at rest
- * throughout — it is the same card either way, and swapping its state under
- * the reader's eyes was noise.
+ * The card is the trigger: it presents, and presenting it is what raises the
+ * code. So the card holds the whole right-hand side, and the QR lives in a
+ * modal over the middle of the screen rather than in a panel that has to be
+ * kept square beside it. Nothing in the section moves when it opens — a modal
+ * is out of flow, which is the point.
  *
- * Les règles sont celles du serveur : cet écran demande un jeton, l'envoie à
- * la validation, et n'imprime que ce que l'API refuse, dans ses mots.
+ * Le jeton est émis par le serveur (voir useQrToken) et **rien n'est débité à
+ * ce stade** : la validation, /api/transactions/valider, n'est pas appelée ici.
+ * Elle l'était (voir l'historique git de ce fichier) et le sera de nouveau
+ * quand l'encaissement sera au programme ; en attendant, cet écran émet,
+ * affiche, laisse expirer et réémet, sans toucher au solde.
  */
 export default function PartnerPayment({ partner }: { partner: Partner }) {
   const router = useRouter();
-  const { profile, refreshAccount } = useAccount();
-  const balance = profile?.balanceCents ?? 0;
-  const [token, setToken] = useState<{
-    id: string;
-    raw: string;
-    expiresAt: number;
-    usedAt?: number;
-  } | null>(null);
+  const balance = useBalance();
+  const [open, setOpen] = useState(false);
+  const { token, state, refusal, remaining, issue } = useQrToken();
 
-  const [refusal, setRefusal] = useState<string | null>(null);
-  const [paid, setPaid] = useState<string | null>(null);
-  // The token expiring is a change on screen, so a clock has to drive it.
-  const [now, setNow] = useState(() => Date.now());
-
-  /* Le jeton vient du serveur et vit dans l'état local de cette page : il n'y a
-     plus rien à rattacher à un partenaire, la page démontée l'emporte avec
-     elle. Pas d'enquête sur le solde avant la presse non plus : émettre n'est
-     pas débiter, et c'est le serveur qui juge au moment de valider. */
-  const mine = !token
-    ? "none"
-    : token.usedAt
-      ? "used"
-      : now >= token.expiresAt
-        ? "expired"
-        : "active";
-
-  useEffect(() => {
-    if (mine !== "active") return;
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, [mine]);
-
-  async function generate() {
-    setPaid(null);
-    try {
-      const result = await api<{
-        raw_token_for_testing: string;
-        expiration: string;
-      }>("/api/salaries/paiement/qr", { method: "POST" });
-      setToken({
-        id: result.raw_token_for_testing.slice(-16),
-        raw: result.raw_token_for_testing,
-        expiresAt: Date.parse(result.expiration),
-      });
-      setRefusal(null);
-      setNow(Date.now());
-    } catch (error) {
-      setRefusal(
-        error instanceof Error ? error.message : "Impossible de générer le QR.",
-      );
-    }
-  }
-
-  async function pay() {
-    if (!token) return;
-    try {
-      await api<{ details: { nouveau_solde_salarie: number } }>(
-        "/api/transactions/valider",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            qr_token: token.raw,
-            montant: partner.amountCents / 100,
-            partenaire_id: partner.id,
-          }),
-        },
-      );
-      await refreshAccount();
-      // Marqué utilisé plutôt qu'effacé : le code reste à l'écran, éteint, et
-      // « QR déjà utilisé » a de quoi s'afficher.
-      setToken({ ...token, usedAt: Date.now() });
-      setPaid(
-        `${formatEuros(partner.amountCents)} chez ${partner.name}. Solde mis à jour.`,
-      );
-      setRefusal(null);
-    } catch (error) {
-      setRefusal(
-        error instanceof Error ? error.message : "Le paiement a échoué.",
-      );
-      setPaid(null);
-    }
+  /* Présenter la carte, c'est demander le code : le clic ouvre la boîte et
+     n'émet que s'il n'y a rien de valable à montrer. Un jeton encore vivant est
+     donc réaffiché tel quel, avec son compte à rebours — rouvrir la boîte ne
+     gaspille pas un jeton. */
+  async function present() {
+    setOpen(true);
+    if (state !== "active") await issue();
   }
 
   return (
-    /* One screen, and sized to stay one: the header, the two columns and the
-       payment block are each capped in vh so the whole thing fits under the
-       76px bar without scrolling. 100dvh rather than 100vh so a mobile
-       browser's collapsing toolbar does not cut the bottom off. */
-    <section className="grid min-h-[calc(100dvh-76px)] content-center py-3">
+    /* Un seul écran, et calibré pour le rester. `density="tight"` parce que
+       sous la barre de 76px, 4rem de marge verticale sortent la carte de
+       l'écran. */
+    <Screen height="below-bar" snap={false} rule={false} density="tight">
       <div className="mb-5 flex items-center gap-4">
         {/* Back to wherever you came from — the catalogue, or the Minister's
             selection. A fresh tab has no history to go back through, so that
             case lands on the space instead of doing nothing. */}
-        <button
-          type="button"
-          aria-label="Retour à la page précédente"
+        <IconButton
+          label="Retour à la page précédente"
           onClick={() =>
             window.history.length > 1 ? router.back() : router.push("/espace")
           }
-          className="border-cp-fg text-cp-fg hover:bg-cp-fg hover:text-cp-page flex size-9 shrink-0 items-center justify-center border text-base leading-none"
         >
-          <span aria-hidden="true">←</span>
-        </button>
+          ←
+        </IconButton>
 
-        <nav aria-label="Fil d'Ariane" className={`flex gap-2 ${MICRO}`}>
-          <Link href="/espace" className="text-cp-muted hover:text-cp-fg">
-            Mon espace
-          </Link>
-          <span className="text-cp-accent" aria-hidden="true">
-            /
-          </span>
-          <Link
-            href="/espace#reseau"
-            className="text-cp-muted hover:text-cp-fg"
-          >
-            Le réseau
-          </Link>
-          <span className="text-cp-accent" aria-hidden="true">
-            /
-          </span>
-          <span className="text-cp-fg">Payer</span>
-        </nav>
+        <Breadcrumb
+          trail={[
+            { label: "Mon espace", href: "/espace" },
+            { label: "Le réseau", href: "/espace#reseau" },
+            { label: "Payer" },
+          ]}
+        />
       </div>
 
-      {/* The heading spans both columns, so the photo and the card start on the
-          same line below it. */}
+      {/* Le titre tient les deux colonnes ; le lieu est redescendu sous la
+          photographie, où il se lit avec elle. */}
       <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-5">
-        <div className="flex flex-wrap items-start gap-x-12 gap-y-4">
-          <h1 className="text-[clamp(28px,3.4vw,48px)] leading-[0.88] font-black tracking-[-0.055em]">
-            Payer chez
-            <br />
-            <em className="text-cp-accent font-serif font-normal">
-              {partner.name}.
-            </em>
-          </h1>
-
-          {/* La catégorie et le lieu tiennent au nom : ils se lisent avec lui,
-              pas sous la photo. */}
-          <div className="pt-1">
-            <p className="text-cp-accent text-[12px] font-black tracking-[0.16em] uppercase">
-              {partnerCategoryLabel(partner.categoryId)}
-            </p>
-            <address className="text-cp-fg mt-3 text-[19px] leading-[1.55] not-italic">
-              {partner.address}
-              <br />
-              <span className="text-cp-muted">
-                {partner.postcode} {partner.city}
-              </span>
-            </address>
-          </div>
-        </div>
+        <Display level={1} accent={`${partner.name}.`}>
+          Payer chez
+        </Display>
 
         {/* Statut administratif porté par les données : affiché seulement pour
-            les partenaires conventionnés, et à hauteur de titre parce que c'est
+            les partenaires conventionnés, et en haut de colonne parce que c'est
             ce que le porteur doit voir avant de payer. */}
         {partner.official && (
-          <p className="border-cp-official text-cp-official w-[17rem] shrink-0 border-2 px-6 py-5 text-[15px] leading-[1.3] font-black tracking-[0.08em] uppercase">
+          <Chip tone="official" as="p" className="mt-2 self-start">
             Partenaire Officiel du Ministère
-          </p>
+          </Chip>
         )}
       </div>
 
-      {/* Trois rangées, et c'est ce qui tient l'alignement : la mention, le QR,
-          puis ce qui se dit du QR. La colonne de gauche occupe les deux
-          premières, si bien que son bas est exactement le bas du QR — sans
-          qu'aucune hauteur soit écrite à la main. La rangée du QR est la seule
-          élastique : la photo prend ce que la carte laisse. */}
-      <div className="mt-5 grid gap-x-8 gap-y-0 lg:grid-cols-2 lg:grid-rows-[auto_1fr_auto] lg:gap-x-14">
-        {/* Gauche : le partenaire, puis la carte sous son adresse. */}
-        <div className="mb-8 flex flex-col lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:mb-0">
-          {/* Élastique à partir de lg : la photo absorbe la hauteur restante,
-              c'est-à-dire le bas du QR moins la carte. Elle garde son cadrage
-              9/5 en pile mobile, où rien ne fixe la hauteur de la colonne. */}
+      <div className="mt-5 grid items-stretch gap-8 lg:grid-cols-2 lg:gap-14">
+        {/* Gauche : la photographie, ce qu'elle montre, et la devise. */}
+        <div className="flex flex-col">
           <PartnerPhoto
             partner={partner}
             withName={false}
-            className="aspect-[9/5] min-h-[150px] w-full lg:aspect-auto lg:flex-1"
+            className="aspect-[3/2] max-h-[40vh] min-h-[180px] w-full shrink-0"
           />
 
-          {/* Pleine largeur : le bord droit de la carte tombe sur celui de la
-              photo. Sa hauteur suit (rapport 1,6), et c'est elle qui décide de
-              ce qui reste à la photo. */}
-          <CardStage
-            className="mt-5 w-full shrink-0"
-            insetClassName="px-[13%] py-[1.5vh]"
-            tagClassName="top-[7%] right-[9%] rotate-[4deg]"
-          >
-            <CreditCard3D balanceCents={balance} />
-          </CardStage>
-        </div>
+          <Micro tone="accent" as="p" className="mt-5">
+            {partnerCategoryLabel(partner.categoryId)}
+          </Micro>
+          <address className="text-cp-fg mt-3 text-[19px] leading-[1.55] not-italic">
+            {partner.address}
+            <br />
+            <span className="text-cp-muted">
+              {partner.postcode} {partner.city}
+            </span>
+          </address>
 
-        {/* Droite : l'emplacement du QR, et rien d'autre. Le bouton attend au
-            centre ; le code se matérialise par-dessus, à la place qu'il occupe
-            déjà, de sorte que rien ne bouge autour de lui. */}
-        <div className="flex lg:col-start-2 lg:row-start-1 lg:justify-end">
-          <p className={SIMULATION_NOTICE}>
-            Paiement réel enregistré en base de données
+          {/* La devise, dans la serif de la marque — la même phrase que
+              l'accueil, pour que la page de paiement appartienne visiblement au
+              même ensemble. */}
+          <p className="border-t-cp-border text-cp-fg mt-auto border-t pt-4 font-serif text-[22px] leading-[1.25] italic">
+            Dépenser autrement.
           </p>
         </div>
 
-        <div className="lg:col-start-2 lg:row-start-2">
-          <div className="border-cp-border bg-cp-page relative ms-auto mt-4 grid aspect-square w-full max-w-[min(100%,62vh)] place-items-center overflow-hidden rounded-2xl border bg-[linear-gradient(to_right,rgba(27,58,107,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(27,58,107,0.10)_1px,transparent_1px)] bg-[length:18px_18px] dark:bg-[linear-gradient(to_right,rgba(234,240,251,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,240,251,0.12)_1px,transparent_1px)]">
-            <button type="button" onClick={generate} className={BTN_SOLID}>
-              {mine === "none" ? "Générer le QR" : "Nouveau QR"}
-            </button>
+        {/* Droite : la carte, et rien d'autre. Le panneau prend toute la
+            colonne, la carte garde sa taille au milieu. */}
+        <div className="flex flex-col">
+          <SimulationNotice>
+            Émission réelle — aucun débit à ce stade
+          </SimulationNotice>
 
-            {mine !== "none" && (
-              <div className="bg-cp-page absolute inset-0 grid place-items-center p-[5%]">
-                <div className="aspect-square h-full max-h-full w-auto max-w-full">
-                  <TokenQr tokenId={token!.id} dimmed={mine !== "active"} />
-                </div>
+          {/* La carte est le déclencheur : on la présente, le code apparaît.
+              Un vrai bouton, donc le clavier l'atteint et l'annonce. */}
+          <button
+            type="button"
+            onClick={present}
+            aria-haspopup="dialog"
+            className="focus-visible:outline-cp-accent mt-4 flex-1 cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-offset-4"
+          >
+            <CardStage
+              className="h-full w-full"
+              insetClassName="grid h-full place-items-center p-[6%]"
+              tagClassName="hidden"
+            >
+              {/* Taille inchangée : la carte ne grandit pas avec le panneau,
+                  elle se centre dedans. Le repère se place par rapport à elle,
+                  pas au panneau, sans quoi il flotterait dans le vide. */}
+              <div className="relative w-[min(100%,430px)]">
+                <CreditCard3D balanceCents={balance} />
+                <CardTag className="top-[-13%] right-[-4%] rotate-[4deg]" />
               </div>
-            )}
-          </div>
-        </div>
+            </CardStage>
+          </button>
 
-        {/* Ce qui se dit du QR : sous lui, à sa largeur, pour que le bouton de
-            scan tombe sur son bord droit. */}
-        <div className="ms-auto w-full max-w-[min(100%,62vh)] lg:col-start-2 lg:row-start-3">
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <p className={`text-cp-fg ${MICRO}`}>
-              {mine === "none" && "En attente du QR"}
-              {mine === "active" && (
-                <>Valable {mmss(token!.expiresAt - now)} — usage unique</>
-              )}
-              {mine === "used" && "QR déjà utilisé"}
-              {mine === "expired" && "QR expiré"}
-            </p>
-            {mine === "active" && (
-              <button
-                type="button"
-                onClick={pay}
-                className={`${BTN_OUTLINE} ms-auto`}
-              >
-                Simuler le scan
-              </button>
-            )}
-          </div>
-
-          {/* Le refus n'a plus de bloc permanent : il apparaît quand le registre
-              refuse, ce que la règle demande — un débit supérieur au solde est
-              refusé et dit pourquoi. */}
-          {refusal && (
-            <p role="alert" className={`${NOTE_DANGER} mt-4`}>
-              {refusal}
-            </p>
-          )}
-          {paid && (
-            <div className={`${NOTE_POSITIVE} mt-4`}>
-              <p role="status">{paid}</p>
-              <Link
-                href="/espace#historique"
-                className="mt-2 inline-block font-black underline underline-offset-4"
-              >
-                Voir dans l&apos;historique
-              </Link>
-            </div>
-          )}
+          <Micro as="p" tone="muted" className="mt-3">
+            Cliquez la carte
+            <Slash />
+            {state === "active"
+              ? `QR valable ${mmss(remaining)}`
+              : "le QR s'affiche par-dessus"}
+          </Micro>
         </div>
       </div>
-    </section>
+
+      {/* Hors flux, au centre de l'écran : la boîte du code. */}
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Votre QR"
+        accent="de paiement."
+        meta={
+          <>
+            {partner.name}
+            <Slash />
+            {formatEuros(partner.amountCents)}
+          </>
+        }
+      >
+        {/* Le cadre garde sa place quoi qu'il arrive : le code s'y matérialise
+            ou le refus s'y affiche, sans que la boîte change de taille. */}
+        <BlueprintFrame pitch="fine" className="mt-6">
+          {token ? (
+            <div className="grid aspect-square h-full w-full place-items-center p-[7%]">
+              <QrCode
+                seed={token.id}
+                motion="materialise"
+                dimmed={state !== "active"}
+              />
+            </div>
+          ) : (
+            <Micro tone="muted" className="px-8 text-center">
+              {refusal ? "QR non émis" : "Émission…"}
+            </Micro>
+          )}
+        </BlueprintFrame>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Micro as="p">
+            {state === "active" && (
+              <>Valable {mmss(remaining)} — usage unique</>
+            )}
+            {state === "expired" && "QR expiré"}
+            {state === "none" && "En attente du QR"}
+          </Micro>
+          {/* Réémission une fois les cinq minutes passées : le serveur en donne
+              un neuf, et rien n'est débité. */}
+          {state !== "active" && (
+            <Button variant="solid" onClick={issue} className="ms-auto">
+              {state === "expired" ? "Nouveau QR" : "Générer le QR"}
+            </Button>
+          )}
+        </div>
+
+        {refusal && (
+          <Note tone="danger" role="alert" className="mt-4">
+            {refusal}
+          </Note>
+        )}
+
+        <Micro as="p" tone="muted" className="mt-4">
+          Aucun débit à ce stade
+          <Slash />
+          <Link
+            href="/espace#historique"
+            className="text-cp-fg underline underline-offset-4"
+          >
+            Voir l&apos;historique
+          </Link>
+        </Micro>
+      </Modal>
+    </Screen>
   );
 }

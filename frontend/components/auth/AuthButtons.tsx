@@ -1,6 +1,6 @@
 "use client";
 
-import { Arrow } from "@/components/home/Marks";
+import { Arrow } from "@/components/brand/Marks";
 import { BTN_SOLID, MICRO } from "@/components/ui/surfaces";
 
 type Props = {

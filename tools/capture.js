@@ -114,7 +114,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
   const base = process.argv[2] || "http://localhost:3000";
-  const out = process.argv[3] || "brandbook/captures";
+  const out = process.argv[3] || "docs/brand-book/captures";
   fs.mkdirSync(out, { recursive: true });
 
   const targets = JSON.parse(await get("http://127.0.0.1:9222/json/list"));

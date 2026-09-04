@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useAccount } from "@/components/account/AccountProvider";
-import SectionNav from "@/components/home/SectionNav";
-import PartnerCatalogue from "@/components/partners/PartnerCatalogue";
-import { MICRO, NOTE_INFO } from "@/components/ui/surfaces";
+import SectionNav from "@/components/layout/SectionNav";
+import PartnerCatalogue from "@/components/espace/PartnerCatalogue";
+import EmptyState from "@/components/ui/EmptyState";
+import Note from "@/components/ui/Note";
 import BalanceSection from "./BalanceSection";
 import HistorySection from "./HistorySection";
 import MinisterPicksSection from "./MinisterPicksSection";
-import type { RailSection } from "@/components/home/SectionNav";
+import type { RailSection } from "@/components/layout/SectionNav";
 
 /**
  * The screens of the space, in order, for the side rail. Numbered from 01 like
@@ -33,28 +34,24 @@ export default function EmployeeSpace() {
   const { profile, ready } = useAccount();
 
   if (!ready) {
-    return (
-      <p className={`text-cp-muted py-24 text-center ${MICRO}`}>
-        Chargement de votre espace…
-      </p>
-    );
+    return <EmptyState variant="page">Chargement de votre espace…</EmptyState>;
   }
 
   if (!profile) {
     return (
-      <div className={NOTE_INFO}>
+      <Note as="div">
         <strong className="font-black">Connexion requise.</strong>{" "}
         Connectez-vous avec un compte employé pour accéder à votre espace.{" "}
         <Link href="/" className="font-black underline underline-offset-4">
           Retour à l&apos;accueil
         </Link>
-      </div>
+      </Note>
     );
   }
 
   if (profile.audience === "partner") {
     return (
-      <div className={NOTE_INFO}>
+      <Note as="div">
         <strong className="font-black">Espace réservé aux employés.</strong> Ce
         compte est un compte partenaire.{" "}
         <Link
@@ -63,7 +60,7 @@ export default function EmployeeSpace() {
         >
           Aller à mes paramètres
         </Link>
-      </div>
+      </Note>
     );
   }
 

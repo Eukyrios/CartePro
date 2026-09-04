@@ -1,3 +1,4 @@
+import { fold } from "@/lib/text";
 import { partnerCategories } from "./partnerCategories";
 
 /**
@@ -246,15 +247,6 @@ export type PartnerPage = {
   page: number;
   pages: number;
 };
-
-/** Accent- and case-insensitive, so "Correze" finds "Corrèze". */
-function fold(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase()
-    .trim();
-}
 
 /**
  * Every partner in `partners` that the query matches, in declaration order and

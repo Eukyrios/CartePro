@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { Avatar, NameEmail } from "@/components/ui/IdentityStrip";
+import { MICRO } from "@/components/ui/surfaces";
 /** The signed-in person shown in the menu header. */
 export type AuthUser = {
   name: string;
@@ -13,15 +15,17 @@ type Props = {
   onSignOut: () => void;
 };
 
-/** Navigation entries listed above the sign-out action, in display order. */
-const MENU_LINKS = [
-  { label: "Mon espace", href: "/espace" },
-  { label: "Paramètres", href: "/parametres" },
-];
+/**
+ * Navigation entries listed above the sign-out action, in display order.
+ *
+ * Pas d'entrée « Mon espace » : connecté, l'accueil *est* l'espace (voir
+ * HomeSwitch), et le logotype de la barre y ramène déjà. Un menu qui propose
+ * l'endroit où l'on se trouve déjà n'aide personne.
+ */
+const MENU_LINKS = [{ label: "Paramètres", href: "/parametres" }];
 
 /** Square, uppercase micro-type rows, as everywhere else in the design. */
-const ITEM_CLASS =
-  "hover:bg-cp-surface hover:text-cp-fg block w-full rounded-none px-4 py-3 text-[9px] font-black tracking-[0.16em] uppercase";
+const ITEM_CLASS = `hover:bg-cp-surface hover:text-cp-fg block w-full px-4 py-3 ${MICRO}`;
 
 /** Avatar button and the dropdown it toggles, for a signed-in user. */
 export default function UserMenu({ user, onSignOut }: Props) {
@@ -54,9 +58,9 @@ export default function UserMenu({ user, onSignOut }: Props) {
         aria-haspopup="menu"
         aria-expanded={dropdownOpen}
         onClick={() => setDropdownOpen((s) => !s)}
-        className="bg-cp-accent focus-visible:outline-cp-fg relative size-10 cursor-pointer rounded-full text-[15px] font-black text-white outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="focus-visible:outline-cp-fg relative cursor-pointer rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
       >
-        <span aria-hidden="true">{user.name.charAt(0).toUpperCase()}</span>
+        <Avatar name={user.name} size="sm" />
         <span className="sr-only">Menu utilisateur</span>
       </button>
 
@@ -67,12 +71,7 @@ export default function UserMenu({ user, onSignOut }: Props) {
           className="bg-cp-page border-cp-fg absolute top-full right-0 z-50 mt-2 w-52 rounded-none border-2"
         >
           <div className="border-cp-border border-b px-4 py-3.5">
-            <div className="text-cp-fg truncate text-[13px] font-black tracking-[-0.03em]">
-              {user.name}
-            </div>
-            <div className="text-cp-muted truncate text-[11px]">
-              {user.email}
-            </div>
+            <NameEmail name={user.name} email={user.email} size="sm" />
           </div>
           <ul className="text-cp-muted">
             {MENU_LINKS.map((link) => (

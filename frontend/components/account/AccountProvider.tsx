@@ -12,7 +12,7 @@ import type {
   AuthAudience,
   AuthSubmitPayload,
 } from "@/components/auth/AuthModal";
-import type { PartnerFields } from "@/components/auth/SignupPartnerFields";
+import type { PartnerFields } from "@/components/forms/partnerFields";
 import { api, clearAccessToken, accessToken, userProfile } from "@/lib/api";
 
 /** Background texture printed on the card. */
@@ -119,9 +119,14 @@ export default function AccountProvider({
   }, []);
 
   const refreshAccount = useCallback(async () => {
-    const data = await api<{ user: Parameters<typeof userProfile>[0] }>("/api/auth/me");
+    const data = await api<{ user: Parameters<typeof userProfile>[0] }>(
+      "/api/auth/me",
+    );
     const next = userProfile(data.user);
-    persist({ ...next, cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle } });
+    persist({
+      ...next,
+      cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle },
+    });
   }, [persist]);
 
   // Read after mount: localStorage does not exist while server-rendering, so
@@ -148,23 +153,32 @@ export default function AccountProvider({
     async (payload: AuthSubmitPayload) => {
       const { audience, mode, username, email, password, partner } = payload;
       try {
-        const data = await api<{ access_token: string; user: Parameters<typeof userProfile>[0] }>(
-          `/api/auth/${mode === "login" ? "login" : "register"}`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              email,
-              password,
-              ...(mode === "signup" ? { username, audience, partner: partner ?? {} } : {}),
-            }),
-          },
-        );
+        const data = await api<{
+          access_token: string;
+          user: Parameters<typeof userProfile>[0];
+        }>(`/api/auth/${mode === "login" ? "login" : "register"}`, {
+          method: "POST",
+          body: JSON.stringify({
+            email,
+            password,
+            ...(mode === "signup"
+              ? { username, audience, partner: partner ?? {} }
+              : {}),
+          }),
+        });
         window.localStorage.setItem("access_token", data.access_token);
         const next = userProfile(data.user);
-        persist({ ...next, cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle } });
+        persist({
+          ...next,
+          cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle },
+        });
         return true;
       } catch (error) {
-        alert(error instanceof Error ? error.message : "Impossible de contacter le serveur.");
+        alert(
+          error instanceof Error
+            ? error.message
+            : "Impossible de contacter le serveur.",
+        );
         return false;
       }
     },
@@ -172,18 +186,31 @@ export default function AccountProvider({
   );
 
   const signOut = useCallback(async () => {
-    try { await api("/api/auth/logout", { method: "POST" }); } catch { /* Session is cleared locally below. */ }
+    try {
+      await api("/api/auth/logout", { method: "POST" });
+    } catch {
+      /* Session is cleared locally below. */
+    }
     clearAccessToken();
     persist(null);
   }, [persist]);
 
-  const updateProfile = useCallback(async (next: Profile) => {
-    const data = await api<{ user: Parameters<typeof userProfile>[0] }>("/api/auth/profile", {
-      method: "PUT",
-      body: JSON.stringify({ profile: next }),
-    });
-    persist({ ...userProfile(data.user), cardStyle: { ...DEFAULT_CARD_STYLE, ...data.user.profile.cardStyle } });
-  }, [persist]);
+  const updateProfile = useCallback(
+    async (next: Profile) => {
+      const data = await api<{ user: Parameters<typeof userProfile>[0] }>(
+        "/api/auth/profile",
+        {
+          method: "PUT",
+          body: JSON.stringify({ profile: next }),
+        },
+      );
+      persist({
+        ...userProfile(data.user),
+        cardStyle: { ...DEFAULT_CARD_STYLE, ...data.user.profile.cardStyle },
+      });
+    },
+    [persist],
+  );
 
   // Distinct from signOut only once a backend exists to delete against; both
   // end the session here.
@@ -203,7 +230,15 @@ export default function AccountProvider({
       deleteAccount,
       refreshAccount,
     }),
-    [profile, ready, signIn, signOut, updateProfile, deleteAccount, refreshAccount],
+    [
+      profile,
+      ready,
+      signIn,
+      signOut,
+      updateProfile,
+      deleteAccount,
+      refreshAccount,
+    ],
   );
 
   return (

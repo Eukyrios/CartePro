@@ -1,5 +1,6 @@
 import type { CardStyle, Profile } from "@/components/account/AccountProvider";
-import type { PartnerFields } from "@/components/auth/SignupPartnerFields";
+import { EMPTY_PARTNER } from "@/components/forms/partnerFields";
+import type { PartnerFields } from "@/components/forms/partnerFields";
 
 export type ApiUser = {
   id: number;
@@ -67,6 +68,16 @@ export function userProfile(user: ApiUser): Profile {
     id: user.id,
     balanceCents: user.balanceCents,
     ...user.profile,
+    /* Les neuf champs partenaire, complétés à la chaîne vide.
+     *
+     * Le seed n'écrit dans `partner_data` que ce dont le réseau a besoin —
+     * raison sociale, secteur, adresse, ville, code postal, tarif — et laisse
+     * `siren`, `objetSocial`, `categorie` et `nomRepresentant` absents. Le type
+     * promet des chaînes, l'API renvoyait `undefined`, et un champ contrôlé
+     * qui reçoit `undefined` puis une frappe fait basculer React de non
+     * contrôlé à contrôlé. Le formulaire ne peut pas se défendre seul de ça :
+     * la forme se répare ici, à la frontière. */
+    partner: { ...EMPTY_PARTNER, ...(user.profile?.partner ?? {}) },
     email: user.email,
     username: user.username,
   };

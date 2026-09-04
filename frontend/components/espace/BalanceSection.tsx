@@ -1,9 +1,11 @@
 "use client";
 
-import CreditCard3D from "@/components/home/CreditCard3D";
+import CreditCard3D from "@/components/card/CreditCard3D";
 import { formatEuros } from "@/components/data/ledger";
-import { SIMULATION_NOTICE } from "@/components/ui/surfaces";
-import { useAccount } from "@/components/account/AccountProvider";
+import Display from "@/components/ui/Display";
+import Screen from "@/components/ui/Screen";
+import SimulationNotice from "@/components/ui/SimulationNotice";
+import { useBalance } from "@/components/account/useBalance";
 
 /**
  * The first screen of the space: the greeting, the card, and what there is
@@ -17,21 +19,14 @@ import { useAccount } from "@/components/account/AccountProvider";
  * The simulation notice is here in the open, because a monetary value is.
  */
 export default function BalanceSection({ firstName }: { firstName: string }) {
-  const { profile } = useAccount();
-  const balance = profile?.balanceCents ?? 0;
+  const balance = useBalance();
 
   return (
-    <section
-      id="solde"
-      className="border-cp-border grid min-h-screen snap-start content-center gap-10 border-b py-16"
-    >
+    <Screen id="solde" gap={10}>
       <div>
-        <h1 className="text-[clamp(38px,5.4vw,64px)] leading-[0.84] font-black tracking-[-0.07em]">
+        <Display level={1} accent={`${firstName}.`} br={false}>
           Bonjour{" "}
-          <em className="text-cp-accent font-serif font-normal">
-            {firstName}.
-          </em>
-        </h1>
+        </Display>
       </div>
 
       <div className="w-full max-w-[520px]">
@@ -39,9 +34,11 @@ export default function BalanceSection({ firstName }: { firstName: string }) {
       </div>
 
       <div>
-        <p className={SIMULATION_NOTICE}>Simulation — aucun paiement réel</p>
+        <SimulationNotice>Simulation — aucun paiement réel</SimulationNotice>
         <p
           aria-live="polite"
+          /* Le seul clamp() hors de DISPLAY, et assumé : c'est une phrase, pas
+             un titre — elle se lit à taille d'affichage sans en être un. */
           className="text-cp-fg mt-3 max-w-[560px] text-[clamp(19px,2.2vw,26px)] leading-[1.35] font-black tracking-[-0.03em]"
         >
           {balance > 0 ? (
@@ -60,6 +57,6 @@ export default function BalanceSection({ firstName }: { firstName: string }) {
           )}
         </p>
       </div>
-    </section>
+    </Screen>
   );
 }

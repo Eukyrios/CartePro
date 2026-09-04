@@ -7,7 +7,7 @@ import { DarkThemeToggle, Navbar, NavbarBrand } from "flowbite-react";
 import AuthButtons from "@/components/auth/AuthButtons";
 import AuthModal from "@/components/auth/AuthModal";
 import UserMenu from "./UserMenu";
-import BrandLogo from "@/components/home/BrandLogo";
+import BrandLogo from "@/components/brand/BrandLogo";
 import {
   displayNameOf,
   useAccount,

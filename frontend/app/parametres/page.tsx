@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PageMain from "@/components/ui/PageMain";
 import AccountSettings from "@/components/profile/AccountSettings";
 
 export const metadata: Metadata = {
@@ -12,8 +13,8 @@ export default function ParametresPage() {
   // logo instead of being inset from it. The background lives in the root
   // layout; flex-1 takes the space left between the top and bottom bars.
   return (
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-6 lg:px-8">
+    <PageMain pad="y">
       <AccountSettings />
-    </main>
+    </PageMain>
   );
 }

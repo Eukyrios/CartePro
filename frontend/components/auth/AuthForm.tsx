@@ -2,8 +2,11 @@
 
 import type React from "react";
 import { demoAccountFor } from "@/components/account/demoAccounts";
-import { Arrow, Eyebrow } from "@/components/home/Marks";
-import { BTN_SOLID, MICRO } from "@/components/ui/surfaces";
+import Button from "@/components/ui/Button";
+import Display from "@/components/ui/Display";
+import Micro from "@/components/ui/Micro";
+import Note from "@/components/ui/Note";
+import { MICRO } from "@/components/ui/surfaces";
 import SigninFields from "./SigninFields";
 import SignupClientFields from "./SignupClientFields";
 import SignupPartnerFields from "./SignupPartnerFields";
@@ -55,12 +58,14 @@ export default function AuthForm({
 
   return (
     <form onSubmit={onSubmit}>
-      {/* Eyebrow over a heavy tight heading, as every section of the landing
-          page opens. */}
-      <Eyebrow>{mode === "login" ? "CONNEXION" : "INSCRIPTION"}</Eyebrow>
-      <h5 className="text-cp-fg mt-3.5 mb-7 text-[26px] leading-[0.92] font-black tracking-[-0.05em]">
+      {/* Micro-label over a heavy tight heading, as every section of the
+          landing page opens. */}
+      <Micro tone="accent">
+        {mode === "login" ? "Connexion" : "Inscription"}
+      </Micro>
+      <Display level={2} scale="panel" className="mt-3.5 mb-7">
         {headingFor(audience, mode)}
-      </h5>
+      </Display>
 
       {mode === "login" ? (
         <SigninFields form={form} />
@@ -71,8 +76,10 @@ export default function AuthForm({
       )}
 
       {demo && (
-        <div className="border-cp-accent bg-cp-surface mt-5 border-l-2 px-4 py-3.5">
-          <p className={`text-cp-accent ${MICRO}`}>{demo.label}</p>
+        <Note as="div" className="mt-5">
+          <Micro tone="accent" as="p">
+            {demo.label}
+          </Micro>
           <p className="text-cp-fg mt-2 font-mono text-[12px] break-all">
             {demo.profile.email} · {demo.password}
           </p>
@@ -83,11 +90,11 @@ export default function AuthForm({
               setValue("email", demo.profile.email);
               setValue("password", demo.password);
             }}
-            className="text-cp-fg decoration-cp-accent mt-2.5 text-[10px] font-black tracking-[0.12em] uppercase underline underline-offset-4 hover:decoration-2"
+            className={`text-cp-fg decoration-cp-accent mt-2.5 underline underline-offset-4 hover:decoration-2 ${MICRO}`}
           >
             Remplir ces identifiants
           </button>
-        </div>
+        </Note>
       )}
 
       <div className="my-6 flex items-start">
@@ -114,10 +121,9 @@ export default function AuthForm({
         </a>
       </div>
 
-      <button type="submit" className={`${BTN_SOLID} mb-4 w-full`}>
+      <Button type="submit" variant="solid" arrow className="mb-4 w-full">
         {submitLabelFor(audience, mode)}
-        <Arrow />
-      </button>
+      </Button>
 
       <div className="text-cp-muted text-[12px]">
         {mode === "login" ? (

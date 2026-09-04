@@ -15,14 +15,14 @@ import sys
 from PIL import Image
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PAGES = sorted((ROOT / "brandbook/pages").glob("page-*.png"))
-OUT = ROOT / "brandbook/ticket-tout-brand-book.pdf"
+PAGES = sorted((ROOT / "docs/brand-book/pages").glob("page-*.png"))
+OUT = ROOT / "docs/brand-book/ticket-tout-brand-book.pdf"
 
 # Les captures sont à 2× la taille CSS : 96 dpi × 2.
 DPI = 192
 
 if not PAGES:
-    sys.exit("aucune page dans brandbook/pages — lancer tools/shots.js d'abord")
+    sys.exit("aucune page dans docs/brand-book/pages — lancer tools/shots.js d'abord")
 
 images = []
 for p in PAGES:

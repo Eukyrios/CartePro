@@ -7,13 +7,19 @@ import {
   partnerCategoryLabel,
 } from "@/components/data/partnerCategories";
 import { partnerById } from "@/components/data/partners";
+import { fold } from "@/lib/text";
+import { useFilters } from "@/hooks/useFilters";
+import Display from "@/components/ui/Display";
+import EmptyState from "@/components/ui/EmptyState";
+import FilterGrid from "@/components/ui/FilterGrid";
+import Micro from "@/components/ui/Micro";
+import Pager from "@/components/ui/Pager";
+import ResultCount from "@/components/ui/ResultCount";
+import Screen from "@/components/ui/Screen";
 import SelectField from "@/components/ui/SelectField";
+import SimulationNotice from "@/components/ui/SimulationNotice";
 import TextField from "@/components/ui/TextField";
-import {
-  BTN_OUTLINE,
-  MICRO,
-  SIMULATION_NOTICE,
-} from "@/components/ui/surfaces";
+import { MICRO } from "@/components/ui/surfaces";
 import { useLedger } from "./useLedger";
 
 const DATE = new Intl.DateTimeFormat("fr-FR", {
@@ -29,15 +35,6 @@ const KINDS = [
   { value: "credit", label: "Crédits" },
   { value: "debit", label: "Paiements" },
 ];
-
-/** Accent- and case-insensitive, so "creperie" finds "Crêperie". */
-function fold(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase()
-    .trim();
-}
 
 /**
  * Every movement, newest first, with the balance as it stood after each one —
@@ -79,8 +76,13 @@ function categoryOf(partnerId?: string) {
 
 export default function HistorySection() {
   const ledger = useLedger();
-  const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [page, setPage] = useState(1);
+  // Toute retouche de filtre ramène à la première page : rester en page 4 d'un
+  // résultat qui n'en compte plus qu'une afficherait un vide.
+  const { filters, setFilter, reset, dirty } = useFilters<Filters>(
+    NO_FILTERS,
+    () => setPage(1),
+  );
   const { search, kind, categoryId, from, to } = filters;
 
   const entries = history(ledger);
@@ -130,24 +132,13 @@ export default function HistorySection() {
   const current = Math.min(page, pages);
   const rows = matches.slice((current - 1) * PER_PAGE, current * PER_PAGE);
 
-  function setFilter<K extends keyof Filters>(field: K, value: Filters[K]) {
-    setPage(1);
-    setFilters((current) => ({ ...current, [field]: value }));
-  }
-
-  const filtered = JSON.stringify(filters) !== JSON.stringify(NO_FILTERS);
-
   return (
-    <section
-      id="historique"
-      className="border-cp-border grid min-h-screen snap-start content-center border-b py-16"
-    >
-      <h2 className="mb-4 text-[clamp(34px,4.4vw,58px)] leading-[0.86] font-black tracking-[-0.07em]">
+    <Screen id="historique">
+      <Display level={2} accent="." br={false} className="mb-4">
         Historique
-        <em className="text-cp-accent font-serif font-normal">.</em>
-      </h2>
+      </Display>
       <div className="mb-8 flex flex-wrap items-center gap-4">
-        <p className={SIMULATION_NOTICE}>Simulation — montants fictifs</p>
+        <SimulationNotice>Simulation — montants fictifs</SimulationNotice>
         {/* The demonstration is spendable, so it has to be rewindable: without
             this, a drained balance persists in the browser and every partner
             refuses for ever. */}
@@ -157,13 +148,13 @@ export default function HistorySection() {
             resetLedger();
             setPage(1);
           }}
-          className={`text-cp-accent underline underline-offset-4 ${MICRO}`}
+          className={`text-cp-accent cursor-pointer underline underline-offset-4 ${MICRO}`}
         >
           Réinitialiser la démonstration
         </button>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <FilterGrid>
         <TextField
           id="historique-recherche"
           label="Rechercher"
@@ -208,33 +199,20 @@ export default function HistorySection() {
           onChange={(value) => setFilter("to", value)}
           min={from || undefined}
         />
-      </div>
+      </FilterGrid>
 
-      <div className="mt-7 flex flex-wrap items-baseline gap-4">
-        <p aria-live="polite" className={`text-cp-fg ${MICRO}`}>
-          {matches.length === 0
-            ? "Aucune opération"
-            : `${matches.length} opération${matches.length > 1 ? "s" : ""}`}
-        </p>
-        {filtered && (
-          <button
-            type="button"
-            onClick={() => {
-              setFilters(NO_FILTERS);
-              setPage(1);
-            }}
-            className={`text-cp-accent ms-auto underline underline-offset-4 ${MICRO}`}
-          >
-            Effacer les filtres
-          </button>
-        )}
-      </div>
+      <ResultCount
+        count={matches.length}
+        noun={["opération", "opérations"]}
+        zero="Aucune opération"
+        onReset={dirty ? reset : undefined}
+      />
 
       {matches.length === 0 ? (
-        <p className="text-cp-muted border-cp-border mt-3 border-y py-10 text-sm">
+        <EmptyState>
           Aucune opération ne correspond à ces filtres. Élargissez la période ou
           effacez les filtres.
-        </p>
+        </EmptyState>
       ) : (
         /* Scrolls inside the screen rather than stretching it. */
         <div className="mt-3 max-h-[46vh] overflow-y-auto">
@@ -271,13 +249,13 @@ export default function HistorySection() {
                     <span className="text-cp-fg text-[15px] font-black tracking-[-0.02em]">
                       {entry.label}
                     </span>
-                    <span className={`text-cp-muted mt-1 block ${MICRO}`}>
+                    <Micro tone="muted" className="mt-1 block">
                       {entry.kind === "credit"
                         ? "Crédit"
                         : categoryOf(entry.partnerId)
                           ? `Paiement · ${partnerCategoryLabel(categoryOf(entry.partnerId)!)}`
                           : "Paiement"}
-                    </span>
+                    </Micro>
                   </td>
                   <td
                     className={`py-4 text-right text-[15px] font-black tabular-nums ${
@@ -300,35 +278,17 @@ export default function HistorySection() {
       )}
 
       {pages > 1 && (
-        <nav
-          aria-label="Pages de l'historique"
-          className="mt-6 flex items-center gap-4"
-        >
-          <button
-            type="button"
-            onClick={() => setPage(current - 1)}
-            disabled={current === 1}
-            className={`${BTN_OUTLINE} px-4`}
-          >
-            <span aria-hidden="true">←</span>
-            <span className="sr-only">Page précédente</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setPage(current + 1)}
-            disabled={current === pages}
-            className={`${BTN_OUTLINE} px-4`}
-          >
-            <span aria-hidden="true">→</span>
-            <span className="sr-only">Page suivante</span>
-          </button>
-          <p aria-live="polite" className={`text-cp-fg ${MICRO}`}>
-            Page {String(current).padStart(2, "0")}
-            <span className="text-cp-accent px-1.5">/</span>
-            {String(pages).padStart(2, "0")}
-          </p>
-        </nav>
+        <Pager
+          onPrev={() => setPage(current - 1)}
+          onNext={() => setPage(current + 1)}
+          prevLabel="Page précédente"
+          nextLabel="Page suivante"
+          position={[current, pages]}
+          atStart={current === 1}
+          atEnd={current === pages}
+          className="mt-6"
+        />
       )}
-    </section>
+    </Screen>
   );
 }

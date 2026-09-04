@@ -2,9 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 import { TabItem, Tabs } from "flowbite-react";
+import Modal from "@/components/ui/Modal";
 import AuthForm from "./AuthForm";
-import { validatePartnerFields } from "./SignupPartnerFields";
-import type { PartnerErrors, PartnerFields } from "./SignupPartnerFields";
+import {
+  EMPTY_PARTNER,
+  validatePartnerFields,
+} from "@/components/forms/partnerFields";
+import type {
+  PartnerErrors,
+  PartnerFields,
+} from "@/components/forms/partnerFields";
 
 export type AuthMode = "login" | "signup";
 
@@ -45,17 +52,6 @@ export type AuthFormApi = {
   ) => void;
   /** Validates partner fields, publishes the messages, returns whether it passed. */
   validatePartner: () => boolean;
-};
-
-export const EMPTY_PARTNER: PartnerFields = {
-  raisonSociale: "",
-  siren: "",
-  objetSocial: "",
-  categorie: "",
-  adresse: "",
-  ville: "",
-  codePostal: "",
-  nomRepresentant: "",
 };
 
 const EMPTY_VALUES: AuthFormValues = {
@@ -155,7 +151,12 @@ export default function AuthModal({
     onSubmit({
       audience,
       mode,
-      username,
+      /* Un partenaire ne saisit pas de nom d'utilisateur — sa raison sociale
+         en tient lieu, comme `displayNameOf` le fait déjà à l'affichage. Sans
+         ce repli, `username` partait vide et /api/auth/register refusait
+         **toute** inscription partenaire par un 400 « Username, email and
+         password are required. », remonté en alert(). */
+      username: username || (partnerSignup ? partner.raisonSociale : username),
       email,
       password,
       remember,
@@ -163,41 +164,26 @@ export default function AuthModal({
     });
   }
 
-  // Render nothing while closed rather than being unmounted by the parent, so
-  // half-typed field values survive closing and reopening the modal.
-  if (!open) return null;
-
+  /* Un <dialog> natif, et non plus un div en position fixe : la touche Échap,
+     le piège de focus, le fond cliquable et le retour du focus au déclencheur
+     viennent de showModal(). Ce dialogue était le seul recouvrement de
+     l'application sans Échap ni piège de focus — la boîte du QR était plus
+     accessible que le formulaire de connexion.
+ 
+     Le « ne rien rendre tant que c'est fermé » disparaît du même coup : un
+     <dialog> fermé reste monté, donc les champs à moitié saisis survivent sans
+     contournement. */
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div
-        className={`bg-cp-page border-cp-fg pointer-events-auto relative z-50 max-h-[90vh] w-full overflow-y-auto rounded-none border-2 p-7 sm:p-8 ${
-          partnerSignup ? "max-w-5xl" : "max-w-sm"
-        }`}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-cp-muted hover:bg-cp-surface hover:text-cp-fg absolute end-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-none bg-transparent"
-        >
-          <svg
-            className="h-4 w-4"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M6 18 17.94 6M18 18 6.06 6"
-            />
-          </svg>
-          <span className="sr-only">Fermer la fenêtre</span>
-        </button>
-
+    <Modal
+      open={open}
+      onClose={onClose}
+      size={partnerSignup ? "2xl" : "sm"}
+      labelledBy="auth-tabs-label"
+    >
+      <span id="auth-tabs-label" className="sr-only">
+        {mode === "login" ? "Se connecter" : "Créer un compte"}
+      </span>
+      <div>
         {/* Flowbite's underline tabs are grey-on-grey with rounded tops and
             body-weight text. Themed here rather than replaced, because the tab
             list is the one part of this dialog doing real work (roving focus
@@ -246,6 +232,6 @@ export default function AuthModal({
           ))}
         </Tabs>
       </div>
-    </div>
+    </Modal>
   );
 }
