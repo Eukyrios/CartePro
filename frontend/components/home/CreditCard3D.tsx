@@ -1,7 +1,7 @@
 "use client";
 
 import { formatEuros } from "@/components/data/ledger";
-import { LogoMark, WordMark } from "./Marks";
+import VectorMark from "./VectorMark";
 import {
   DEFAULT_CARD_STYLE,
   useAccount,
@@ -171,27 +171,11 @@ export default function CreditCard3D({
             }}
           />
           <div className="flex items-start justify-between">
-            {/* Every length here is in cqw so the lockup keeps its proportions
-                at any card size: 2.5cqw of gap against a 7cqw glyph is the
-                10px-against-28px of the navbar. */}
-            <div className="flex items-center gap-[2.5cqw]">
-              <LogoMark
-                className="size-[7cqw]"
-                barClassName="h-[3.8cqw] w-[0.8cqw]"
-                style={{ backgroundColor: card.text }}
-                barStyle={{ backgroundColor: card.color }}
-              />
-              {/* 4.3cqw against the 7cqw glyph matches the 17px-against-28px
-                  the navbar sets — 2.9cqw was left over from the single-line
-                  wordmark, which made the two-line one read half a size small.
-                  The card's ink is chosen by the employé, so the shared T
-                  follows it rather than the brand accent. */}
-              <WordMark
-                className="text-[4.3cqw]"
-                tClassName="text-inherit"
-                wordClassName="text-inherit"
-              />
-            </div>
+            {/* In the card's own ink: VectorMark draws in currentColor, and
+                the card sets `color` to the employé's chosen text colour, so
+                the mark follows every restyle without a second asset. Sized in
+                cqw like everything else on the card. */}
+            <VectorMark className="h-[9cqw] w-auto" />
             {paying ? (
               /* A token QR, drawn from the card's own ink: the card at the
                  moment of payment is presenting something. */

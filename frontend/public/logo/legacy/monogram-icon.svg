@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Ticket Tout">
+  <!--
+    The Ticket Tout monogram, same geometry as the LogoMark in
+    components/home/Marks.tsx: a square skewed -8deg holding three bars each
+    skewed -25deg, with the bars carried by the tile's skew exactly as CSS
+    nesting composes them. The bars are a little thicker than the CSS glyph so
+    they hold up at 16px.
+
+    Shipped next to favicon.ico: this one stays crisp on high-DPI tabs, the ICO
+    covers everything that does not take an SVG icon.
+  -->
+  <style>
+    /* The tile is near-black in the light palette; on a dark tab strip it
+       needs a lighter step of the same ramp to stay visible. */
+    .tile { fill: #1b3a6b }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #3f6897 }
+    }
+  </style>
+  <g transform="translate(16 16) skewX(-8) translate(-16 -16)">
+    <rect class="tile" x="3" y="3" width="26" height="26" />
+    <g fill="#ffffff">
+      <rect x="7.5" y="8" width="4" height="16"
+            transform="translate(9.5 16) skewY(-25) translate(-9.5 -16)" />
+      <rect x="14" y="8" width="4" height="16"
+            transform="translate(16 16) skewY(-25) translate(-16 -16)" />
+      <rect x="20.5" y="8" width="4" height="16"
+            transform="translate(22.5 16) skewY(-25) translate(-22.5 -16)" />
+    </g>
+  </g>
+</svg>

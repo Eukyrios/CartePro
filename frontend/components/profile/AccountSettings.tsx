@@ -9,7 +9,6 @@ import {
   displayNameOf,
   useAccount,
 } from "@/components/account/AccountProvider";
-import { Eyebrow } from "@/components/home/Marks";
 import {
   BTN_OUTLINE,
   CHIP_OFFICIAL,
@@ -150,8 +149,7 @@ export default function AccountSettings() {
         <span className="text-cp-fg">Paramètres</span>
       </nav>
 
-      <Eyebrow>MON COMPTE</Eyebrow>
-      <h1 className="mt-4 mb-5 text-[clamp(38px,5.4vw,64px)] leading-[0.84] font-black tracking-[-0.07em]">
+      <h1 className="mb-5 text-[clamp(38px,5.4vw,64px)] leading-[0.84] font-black tracking-[-0.07em]">
         Paramètres
         <br />
         <em className="text-cp-accent font-serif font-normal">du compte.</em>

@@ -5,6 +5,11 @@ import type { Partner } from "@/components/data/partners";
  * A partner's photograph with their name laid over the bottom of it, shared by
  * the catalogue and the Minister's selection.
  *
+ * `shrink-0` and a min-height on the frame: in a tile whose height is set by
+ * its row rather than by its own content, a flex parent would otherwise squash
+ * the photo to fit — or, with no floor, flatten it in a narrow column. The
+ * frame also clips, so a hover scale cannot spill past the border.
+ *
  * alt="" on purpose: the name sits over the image as real text, so describing
  * the picture would only repeat it. `unoptimized` because the placeholders are
  * SVG, which the image optimiser refuses without being opened up to arbitrary
@@ -12,7 +17,7 @@ import type { Partner } from "@/components/data/partners";
  */
 export default function PartnerPhoto({
   partner,
-  className = "aspect-[4/3]",
+  className = "aspect-[4/3] min-h-[150px]",
   nameClassName = "text-[17px]",
 }: {
   partner: Partner;
@@ -20,7 +25,7 @@ export default function PartnerPhoto({
   nameClassName?: string;
 }) {
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={`relative shrink-0 overflow-hidden ${className}`}>
       <Image
         src={partner.photo}
         alt=""

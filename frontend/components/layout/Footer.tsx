@@ -5,7 +5,7 @@ import {
   FooterLink,
   FooterLinkGroup,
 } from "flowbite-react";
-import { LogoMark, WordMark } from "@/components/home/Marks";
+import BrandLogo from "@/components/home/BrandLogo";
 
 /**
  * TODO: the links are placeholders — point them at the real contact and legal
@@ -32,19 +32,10 @@ export default function Footer() {
       className="bg-cp-ink dark:bg-cp-ink mt-auto min-h-[230px] items-end rounded-none px-6 py-10 text-white shadow-none lg:h-[230px] lg:px-[7vw] lg:py-[42px]"
     >
       <div className="grid w-full gap-8 lg:grid-cols-3 lg:items-end lg:gap-0">
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 text-[18px] font-black tracking-[-0.07em] text-white"
-        >
-          <LogoMark className="size-7 bg-white" barClassName="bg-cp-ink" />
-          {/* Both tones step up the ramp here: the footer is near-black in
-              both themes, so the deep blue of the T would be swallowed by it.
-              The T stays the darker of the two, the words the paler, which is
-              the pairing everywhere else. */}
-          <WordMark
-            tClassName="text-primary-500"
-            wordClassName="text-primary-200"
-          />
+        <Link href="/" className="inline-flex">
+          {/* The footer is near-black in both themes, so the white mark is
+              pinned rather than following the theme. */}
+          <BrandLogo variant="white" className="h-[42px] w-auto" />
         </Link>
 
         <div className="max-w-[250px] text-[11px] leading-[1.5]">

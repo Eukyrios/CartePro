@@ -2,7 +2,6 @@
 
 import CreditCard3D from "@/components/home/CreditCard3D";
 import { balanceCents, formatEuros } from "@/components/data/ledger";
-import { Eyebrow } from "@/components/home/Marks";
 import { SIMULATION_NOTICE } from "@/components/ui/surfaces";
 import { useLedger } from "./useLedger";
 
@@ -27,8 +26,7 @@ export default function BalanceSection({ firstName }: { firstName: string }) {
       className="border-cp-border grid min-h-screen snap-start content-center gap-10 border-b py-16"
     >
       <div>
-        <Eyebrow>MON ESPACE</Eyebrow>
-        <h1 className="mt-4 text-[clamp(38px,5.4vw,64px)] leading-[0.84] font-black tracking-[-0.07em]">
+        <h1 className="text-[clamp(38px,5.4vw,64px)] leading-[0.84] font-black tracking-[-0.07em]">
           Bonjour{" "}
           <em className="text-cp-accent font-serif font-normal">
             {firstName}.

@@ -69,9 +69,9 @@ const PARTNER: DemoAccount = {
       siren: "404833048",
       objetSocial: "Chapellerie artisanale et accessoires de costume",
       categorie: "Culture",
-      adresse: "18 rue des Petits-Carreaux",
-      ville: "Paris",
-      codePostal: "75002",
+      adresse: "9 rue des Filatiers",
+      ville: "Toulouse",
+      codePostal: "31000",
       nomRepresentant: "Élise Chapelier",
     },
     cardStyle: {

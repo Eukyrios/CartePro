@@ -18,16 +18,20 @@ export type MinisterPick = {
 
 const PICKS: MinisterPick[] = [
   {
+    partnerId: "poney-dream-78",
+    note: "Parfait pour ressouder une équipe et renouer avec la nature.",
+  },
+  {
+    partnerId: "kostumparty",
+    note: "La créativité est la clé du bonheur au travail.",
+  },
+  {
     partnerId: "glaces-correze",
-    note: "Trois parfums, pas trente. La châtaigne vaut le détour à elle seule.",
+    note: "Soutenir l'artisanat français, un parfum à la fois.",
   },
   {
-    partnerId: "librairie-bellevue",
-    note: "On y entre pour un titre et on en ressort avec quatre. Le libraire y est pour beaucoup.",
-  },
-  {
-    partnerId: "thermes-chaudes-aigues",
-    note: "L'eau sort du sol à 82 °C depuis l'époque romaine. On ne s'en lasse pas.",
+    partnerId: "chapelier-fontaine",
+    note: "L'élégance française.",
   },
 ];
 

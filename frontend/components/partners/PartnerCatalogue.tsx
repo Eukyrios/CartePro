@@ -126,9 +126,18 @@ export default function PartnerCatalogue() {
        landmark named for assistive technology. */
     <section
       id="reseau"
-      aria-label="Catalogue des partenaires"
+      aria-labelledby="reseau-titre"
       className="grid min-h-screen snap-start content-center py-16"
     >
+      {/* Titled like the other screens of the space. */}
+      <h2
+        id="reseau-titre"
+        className="mb-8 text-[clamp(34px,4.4vw,58px)] leading-[0.86] font-black tracking-[-0.07em]"
+      >
+        Le réseau
+        <em className="text-cp-accent font-serif font-normal">.</em>
+      </h2>
+
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <TextField
           id="catalogue-search"
@@ -227,11 +236,11 @@ export default function PartnerCatalogue() {
                   if (travelled.current > 6) return;
                   setPaying(partner);
                 }}
-                className="border-cp-border group hover:border-cp-fg focus-visible:outline-cp-accent h-full w-full cursor-pointer border text-left focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="border-cp-border group hover:border-cp-fg focus-visible:outline-cp-accent flex h-full w-full cursor-pointer flex-col overflow-hidden border text-left focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 <PartnerPhoto partner={partner} />
 
-                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 p-4">
+                <div className="flex flex-1 flex-wrap items-baseline gap-x-4 gap-y-2 p-4">
                   <span className={`text-cp-accent ${MICRO}`}>
                     {partnerCategoryLabel(partner.categoryId)}
                   </span>
