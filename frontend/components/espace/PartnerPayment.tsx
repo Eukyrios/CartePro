@@ -185,16 +185,31 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
         )}
       </div>
 
-      <div className="mt-5 grid items-start gap-8 lg:grid-cols-2 lg:gap-14">
+      {/* Trois rangées, et c'est ce qui tient l'alignement : la mention, le QR,
+          puis ce qui se dit du QR. La colonne de gauche occupe les deux
+          premières, si bien que son bas est exactement le bas du QR — sans
+          qu'aucune hauteur soit écrite à la main. La rangée du QR est la seule
+          élastique : la photo prend ce que la carte laisse. */}
+      <div className="mt-5 grid gap-x-8 gap-y-0 lg:grid-cols-2 lg:grid-rows-[auto_1fr_auto] lg:gap-x-14">
         {/* Gauche : le partenaire, puis la carte sous son adresse. */}
-        <div>
+        <div className="mb-8 flex flex-col lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:mb-0">
+          {/* Élastique à partir de lg : la photo absorbe la hauteur restante,
+              c'est-à-dire le bas du QR moins la carte. Elle garde son cadrage
+              9/5 en pile mobile, où rien ne fixe la hauteur de la colonne. */}
           <PartnerPhoto
             partner={partner}
             withName={false}
-            className="aspect-[9/4] max-h-[32vh] min-h-[140px] w-full"
+            className="aspect-[9/5] min-h-[150px] w-full lg:aspect-auto lg:flex-1"
           />
 
-          <CardStage className="mt-5 w-full max-w-[min(100%,70vh)]">
+          {/* Pleine largeur : le bord droit de la carte tombe sur celui de la
+              photo. Sa hauteur suit (rapport 1,6), et c'est elle qui décide de
+              ce qui reste à la photo. */}
+          <CardStage
+            className="mt-5 w-full shrink-0"
+            insetClassName="px-[13%] py-[1.5vh]"
+            tagClassName="top-[8%] right-[16%] rotate-[4deg]"
+          >
             <CreditCard3D balanceCents={balance} />
           </CardStage>
         </div>
@@ -202,12 +217,14 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
         {/* Droite : l'emplacement du QR, et rien d'autre. Le bouton attend au
             centre ; le code se matérialise par-dessus, à la place qu'il occupe
             déjà, de sorte que rien ne bouge autour de lui. */}
-        <div className="flex flex-col lg:items-end">
+        <div className="flex lg:col-start-2 lg:row-start-1 lg:justify-end">
           <p className={SIMULATION_NOTICE}>
             Simulation — ce QR ne débite rien de réel
           </p>
+        </div>
 
-          <div className="border-cp-border bg-cp-page relative mt-4 grid aspect-square w-full max-w-[min(100%,62vh)] place-items-center overflow-hidden rounded-2xl border bg-[linear-gradient(to_right,rgba(27,58,107,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(27,58,107,0.10)_1px,transparent_1px)] bg-[length:18px_18px] dark:bg-[linear-gradient(to_right,rgba(234,240,251,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,240,251,0.12)_1px,transparent_1px)]">
+        <div className="lg:col-start-2 lg:row-start-2">
+          <div className="border-cp-border bg-cp-page relative ms-auto mt-4 grid aspect-square w-full max-w-[min(100%,62vh)] place-items-center overflow-hidden rounded-2xl border bg-[linear-gradient(to_right,rgba(27,58,107,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(27,58,107,0.10)_1px,transparent_1px)] bg-[length:18px_18px] dark:bg-[linear-gradient(to_right,rgba(234,240,251,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,240,251,0.12)_1px,transparent_1px)]">
             <button type="button" onClick={generate} className={BTN_SOLID}>
               {mine === "none" ? "Générer le QR" : "Nouveau QR"}
             </button>
@@ -220,7 +237,11 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
               </div>
             )}
           </div>
+        </div>
 
+        {/* Ce qui se dit du QR : sous lui, à sa largeur, pour que le bouton de
+            scan tombe sur son bord droit. */}
+        <div className="ms-auto w-full max-w-[min(100%,62vh)] lg:col-start-2 lg:row-start-3">
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <p className={`text-cp-fg ${MICRO}`}>
               {mine === "none" && "En attente du QR"}

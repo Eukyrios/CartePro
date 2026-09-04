@@ -37,10 +37,18 @@ export default function CardStage({
   children,
   tagClassName,
   className = "",
+  insetClassName = "px-[7%] py-[2.2vh]",
 }: {
   children: React.ReactNode;
   tagClassName?: string;
   className?: string;
+  /**
+   * The card's inset in the panel. It is the one thing that decides the
+   * panel's height, since the card's height follows its width: widen the
+   * inset and the whole panel gets shorter. Overridden where the panel shares
+   * a column with something that needs the room.
+   */
+  insetClassName?: string;
 }) {
   return (
     <div
@@ -52,7 +60,7 @@ export default function CardStage({
           filling it. The vertical inset is in vh, not per cent: a percentage
           padding resolves against the panel's *width*, which on a wide column
           made the panel far taller than the card inside it. */}
-      <div className="relative z-2 px-[7%] py-[2.2vh]">{children}</div>
+      <div className={`relative z-2 ${insetClassName}`}>{children}</div>
     </div>
   );
 }
