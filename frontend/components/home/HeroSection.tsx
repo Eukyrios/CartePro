@@ -1,3 +1,4 @@
+import { CardTag } from "./CardStage";
 import CreditCard3D from "./CreditCard3D";
 
 /**
@@ -66,16 +67,7 @@ export default function HeroSection() {
           </div>
         </div>
 
-        <div className="text-cp-accent border-primary-700 bg-cp-page absolute top-[9%] right-[6%] z-3 rotate-[4deg] border px-[13px] py-[11px]">
-          <span className="mb-[7px] block text-[7px] font-black tracking-[0.16em]">
-            UNE CARTE
-          </span>
-          <b className="text-[13px] leading-[0.85] tracking-[-0.05em]">
-            POUR
-            <br />
-            CHOISIR.
-          </b>
-        </div>
+        <CardTag />
 
         <div className="absolute right-[30px] bottom-[25px] text-[11px] font-black">
           01<span className="text-cp-accent px-1">/</span>04

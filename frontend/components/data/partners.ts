@@ -25,6 +25,13 @@ export type Partner = {
    * the difference.
    */
   photo: string;
+  /**
+   * What this partner is asking for, in cents — the amount is the merchant's
+   * to set, never the employé's. In production the partner's terminal sends
+   * it; here it stands in the data, which is also what makes some partners
+   * cost more than the demo balance, so the refusal can be shown.
+   */
+  amountCents: number;
 };
 
 const PARTNERS: Partner[] = [
@@ -36,6 +43,7 @@ const PARTNERS: Partner[] = [
     city: "Rambouillet",
     postcode: "78120",
     photo: "/partenaires/poney-dream-78.svg",
+    amountCents: 2500,
   },
   {
     id: "kostumparty",
@@ -45,6 +53,7 @@ const PARTNERS: Partner[] = [
     city: "Paris",
     postcode: "75011",
     photo: "/partenaires/kostumparty.svg",
+    amountCents: 1800,
   },
   {
     id: "glaces-correze",
@@ -54,6 +63,7 @@ const PARTNERS: Partner[] = [
     city: "Brive-la-Gaillarde",
     postcode: "19100",
     photo: "/partenaires/glaces-correze.svg",
+    amountCents: 450,
   },
   {
     id: "chapelier-fontaine",
@@ -63,6 +73,7 @@ const PARTNERS: Partner[] = [
     city: "Toulouse",
     postcode: "31000",
     photo: "/partenaires/chapelier-fontaine.svg",
+    amountCents: 2900,
   },
   {
     id: "table-des-quais",
@@ -72,6 +83,7 @@ const PARTNERS: Partner[] = [
     city: "Nantes",
     postcode: "44000",
     photo: "/partenaires/table-des-quais.svg",
+    amountCents: 1900,
   },
   {
     id: "librairie-bellevue",
@@ -81,6 +93,7 @@ const PARTNERS: Partner[] = [
     city: "Grenoble",
     postcode: "38000",
     photo: "/partenaires/librairie-bellevue.svg",
+    amountCents: 1650,
   },
   {
     id: "atelier-savon-marseille",
@@ -90,6 +103,7 @@ const PARTNERS: Partner[] = [
     city: "Marseille",
     postcode: "13001",
     photo: "/partenaires/atelier-savon-marseille.svg",
+    amountCents: 900,
   },
   {
     id: "thermes-chaudes-aigues",
@@ -99,6 +113,7 @@ const PARTNERS: Partner[] = [
     city: "Chaudes-Aigues",
     postcode: "15110",
     photo: "/partenaires/thermes-chaudes-aigues.svg",
+    amountCents: 3200,
   },
   {
     id: "gite-monts-dore",
@@ -108,6 +123,7 @@ const PARTNERS: Partner[] = [
     city: "Le Mont-Dore",
     postcode: "63240",
     photo: "/partenaires/gite-monts-dore.svg",
+    amountCents: 8900,
   },
   {
     id: "cinema-rex-lille",
@@ -117,6 +133,7 @@ const PARTNERS: Partner[] = [
     city: "Lille",
     postcode: "59800",
     photo: "/partenaires/cinema-rex-lille.svg",
+    amountCents: 750,
   },
   {
     id: "accrobranche-esterel",
@@ -126,6 +143,7 @@ const PARTNERS: Partner[] = [
     city: "Fréjus",
     postcode: "83600",
     photo: "/partenaires/accrobranche-esterel.svg",
+    amountCents: 2200,
   },
   {
     id: "primeur-victor-hugo",
@@ -135,6 +153,7 @@ const PARTNERS: Partner[] = [
     city: "Toulouse",
     postcode: "31000",
     photo: "/partenaires/primeur-victor-hugo.svg",
+    amountCents: 1200,
   },
   {
     id: "creperie-armor",
@@ -144,6 +163,7 @@ const PARTNERS: Partner[] = [
     city: "Vannes",
     postcode: "56000",
     photo: "/partenaires/creperie-armor.svg",
+    amountCents: 1450,
   },
   {
     id: "spa-vosges",
@@ -153,6 +173,7 @@ const PARTNERS: Partner[] = [
     city: "Gérardmer",
     postcode: "88400",
     photo: "/partenaires/spa-vosges.svg",
+    amountCents: 5500,
   },
   {
     id: "musee-verre-biot",
@@ -162,6 +183,7 @@ const PARTNERS: Partner[] = [
     city: "Biot",
     postcode: "06410",
     photo: "/partenaires/musee-verre-biot.svg",
+    amountCents: 600,
   },
   {
     id: "camping-etang-bleu",
@@ -171,6 +193,7 @@ const PARTNERS: Partner[] = [
     city: "Vayrac",
     postcode: "46110",
     photo: "/partenaires/camping-etang-bleu.svg",
+    amountCents: 4200,
   },
 ];
 

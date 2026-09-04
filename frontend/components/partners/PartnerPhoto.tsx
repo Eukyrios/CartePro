@@ -19,10 +19,13 @@ export default function PartnerPhoto({
   partner,
   className = "aspect-[4/3] min-h-[150px]",
   nameClassName = "text-[17px]",
+  withName = true,
 }: {
   partner: Partner;
   className?: string;
   nameClassName?: string;
+  /** False where the name is already a heading beside the photo. */
+  withName?: boolean;
 }) {
   return (
     <div className={`relative shrink-0 overflow-hidden ${className}`}>
@@ -35,16 +38,21 @@ export default function PartnerPhoto({
         className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
       />
       {/* Scrim: white on the artwork alone is not a contrast anyone can rely
-          on, whatever the photograph turns out to be. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/85 via-black/45 to-transparent"
-      />
-      <h3
-        className={`absolute inset-x-0 bottom-0 p-4 leading-[1.05] font-black tracking-[-0.03em] text-white ${nameClassName}`}
-      >
-        {partner.name}
-      </h3>
+          on, whatever the photograph turns out to be. Both it and the name go
+          when the name is not laid over the picture. */}
+      {withName && (
+        <>
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/85 via-black/45 to-transparent"
+          />
+          <h3
+            className={`absolute inset-x-0 bottom-0 p-4 leading-[1.05] font-black tracking-[-0.03em] text-white ${nameClassName}`}
+          >
+            {partner.name}
+          </h3>
+        </>
+      )}
     </div>
   );
 }

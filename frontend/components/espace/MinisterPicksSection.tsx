@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import Link from "next/link";
 import { ministerPicks } from "@/components/data/ministerPicks";
 import PartnerPhoto from "@/components/partners/PartnerPhoto";
 import { BTN_OUTLINE, CHIP_OFFICIAL, MICRO } from "@/components/ui/surfaces";
-import PaymentDialog from "./PaymentDialog";
-import type { Partner } from "@/components/data/partners";
 
 /** Copies of the list laid end to end, so the seam is never on screen. */
 const COPIES = 3;
@@ -31,7 +30,6 @@ const DRIFT = 0.04;
  * re-render every tile in it.
  */
 export default function MinisterPicksSection() {
-  const [paying, setPaying] = useState<Partner | null>(null);
   const trackRef = useRef<HTMLUListElement>(null);
   const motion = useRef({
     offset: 0,
@@ -39,19 +37,16 @@ export default function MinisterPicksSection() {
     target: null as number | null,
     /** Pointer or focus inside the row: reading should not be a moving target. */
     hovered: false,
-    /** A payment dialog is open, so the row behind it holds still. */
-    blocked: false,
+    /** Whether the last gesture moved the row, so a drag is not read as a tap. */
+    dragged: false,
     drag: null as { pointerX: number; from: number } | null,
     copyWidth: 0,
   });
 
-  const picks = ministerPicks();
+  /** Set while a drag is in progress, read by the tiles' click handler. */
+  const dragged = useRef(false);
 
-  // The dialog's pause belongs in an effect: assigning it while rendering both
-  // fires on every render and — as first written — latched on for good.
-  useEffect(() => {
-    motion.current.blocked = paying !== null;
-  }, [paying]);
+  const picks = ministerPicks();
 
   useEffect(() => {
     const track = trackRef.current;
@@ -77,7 +72,7 @@ export default function MinisterPicksSection() {
           } else {
             m.offset += remaining * Math.min(1, dt / 110);
           }
-        } else if (!m.hovered && !m.blocked && !reduced.matches) {
+        } else if (!m.hovered && !reduced.matches) {
           m.offset += DRIFT * dt;
         }
       }
@@ -110,23 +105,35 @@ export default function MinisterPicksSection() {
 
   function handlePointerDown(event: React.PointerEvent) {
     if (event.button !== 0) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    /* Capture is taken in handlePointerMove, not here: an element that captures
+       the pointer becomes the target of the following click, which stopped the
+       tiles' links from ever navigating. */
     motion.current.drag = {
       pointerX: event.clientX,
       from: motion.current.offset,
     };
     motion.current.target = null;
+    dragged.current = false;
   }
 
   function handlePointerMove(event: React.PointerEvent) {
     const drag = motion.current.drag;
     if (!drag) return;
+    if (Math.abs(event.clientX - drag.pointerX) > 6) {
+      dragged.current = true;
+      if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+    }
     // Dragging left pulls the row left, which means a larger offset.
     motion.current.offset = drag.from - (event.clientX - drag.pointerX);
   }
 
   function endDrag() {
     motion.current.drag = null;
+    // After the click that follows this release, so the guard above still sees
+    // it, but never outliving the gesture.
+    window.setTimeout(() => (dragged.current = false), 0);
   }
 
   if (picks.length === 0) return null;
@@ -173,10 +180,17 @@ export default function MinisterPicksSection() {
                    are there to make the row look endless. */
                 aria-hidden={copy > 0 ? "true" : undefined}
               >
-                <button
-                  type="button"
+                <Link
+                  href={`/espace/partenaire/${partner.id}`}
                   tabIndex={copy > 0 ? -1 : undefined}
-                  onClick={() => setPaying(partner)}
+                  onClick={(event) => {
+                    /* Pushing the row along is not choosing a partner.
+                       `detail === 0` is a keyboard activation, which no drag
+                       precedes — otherwise a stale flag would block Enter. */
+                    if (event.detail !== 0 && dragged.current) {
+                      event.preventDefault();
+                    }
+                  }}
                   className="border-cp-border group hover:border-cp-fg focus-visible:outline-cp-accent flex h-full w-full cursor-pointer flex-col overflow-hidden border text-left focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   <PartnerPhoto partner={partner} />
@@ -190,7 +204,7 @@ export default function MinisterPicksSection() {
                       {partner.postcode} {partner.city}
                     </address>
                   </div>
-                </button>
+                </Link>
               </li>
             )),
           )}
@@ -218,10 +232,6 @@ export default function MinisterPicksSection() {
           {picks.length} coup{picks.length > 1 ? "s" : ""} de cœur
         </p>
       </div>
-
-      {paying && (
-        <PaymentDialog partner={paying} onClose={() => setPaying(null)} />
-      )}
     </section>
   );
 }

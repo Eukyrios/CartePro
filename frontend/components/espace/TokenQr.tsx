@@ -8,6 +8,11 @@
  *
  * Deliberately drawn from the id alone: the amount and the holder are not in
  * the picture, and could not be read out of it.
+ *
+ * It forms rather than appears: each module fades and scales in on a delay
+ * taken from its position, which is the landing page's dissolve played
+ * backwards. The svg is keyed on the token, so a new one remounts and draws
+ * itself again instead of swapping in fully formed.
  */
 const SIZE = 21;
 
@@ -61,11 +66,12 @@ export default function TokenQr({
 
   return (
     <div
-      className={`aspect-square w-[min(72vw,300px)] rounded-2xl bg-white p-[5%] ${
+      className={`qr-materialise aspect-square w-full rounded-2xl bg-white p-[5%] ${
         dimmed ? "opacity-30" : ""
       }`}
     >
       <svg
+        key={tokenId}
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         aria-hidden="true"
         className="size-full"
@@ -78,7 +84,10 @@ export default function TokenQr({
             y={row}
             width="1"
             height="1"
-            className="fill-primary-700"
+            className="qr-module fill-primary-700"
+            /* Staggered along the diagonal, so the code draws itself from one
+               corner rather than blinking into existence. */
+            style={{ animationDelay: `${(row + col) * 12}ms` }}
           />
         ))}
       </svg>

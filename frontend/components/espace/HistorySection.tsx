@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { formatEuros, history } from "@/components/data/ledger";
+import { formatEuros, history, resetLedger } from "@/components/data/ledger";
 import {
   partnerCategories,
   partnerCategoryLabel,
@@ -146,9 +146,22 @@ export default function HistorySection() {
         Historique
         <em className="text-cp-accent font-serif font-normal">.</em>
       </h2>
-      <p className={`${SIMULATION_NOTICE} mb-8`}>
-        Simulation — montants fictifs
-      </p>
+      <div className="mb-8 flex flex-wrap items-center gap-4">
+        <p className={SIMULATION_NOTICE}>Simulation — montants fictifs</p>
+        {/* The demonstration is spendable, so it has to be rewindable: without
+            this, a drained balance persists in the browser and every partner
+            refuses for ever. */}
+        <button
+          type="button"
+          onClick={() => {
+            resetLedger();
+            setPage(1);
+          }}
+          className={`text-cp-accent underline underline-offset-4 ${MICRO}`}
+        >
+          Réinitialiser la démonstration
+        </button>
+      </div>
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <TextField

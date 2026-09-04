@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DarkThemeToggle, Navbar, NavbarBrand } from "flowbite-react";
 import AuthButtons from "@/components/auth/AuthButtons";
 import AuthModal from "@/components/auth/AuthModal";
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export default function TopBar({ onLogin, onLogout }: Props) {
+  const router = useRouter();
   const { profile, ready, signIn, signOut } = useAccount();
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");
@@ -44,6 +46,10 @@ export default function TopBar({ onLogin, onLogout }: Props) {
   function handleSignOut() {
     signOut();
     if (onLogout) onLogout();
+    /* Every other page is the signed-in person's own — the space, the
+       settings, a partner's payment screen — so signing out anywhere lands on
+       the public homepage rather than on a page telling you to sign in. */
+    router.push("/");
   }
 
   return (

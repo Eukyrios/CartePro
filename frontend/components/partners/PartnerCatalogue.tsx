@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { Arrow } from "@/components/home/Marks";
 import PartnerPhoto from "./PartnerPhoto";
 import { partnerCategoryLabel } from "@/components/data/partnerCategories";
@@ -12,8 +13,6 @@ import {
 import SelectField from "@/components/ui/SelectField";
 import TextField from "@/components/ui/TextField";
 import { BTN_OUTLINE, MICRO } from "@/components/ui/surfaces";
-import PaymentDialog from "@/components/espace/PaymentDialog";
-import type { Partner } from "@/components/data/partners";
 
 /** Everything the filters hold. Page is reset whenever any of them changes. */
 type Filters = {
@@ -53,7 +52,6 @@ export default function PartnerCatalogue() {
   const startX = useRef(0);
   /** How far the last gesture travelled, so a swipe is not read as a tap. */
   const travelled = useRef(0);
-  const [paying, setPaying] = useState<Partner | null>(null);
 
   const categories = useMemo(
     () =>
@@ -84,7 +82,11 @@ export default function PartnerCatalogue() {
      that cannot go anywhere says so instead of doing nothing. */
   function handlePointerDown(event: React.PointerEvent) {
     if (event.button !== 0) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    /* No setPointerCapture here, deliberately. A container that captures the
+       pointer on pointerdown becomes the target of the click that follows, so
+       the tile's link never received it and clicking a partner did nothing.
+       Capture is taken in handlePointerMove instead, once the gesture has
+       proved itself a drag — a plain click then never involves capture at all. */
     startX.current = event.clientX;
     travelled.current = 0;
     setDrag(0);
@@ -94,6 +96,12 @@ export default function PartnerCatalogue() {
     if (drag === null) return;
     const travel = event.clientX - startX.current;
     travelled.current = Math.abs(travel);
+    if (
+      travelled.current > 6 &&
+      !event.currentTarget.hasPointerCapture(event.pointerId)
+    ) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     const blocked =
       (travel < 0 && result.page === result.pages) ||
       (travel > 0 && result.page === 1);
@@ -102,6 +110,9 @@ export default function PartnerCatalogue() {
 
   function handlePointerUp() {
     if (drag === null) return;
+    // Cleared on the next press, but also here so nothing stale outlives the
+    // gesture that measured it.
+    window.setTimeout(() => (travelled.current = 0), 0);
     if (drag <= -SWIPE_THRESHOLD)
       setPage(Math.min(result.page + 1, result.pages));
     else if (drag >= SWIPE_THRESHOLD) setPage(Math.max(result.page - 1, 1));
@@ -225,16 +236,20 @@ export default function PartnerCatalogue() {
         >
           {result.items.map((partner) => (
             <li key={partner.id}>
-              {/* A tile is the way to pay: clicking one opens the payment
-                  dialog for that partner. A button, so the keyboard reaches it
-                  and it announces itself as an action. */}
-              <button
-                type="button"
-                onClick={() => {
-                  // A drag that happens to end on a tile is a swipe, not a
-                  // choice of partner.
-                  if (travelled.current > 6) return;
-                  setPaying(partner);
+              {/* A tile is the way to pay: it links to that partner's payment
+                  page. A real link, so it opens in a new tab, is shareable,
+                  and the keyboard reaches it. */}
+              <Link
+                href={`/espace/partenaire/${partner.id}`}
+                onClick={(event) => {
+                  /* A drag that happens to end on a tile is a swipe, not a
+                     choice of partner — so it must not navigate. `detail === 0`
+                     is a keyboard activation, which no gesture precedes: without
+                     that check a stale travel distance from an earlier swipe
+                     would block Enter on the tile. */
+                  if (event.detail !== 0 && travelled.current > 6) {
+                    event.preventDefault();
+                  }
                 }}
                 className="border-cp-border group hover:border-cp-fg focus-visible:outline-cp-accent flex h-full w-full cursor-pointer flex-col overflow-hidden border text-left focus-visible:outline-2 focus-visible:outline-offset-2"
               >
@@ -253,14 +268,10 @@ export default function PartnerCatalogue() {
                     {partner.postcode} {partner.city}
                   </address>
                 </div>
-              </button>
+              </Link>
             </li>
           ))}
         </ul>
-      )}
-
-      {paying && (
-        <PaymentDialog partner={paying} onClose={() => setPaying(null)} />
       )}
 
       {result.pages > 1 && (

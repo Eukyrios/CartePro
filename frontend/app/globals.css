@@ -468,6 +468,42 @@ html:has(.snap-sections) {
   scale: 0;
 }
 
+/*
+ * The payment QR forming, which is the landing page's dissolve run backwards:
+ * the same per-module transition, the same diagonal stagger set inline, but
+ * from nothing to solid when a token is issued. Keyed on the token, so a new
+ * one draws itself again rather than appearing fully formed.
+ */
+@keyframes qr-form {
+  from {
+    opacity: 0;
+    scale: 0;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/*
+ * An animation, not a transition: a transition needs two states arranged in
+ * two frames, which meant a mount, a ref, and a state flip that had to land —
+ * three things to get wrong for a decoration. A keyframe plays itself the
+ * moment the module exists, and the per-module delay set inline staggers it
+ * along the diagonal exactly as the landing page's dissolve does.
+ */
+.qr-materialise .qr-module {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: qr-form 0.34s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-materialise .qr-module {
+    animation: none;
+  }
+}
+
 /* Held back until the code has mostly cleared, so the two do not overlap. */
 .qr-dissolve .qr-reveal {
   opacity: 0;
