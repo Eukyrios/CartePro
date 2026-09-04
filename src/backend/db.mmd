@@ -1,0 +1,30 @@
+erDiagram
+    direction LR
+
+    USER ||--o{ TRANSACTION : "est le salarie"
+    USER ||--o{ TRANSACTION : "est le partenaire"
+
+    USER {
+        INTEGER id PK
+        VARCHAR username UK
+        VARCHAR email UK
+        VARCHAR password_hash
+        VARCHAR role
+        VARCHAR audience
+        BOOLEAN is_active
+        DATETIME created_at
+        FLOAT solde
+        VARCHAR company_name
+        VARCHAR siret
+        JSON partner_data
+        JSON card_style
+    }
+
+    TRANSACTION {
+        INTEGER id PK
+        INTEGER salarie_id FK
+        INTEGER partenaire_id FK
+        FLOAT montant
+        DATETIME date
+        VARCHAR statut
+    }
