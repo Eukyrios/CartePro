@@ -1,38 +1,69 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
+from models import db, User
 
 partenaires_bp = Blueprint('partenaires', __name__)
 
-# Simulation de la base de données
-PARTENAIRES_OFFICIELS = [
-    {"id": 1, "nom": "Poney Dream 78", "secteur": "Team building", "badge_partenaire_officiel": True, "featured": False},
-    {"id": 2, "nom": "KostumParty", "secteur": "Déguisements", "badge_partenaire_officiel": True, "featured": True},
-    {"id": 3, "nom": "Glaces Artisanales Corrèze", "secteur": "Alimentation", "badge_partenaire_officiel": True, "featured": False},
-    {"id": 4, "nom": "Chapelier Fontaine", "secteur": "Mode", "badge_partenaire_officiel": True, "featured": False}
-]
-
 @partenaires_bp.route('/catalogue', methods=['GET'])
 def catalogue():
-    partenaires = [
-        {"id": 1, "nom": "Poney Dream 78"},
-        {"id": 2, "nom": "KostumParty"}
-    ]
-    return jsonify(partenaires), 200
+    # 1. On va chercher tous les utilisateurs ayant le rôle partenaire
+    partenaires_db = User.query.filter_by(role='partenaire').all()
+    
+    # 2. On formate le JSON pour le frontend
+    catalogue = []
+    for p in partenaires_db:
+        # On gère le fait que partner_data puisse être vide
+        data_json = p.partner_data if isinstance(p.partner_data, dict) else {}
+        
+        catalogue.append({
+            "id": p.id,
+            "nom": p.company_name or p.username or "Partenaire sans nom",
+            "secteur": data_json.get("secteur", "Non défini"),
+            "featured": data_json.get("featured", False)
+        })
+        
+    return jsonify(catalogue), 200
 
 @partenaires_bp.route('/coup-de-coeur', methods=['GET'])
 def get_coup_de_coeur():
-    featured = next((p for p in PARTENAIRES_OFFICIELS if p["featured"]), None)
+    # On récupère tous les partenaires
+    partenaires_db = User.query.filter_by(role='partenaire').all()
+    
+    # On cherche le premier qui possède "featured: true" dans son dictionnaire JSON
+    featured = next(
+        (p for p in partenaires_db if isinstance(p.partner_data, dict) and p.partner_data.get("featured") is True), 
+        None
+    )
+    
+    if featured:
+        retour = {
+            "id": featured.id,
+            "nom": featured.company_name or featured.username,
+            "secteur": featured.partner_data.get("secteur", "Non défini")
+        }
+    else:
+        retour = None
+
     return jsonify({
         "status": "success",
-        "coup_de_coeur": featured
+        "coup_de_coeur": retour
     }), 200
 
-@partenaires_bp.route('/admin/supprimer', methods=['POST'])
+# J'ai ajouté l'ID dans l'URL pour que ce soit RESTful (ex: /admin/supprimer/3)
+@partenaires_bp.route('/admin/supprimer/<int:partenaire_id>', methods=['DELETE'])
 @jwt_required()
-def supprimer_partenaire():
+def supprimer_partenaire(partenaire_id):
     claims = get_jwt()
     
     if claims.get("role") != "admin":
         return jsonify({"error": "Accès refusé. Réservé aux administrateurs."}), 403
         
-    return jsonify({"message": "Action administrateur autorisée"}), 200
+    partenaire = User.query.get(partenaire_id)
+    if not partenaire or partenaire.role != 'partenaire':
+        return jsonify({"error": "Partenaire introuvable dans la base de données."}), 404
+        
+    # Suppression définitive en base de données
+    db.session.delete(partenaire)
+    db.session.commit()
+        
+    return jsonify({"message": f"Le partenaire {partenaire.company_name or partenaire.id} a été supprimé."}), 200
