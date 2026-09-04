@@ -63,13 +63,8 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
   const [now, setNow] = useState(() => Date.now());
 
   const status = tokenState(token, now);
-  /* Judged before the press as well as inside the ledger: a button that can
-     only ever be refused should say so rather than look broken when nothing
-     happens. The ledger still has the last word — the balance can change
-     between this render and the click. */
-  const affordable = partner.amountCents <= balance;
-  // A token issued for another partner is not this page's business.
-  const mine = token?.amountCents === partner.amountCents ? status : "none";
+  // Un jeton émis pour un autre partenaire ne concerne pas cette page.
+  const mine = token?.partnerId === partner.id ? status : "none";
 
   useEffect(() => {
     if (status !== "active") return;
@@ -89,7 +84,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
 
   function generate() {
     setPaid(null);
-    const result = issueToken(partner.amountCents);
+    const result = issueToken(partner.amountCents, partner.id);
     setRefusal(result.ok ? null : result.reason);
     setNow(Date.now());
   }
@@ -116,8 +111,8 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
        payment block are each capped in vh so the whole thing fits under the
        76px bar without scrolling. 100dvh rather than 100vh so a mobile
        browser's collapsing toolbar does not cut the bottom off. */
-    <section className="grid min-h-[calc(100dvh-76px)] content-center py-6">
-      <div className="mb-8 flex items-center gap-4">
+    <section className="grid min-h-[calc(100dvh-76px)] content-center py-3">
+      <div className="mb-5 flex items-center gap-4">
         {/* Back to wherever you came from — the catalogue, or the Minister's
             selection. A fresh tab has no history to go back through, so that
             case lands on the space instead of doing nothing. */}
@@ -154,130 +149,117 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
 
       {/* The heading spans both columns, so the photo and the card start on the
           same line below it. */}
-      <h1 className="text-[clamp(26px,3.4vw,44px)] leading-[0.88] font-black tracking-[-0.06em]">
-        Payer chez
-        <br />
-        <em className="text-cp-accent font-serif font-normal">
-          {partner.name}.
-        </em>
-      </h1>
+      <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-5">
+        <div className="flex flex-wrap items-start gap-x-12 gap-y-4">
+          <h1 className="text-[clamp(28px,3.4vw,48px)] leading-[0.88] font-black tracking-[-0.055em]">
+            Payer chez
+            <br />
+            <em className="text-cp-accent font-serif font-normal">
+              {partner.name}.
+            </em>
+          </h1>
 
-      <div className="mt-7 grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* La catégorie et le lieu tiennent au nom : ils se lisent avec lui,
+              pas sous la photo. */}
+          <div className="pt-1">
+            <p className="text-cp-accent text-[12px] font-black tracking-[0.16em] uppercase">
+              {partnerCategoryLabel(partner.categoryId)}
+            </p>
+            <address className="text-cp-fg mt-3 text-[19px] leading-[1.55] not-italic">
+              {partner.address}
+              <br />
+              <span className="text-cp-muted">
+                {partner.postcode} {partner.city}
+              </span>
+            </address>
+          </div>
+        </div>
+
+        {/* Statut administratif porté par les données : affiché seulement pour
+            les partenaires conventionnés, et à hauteur de titre parce que c'est
+            ce que le porteur doit voir avant de payer. */}
+        {partner.official && (
+          <p className="border-cp-official text-cp-official w-[17rem] shrink-0 border-2 px-6 py-5 text-[15px] leading-[1.3] font-black tracking-[0.08em] uppercase">
+            Partenaire Officiel du Ministère
+          </p>
+        )}
+      </div>
+
+      <div className="mt-5 grid items-start gap-8 lg:grid-cols-2 lg:gap-14">
+        {/* Gauche : le partenaire, puis la carte sous son adresse. */}
         <div>
-          {/* Tall enough to reach the rule that opens the payment block in the
-              other column: that rule sits at the panel's height plus its top
-              margin, which is about 36vh on a full-height window. */}
           <PartnerPhoto
             partner={partner}
             withName={false}
-            className="aspect-[4/3] max-h-[36vh] min-h-[180px] w-full"
+            className="aspect-[9/4] max-h-[32vh] min-h-[140px] w-full"
           />
-          {/* Bigger than the micro-type used elsewhere: with only a category
-              and three lines of address under a large photo, the column read
-              as empty. */}
-          <p className="text-cp-accent mt-7 text-[11px] font-black tracking-[0.16em] uppercase">
-            {partnerCategoryLabel(partner.categoryId)}
-          </p>
-          <address className="text-cp-fg mt-5 text-[19px] leading-[1.55] not-italic">
-            {partner.address}
-            <br />
-            <span className="text-cp-muted">
-              {partner.postcode} {partner.city}
-            </span>
-          </address>
+
+          <CardStage className="mt-5 w-full max-w-[min(100%,70vh)]">
+            <CreditCard3D balanceCents={balance} />
+          </CardStage>
         </div>
 
-        <div>
-          {/* The same panel the hero presents the card on: blueprint grid and
-              the tilted tag. */}
-          <CardStage className="w-full">
-            {/* The card is sized off the height budget: 44vh of width is about
-                27vh of card, since the card is 1.6:1. */}
-            <div className="mx-auto w-full max-w-[min(100%,44vh)]">
-              <CreditCard3D balanceCents={balance} />
-            </div>
-          </CardStage>
+        {/* Droite : l'emplacement du QR, et rien d'autre. Le bouton attend au
+            centre ; le code se matérialise par-dessus, à la place qu'il occupe
+            déjà, de sorte que rien ne bouge autour de lui. */}
+        <div className="flex flex-col lg:items-end">
+          <p className={SIMULATION_NOTICE}>
+            Simulation — ce QR ne débite rien de réel
+          </p>
 
-          <div className="border-t-cp-fg mt-6 grid items-start gap-6 border-t-2 pt-5 sm:grid-cols-[minmax(0,1fr)_170px]">
-            <div>
-              <p className={SIMULATION_NOTICE}>
-                Simulation — ce QR ne débite rien de réel
-              </p>
+          <div className="border-cp-border bg-cp-page relative mt-4 grid aspect-square w-full max-w-[min(100%,62vh)] place-items-center overflow-hidden rounded-2xl border bg-[linear-gradient(to_right,rgba(27,58,107,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(27,58,107,0.10)_1px,transparent_1px)] bg-[length:18px_18px] dark:bg-[linear-gradient(to_right,rgba(234,240,251,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,240,251,0.12)_1px,transparent_1px)]">
+            <button type="button" onClick={generate} className={BTN_SOLID}>
+              {mine === "none" ? "Générer le QR" : "Nouveau QR"}
+            </button>
 
-              {/* The partner's price, stated rather than asked for. */}
-              <p className={`text-cp-muted mt-4 ${MICRO}`}>Montant demandé</p>
-              <p className="mt-1 text-[clamp(26px,3vw,36px)] leading-[0.9] font-black tracking-[-0.05em]">
-                {formatEuros(partner.amountCents)}
-              </p>
-              <p className="text-cp-muted mt-2 text-[13px]">
-                Votre solde : {formatEuros(balance)}
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={generate}
-                  disabled={!affordable}
-                  className={BTN_SOLID}
-                >
-                  {mine === "active" ? "Nouveau QR" : "Générer le QR"}
-                </button>
-                {mine === "active" && (
-                  <button type="button" onClick={pay} className={BTN_OUTLINE}>
-                    Simuler le scan
-                  </button>
-                )}
-              </div>
-
-              {!affordable && (
-                <p className={`${NOTE_DANGER} mt-5`}>
-                  Ce partenaire demande{" "}
-                  {formatEuros(partner.amountCents - balance)} de plus que votre
-                  solde. Aucun QR ne peut être émis pour ce montant.
-                </p>
-              )}
-
-              {/* The refusal is the point: it says why, in the ledger's words. */}
-              {refusal && affordable && (
-                <p role="alert" className={`${NOTE_DANGER} mt-5`}>
-                  {refusal}
-                </p>
-              )}
-              {paid && (
-                <div className={`${NOTE_POSITIVE} mt-5`}>
-                  <p role="status">{paid}</p>
-                  <Link
-                    href="/espace#historique"
-                    className="mt-2 inline-block font-black underline underline-offset-4"
-                  >
-                    Voir dans l&apos;historique
-                  </Link>
+            {mine !== "none" && (
+              <div className="bg-cp-page absolute inset-0 grid place-items-center p-[5%]">
+                <div className="aspect-square h-full max-h-full w-auto max-w-full">
+                  <TokenQr tokenId={token!.id} dimmed={mine !== "active"} />
                 </div>
-              )}
-            </div>
-
-            {/* The QR's frame is always here, at one fixed size: an empty
-                blueprint square before, the code itself after. Swapping the
-                contents of a frame moves nothing below it. */}
-            <div className="w-full max-w-[170px]">
-              {mine === "none" ? (
-                <div
-                  aria-hidden="true"
-                  className="border-cp-border bg-cp-page aspect-square w-full rounded-2xl border bg-[linear-gradient(to_right,rgba(27,58,107,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(27,58,107,0.10)_1px,transparent_1px)] bg-[length:14px_14px] dark:bg-[linear-gradient(to_right,rgba(234,240,251,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,240,251,0.12)_1px,transparent_1px)]"
-                />
-              ) : (
-                <TokenQr tokenId={token!.id} dimmed={mine !== "active"} />
-              )}
-              <p className={`text-cp-fg mt-3 min-h-[2.4em] ${MICRO}`}>
-                {mine === "none" && "En attente du QR"}
-                {mine === "active" && (
-                  <>Valable {mmss(token!.expiresAt - now)} — usage unique</>
-                )}
-                {mine === "used" && "QR déjà utilisé"}
-                {mine === "expired" && "QR expiré"}
-              </p>
-            </div>
+              </div>
+            )}
           </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <p className={`text-cp-fg ${MICRO}`}>
+              {mine === "none" && "En attente du QR"}
+              {mine === "active" && (
+                <>Valable {mmss(token!.expiresAt - now)} — usage unique</>
+              )}
+              {mine === "used" && "QR déjà utilisé"}
+              {mine === "expired" && "QR expiré"}
+            </p>
+            {mine === "active" && (
+              <button
+                type="button"
+                onClick={pay}
+                className={`${BTN_OUTLINE} ms-auto`}
+              >
+                Simuler le scan
+              </button>
+            )}
+          </div>
+
+          {/* Le refus n'a plus de bloc permanent : il apparaît quand le registre
+              refuse, ce que la règle demande — un débit supérieur au solde est
+              refusé et dit pourquoi. */}
+          {refusal && (
+            <p role="alert" className={`${NOTE_DANGER} mt-4`}>
+              {refusal}
+            </p>
+          )}
+          {paid && (
+            <div className={`${NOTE_POSITIVE} mt-4`}>
+              <p role="status">{paid}</p>
+              <Link
+                href="/espace#historique"
+                className="mt-2 inline-block font-black underline underline-offset-4"
+              >
+                Voir dans l&apos;historique
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </section>

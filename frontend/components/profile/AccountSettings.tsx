@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { officialPartners } from "@/components/data/partners";
 import CardStyleForm from "./CardStyleForm";
 import DeleteAccountCard from "./DeleteAccountCard";
 import ProfileForm from "./ProfileForm";
@@ -125,6 +126,18 @@ export default function AccountSettings() {
   }
 
   const isPartner = profile.audience === "partner";
+  /* Le conventionnement vit dans les données du réseau, pas dans le compte : on
+     le retrouve par la raison sociale, faute d'identifiant de partenaire dans
+     le profil. Cette jointure par le nom disparaîtra quand le backend donnera
+     un identifiant au compte partenaire. */
+  const official =
+    isPartner &&
+    officialPartners().some(
+      (partner) =>
+        partner.name.localeCompare(profile.partner.raisonSociale, "fr", {
+          sensitivity: "base",
+        }) === 0,
+    );
   const profileTitle = isPartner
     ? "Informations de l'entreprise"
     : "Mon profil";
@@ -177,11 +190,19 @@ export default function AccountSettings() {
             {profile.email}
           </div>
         </div>
-        {/* A partner's own profile carries the ministry's mark, in the ochre
-            accent the palette reserves for what the ministry vouches for. */}
-        <span className={`ms-auto ${isPartner ? CHIP_OFFICIAL : CHIP_PLAIN}`}>
-          {isPartner ? "Partenaire Officiel du Ministère" : "Employé"}
+        {/* Deux pastilles distinctes, et c'est délibéré : le type de compte est
+            un fait neutre, le conventionnement est un statut que le Ministère
+            accorde. Les confondre — comme le faisait la pastille ochre unique —
+            revenait à décorer tout compte partenaire d'un label officiel qu'il
+            n'a peut-être pas. */}
+        <span className={`ms-auto ${CHIP_PLAIN}`}>
+          {isPartner ? "Partenaire" : "Employé"}
         </span>
+        {official && (
+          <span className={CHIP_OFFICIAL}>
+            Partenaire Officiel du Ministère
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-8 md:flex-row md:items-start">

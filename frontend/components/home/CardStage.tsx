@@ -52,7 +52,7 @@ export default function CardStage({
           filling it. The vertical inset is in vh, not per cent: a percentage
           padding resolves against the panel's *width*, which on a wide column
           made the panel far taller than the card inside it. */}
-      <div className="relative z-2 px-[7%] py-[3.2vh]">{children}</div>
+      <div className="relative z-2 px-[7%] py-[2.2vh]">{children}</div>
     </div>
   );
 }
