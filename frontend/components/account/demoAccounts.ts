@@ -31,8 +31,7 @@ const EMPLOYEE: DemoAccount = {
     audience: "employee",
     username: "Camille Fontaine",
     email: "employe@tickettout.fr",
-    /* An employé has no establishment behind them, so the partner block stays
-       empty — the settings page only renders the fields of its own audience. */
+    balanceCents: 3250, // 👈 Ajout ici
     partner: {
       raisonSociale: "",
       siren: "",
@@ -52,11 +51,6 @@ const EMPLOYEE: DemoAccount = {
   },
 };
 
-/**
- * The partenaire: every registration field filled, including a SIREN that
- * passes the Luhn check in isValidSiren and a five-digit code postal, so the
- * settings form validates as-is instead of opening on errors.
- */
 const PARTNER: DemoAccount = {
   label: "Compte partenaire de démonstration",
   password: DEMO_PASSWORD,
@@ -64,6 +58,7 @@ const PARTNER: DemoAccount = {
     audience: "partner",
     username: "Chapelier Fontaine",
     email: "partenaire@tickettout.fr",
+    balanceCents: 0, // 👈 Ajout ici
     partner: {
       raisonSociale: "Chapelier Fontaine",
       siren: "404833048",

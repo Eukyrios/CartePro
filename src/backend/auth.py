@@ -35,6 +35,7 @@ def _serialize_user(user):
         "role": user.role,
         "isActive": user.is_active,
         "profile": profile,
+        "balanceCents": round(user.solde * 100),
     }
 
 

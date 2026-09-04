@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Arrow } from "@/components/home/Marks";
 import PartnerPhoto from "./PartnerPhoto";
 import { partnerCategoryLabel } from "@/components/data/partnerCategories";
 import {
   categoriesInUse,
-  partnerCities,
-  searchPartners,
+  searchPartnerList,
+  type Partner,
 } from "@/components/data/partners";
+import { api, type ApiPartner } from "@/lib/api";
 import SelectField from "@/components/ui/SelectField";
 import TextField from "@/components/ui/TextField";
 import { BTN_OUTLINE, MICRO } from "@/components/ui/surfaces";
@@ -45,6 +46,8 @@ const NO_FILTERS: Filters = {
  * There is deliberately no map.
  */
 export default function PartnerCatalogue() {
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [page, setPage] = useState(1);
   /** Live pointer travel in px, or null when no swipe is in progress. */
@@ -53,21 +56,52 @@ export default function PartnerCatalogue() {
   /** How far the last gesture travelled, so a swipe is not read as a tap. */
   const travelled = useRef(0);
 
+  useEffect(() => {
+    api<ApiPartner[]>("/api/partenaires/catalogue")
+      .then((items) =>
+        setPartners(
+          items.map((item) => ({
+            id: item.id,
+            name: item.nom,
+            categoryId: item.secteur,
+            address: item.adresse || "Adresse non renseignée",
+            city: item.ville || "",
+            postcode: item.codePostal || "",
+            photo: "/partenaires/glaces-correze.svg",
+            amountCents: item.amountCents,
+            /* Faux jusqu'à ce que l'API expose le conventionnement : `featured`
+               est la mise en avant éditoriale du Ministre, pas le statut
+               « Partenaire Officiel du Ministère », et les confondre
+               apposerait un tampon administratif sur une sélection de goût.
+               Un badge absent se corrige, un badge faux se croit. */
+            official: false,
+          })),
+        ),
+      )
+      .finally(() => setLoaded(true));
+  }, []);
+
   const categories = useMemo(
     () =>
-      categoriesInUse().map((category) => ({
-        value: category.id,
-        label: category.label,
+      (partners.length
+        ? [...new Set(partners.map((partner) => partner.categoryId))]
+        : categoriesInUse().map((category) => category.id)
+      ).map((categoryId) => ({
+        value: categoryId,
+        label: partnerCategoryLabel(categoryId),
       })),
-    [],
+    [partners],
   );
-  const cities = useMemo(() => partnerCities(), []);
+  const cities = useMemo(
+    () => [...new Set(partners.map((partner) => partner.city))].sort(),
+    [partners],
+  );
 
   // searchPartners clamps the page itself, so a filter change that shortens the
   // list can never leave the view on a page that no longer exists.
   const result = useMemo(
-    () => searchPartners({ ...filters, page }),
-    [filters, page],
+    () => searchPartnerList(partners, { ...filters, page }),
+    [partners, filters, page],
   );
 
   function setFilter<K extends keyof Filters>(field: K, value: Filters[K]) {
@@ -215,7 +249,11 @@ export default function PartnerCatalogue() {
         )}
       </div>
 
-      {result.total === 0 ? (
+      {!loaded ? (
+        <p className="text-cp-muted border-cp-border border-b py-10 text-sm">
+          Chargement du réseau…
+        </p>
+      ) : result.total === 0 ? (
         <p className="text-cp-muted border-cp-border border-b py-10 text-sm">
           Aucun partenaire ne correspond à cette recherche. Essayez un autre
           nom, une autre ville, ou effacez les filtres.

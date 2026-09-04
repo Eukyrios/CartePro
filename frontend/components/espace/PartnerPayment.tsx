@@ -5,14 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CardStage from "@/components/home/CardStage";
 import CreditCard3D from "@/components/home/CreditCard3D";
-import {
-  balanceCents,
-  cancelToken,
-  formatEuros,
-  issueToken,
-  payWithToken,
-  tokenState,
-} from "@/components/data/ledger";
+import { formatEuros } from "@/components/data/ledger";
+import { api } from "@/lib/api";
+import { useAccount } from "@/components/account/AccountProvider";
 import { partnerCategoryLabel } from "@/components/data/partnerCategories";
 import PartnerPhoto from "@/components/partners/PartnerPhoto";
 import {
@@ -24,7 +19,6 @@ import {
   SIMULATION_NOTICE,
 } from "@/components/ui/surfaces";
 import TokenQr from "./TokenQr";
-import { useLedger } from "./useLedger";
 import type { Partner } from "@/components/data/partners";
 
 function mmss(msLeft: number) {
@@ -48,60 +42,90 @@ function mmss(msLeft: number) {
  * throughout — it is the same card either way, and swapping its state under
  * the reader's eyes was noise.
  *
- * The rules are the ledger's (data/ledger). This screen only prints what the
- * ledger refuses, in the ledger's own words.
+ * Les règles sont celles du serveur : cet écran demande un jeton, l'envoie à
+ * la validation, et n'imprime que ce que l'API refuse, dans ses mots.
  */
 export default function PartnerPayment({ partner }: { partner: Partner }) {
   const router = useRouter();
-  const ledger = useLedger();
-  const balance = balanceCents(ledger);
-  const token = ledger.token;
+  const { profile, refreshAccount } = useAccount();
+  const balance = profile?.balanceCents ?? 0;
+  const [token, setToken] = useState<{
+    id: string;
+    raw: string;
+    expiresAt: number;
+    usedAt?: number;
+  } | null>(null);
 
   const [refusal, setRefusal] = useState<string | null>(null);
   const [paid, setPaid] = useState<string | null>(null);
   // The token expiring is a change on screen, so a clock has to drive it.
   const [now, setNow] = useState(() => Date.now());
 
-  const status = tokenState(token, now);
-  // Un jeton émis pour un autre partenaire ne concerne pas cette page.
-  const mine = token?.partnerId === partner.id ? status : "none";
+  /* Le jeton vient du serveur et vit dans l'état local de cette page : il n'y a
+     plus rien à rattacher à un partenaire, la page démontée l'emporte avec
+     elle. Pas d'enquête sur le solde avant la presse non plus : émettre n'est
+     pas débiter, et c'est le serveur qui juge au moment de valider. */
+  const mine = !token
+    ? "none"
+    : token.usedAt
+      ? "used"
+      : now >= token.expiresAt
+        ? "expired"
+        : "active";
 
   useEffect(() => {
-    if (status !== "active") return;
+    if (mine !== "active") return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [status]);
+  }, [mine]);
 
-  // A token belongs to the visit that issued it: leaving must not leave a
-  // valid code behind.
-  useEffect(
-    () => () => {
-      if (tokenState(ledger.token) === "active") cancelToken();
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  function generate() {
+  async function generate() {
     setPaid(null);
-    const result = issueToken(partner.amountCents, partner.id);
-    setRefusal(result.ok ? null : result.reason);
-    setNow(Date.now());
+    try {
+      const result = await api<{
+        raw_token_for_testing: string;
+        expiration: string;
+      }>("/api/salaries/paiement/qr", { method: "POST" });
+      setToken({
+        id: result.raw_token_for_testing.slice(-16),
+        raw: result.raw_token_for_testing,
+        expiresAt: Date.parse(result.expiration),
+      });
+      setRefusal(null);
+      setNow(Date.now());
+    } catch (error) {
+      setRefusal(
+        error instanceof Error ? error.message : "Impossible de générer le QR.",
+      );
+    }
   }
 
-  function pay() {
+  async function pay() {
     if (!token) return;
-    const result = payWithToken(token.id, {
-      id: partner.id,
-      name: partner.name,
-    });
-    if (result.ok) {
+    try {
+      await api<{ details: { nouveau_solde_salarie: number } }>(
+        "/api/transactions/valider",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            qr_token: token.raw,
+            montant: partner.amountCents / 100,
+            partenaire_id: partner.id,
+          }),
+        },
+      );
+      await refreshAccount();
+      // Marqué utilisé plutôt qu'effacé : le code reste à l'écran, éteint, et
+      // « QR déjà utilisé » a de quoi s'afficher.
+      setToken({ ...token, usedAt: Date.now() });
       setPaid(
-        `${formatEuros(result.transaction.amountCents)} chez ${partner.name}. Solde mis à jour.`,
+        `${formatEuros(partner.amountCents)} chez ${partner.name}. Solde mis à jour.`,
       );
       setRefusal(null);
-    } else {
-      setRefusal(result.reason);
+    } catch (error) {
+      setRefusal(
+        error instanceof Error ? error.message : "Le paiement a échoué.",
+      );
       setPaid(null);
     }
   }
@@ -219,7 +243,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
             déjà, de sorte que rien ne bouge autour de lui. */}
         <div className="flex lg:col-start-2 lg:row-start-1 lg:justify-end">
           <p className={SIMULATION_NOTICE}>
-            Simulation — ce QR ne débite rien de réel
+            Paiement réel enregistré en base de données
           </p>
         </div>
 

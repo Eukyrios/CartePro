@@ -261,13 +261,16 @@ function fold(value: string) {
  * local; the signature is already the shape a fetch would return, so the
  * screen does not change when this starts hitting the network.
  */
-export function searchPartners(query: PartnerQuery = {}): PartnerPage {
+export function searchPartnerList(
+  partners: readonly Partner[],
+  query: PartnerQuery = {},
+): PartnerPage {
   const search = fold(query.search ?? "");
   const city = fold(query.city ?? "");
   const postcode = fold(query.postcode ?? "");
   const categoryId = query.categoryId ?? "";
 
-  const matches = PARTNERS.filter((partner) => {
+  const matches = partners.filter((partner) => {
     if (categoryId && partner.categoryId !== categoryId) return false;
     if (city && !fold(partner.city).includes(city)) return false;
     if (postcode && !partner.postcode.startsWith(postcode)) return false;
@@ -291,6 +294,10 @@ export function searchPartners(query: PartnerQuery = {}): PartnerPage {
     page,
     pages,
   };
+}
+
+export function searchPartners(query: PartnerQuery = {}): PartnerPage {
+  return searchPartnerList(PARTNERS, query);
 }
 
 /** Les conventionnés, pour les écrans qui les distinguent du reste du réseau. */

@@ -8,13 +8,12 @@ import {
   useMemo,
   useState,
 } from "react";
-import { EMPTY_PARTNER } from "@/components/auth/AuthModal";
 import type {
   AuthAudience,
   AuthSubmitPayload,
 } from "@/components/auth/AuthModal";
 import type { PartnerFields } from "@/components/auth/SignupPartnerFields";
-import { findDemoAccount } from "./demoAccounts";
+import { api, clearAccessToken, accessToken, userProfile } from "@/lib/api";
 
 /** Background texture printed on the card. */
 export type CardPattern =
@@ -51,6 +50,8 @@ export const DEFAULT_CARD_STYLE: CardStyle = {
  * field set is ever rendered.
  */
 export type Profile = {
+  id?: number;
+  balanceCents: number;
   audience: AuthAudience;
   username: string;
   email: string;
@@ -63,10 +64,11 @@ type Account = {
   profile: Profile | null;
   /** False during the first paint, while the stored session is still unknown. */
   ready: boolean;
-  signIn: (payload: AuthSubmitPayload) => void;
+  signIn: (payload: AuthSubmitPayload) => Promise<boolean>;
   signOut: () => void;
-  updateProfile: (profile: Profile) => void;
-  deleteAccount: () => void;
+  updateProfile: (profile: Profile) => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  refreshAccount: () => Promise<void>;
 };
 
 const AccountContext = createContext<Account | null>(null);
@@ -77,23 +79,6 @@ const AccountContext = createContext<Account | null>(null);
  * direct visit. Only profile fields are stored, never the password.
  */
 const STORAGE_KEY = "ticket-tout.profile";
-
-function readStored(): Profile | null {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const stored = JSON.parse(raw) as Profile;
-    // A session stored before the card style existed has no `cardStyle`, and a
-    // partially written one may miss individual keys.
-    return {
-      ...stored,
-      cardStyle: { ...DEFAULT_CARD_STYLE, ...(stored.cardStyle ?? {}) },
-    };
-  } catch {
-    // Private windows and browsers set to block site data throw on access.
-    return null;
-  }
-}
 
 function writeStored(profile: Profile | null) {
   try {
@@ -128,57 +113,85 @@ export default function AccountProvider({
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(false);
 
-  // Read after mount: localStorage does not exist while server-rendering, so
-  // reading it during the first render would break hydration.
-  useEffect(() => {
-    setProfile(readStored());
-    setReady(true);
-  }, []);
-
   const persist = useCallback((next: Profile | null) => {
     setProfile(next);
     writeStored(next);
   }, []);
 
-  const signIn = useCallback(
-    (payload: AuthSubmitPayload) => {
-      const { audience, mode, username, email, password, partner } = payload;
+  const refreshAccount = useCallback(async () => {
+    const data = await api<{ user: Parameters<typeof userProfile>[0] }>("/api/auth/me");
+    const next = userProfile(data.user);
+    persist({ ...next, cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle } });
+  }, [persist]);
 
-      // A demonstration account signs in to its seeded profile, filled in and
-      // ready to show. Everything else falls through to the mock below, which
-      // still accepts any credentials until the backend exists.
-      if (mode === "login") {
-        const demo = findDemoAccount(email, password);
-        if (demo) {
-          persist(demo.profile);
-          return;
-        }
+  // Read after mount: localStorage does not exist while server-rendering, so
+  // reading it during the first render would break hydration.
+  useEffect(() => {
+    async function restoreSession() {
+      if (!accessToken()) {
+        setReady(true);
+        return;
       }
+      try {
+        await refreshAccount();
+      } catch {
+        clearAccessToken();
+        setProfile(null);
+      } finally {
+        setReady(true);
+      }
+    }
+    restoreSession();
+  }, [refreshAccount]);
 
-      // Signing in carries no partner details, so those stay empty until the
-      // backend can supply them; the settings page is what fills them in.
-      persist({
-        audience,
-        username:
-          mode === "signup" && username ? username : email.split("@")[0],
-        email,
-        partner: partner ?? EMPTY_PARTNER,
-        cardStyle: DEFAULT_CARD_STYLE,
-      });
+  const signIn = useCallback(
+    async (payload: AuthSubmitPayload) => {
+      const { audience, mode, username, email, password, partner } = payload;
+      try {
+        const data = await api<{ access_token: string; user: Parameters<typeof userProfile>[0] }>(
+          `/api/auth/${mode === "login" ? "login" : "register"}`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              email,
+              password,
+              ...(mode === "signup" ? { username, audience, partner: partner ?? {} } : {}),
+            }),
+          },
+        );
+        window.localStorage.setItem("access_token", data.access_token);
+        const next = userProfile(data.user);
+        persist({ ...next, cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle } });
+        return true;
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Impossible de contacter le serveur.");
+        return false;
+      }
     },
     [persist],
   );
 
-  const signOut = useCallback(() => persist(null), [persist]);
+  const signOut = useCallback(async () => {
+    try { await api("/api/auth/logout", { method: "POST" }); } catch { /* Session is cleared locally below. */ }
+    clearAccessToken();
+    persist(null);
+  }, [persist]);
 
-  const updateProfile = useCallback(
-    (next: Profile) => persist(next),
-    [persist],
-  );
+  const updateProfile = useCallback(async (next: Profile) => {
+    const data = await api<{ user: Parameters<typeof userProfile>[0] }>("/api/auth/profile", {
+      method: "PUT",
+      body: JSON.stringify({ profile: next }),
+    });
+    persist({ ...userProfile(data.user), cardStyle: { ...DEFAULT_CARD_STYLE, ...data.user.profile.cardStyle } });
+  }, [persist]);
 
   // Distinct from signOut only once a backend exists to delete against; both
   // end the session here.
-  const deleteAccount = useCallback(() => persist(null), [persist]);
+  const deleteAccount = useCallback(async () => {
+    await api("/api/auth/account", { method: "DELETE" });
+    clearAccessToken();
+    persist(null);
+  }, [persist]);
 
   const value = useMemo(
     () => ({
@@ -188,8 +201,9 @@ export default function AccountProvider({
       signOut,
       updateProfile,
       deleteAccount,
+      refreshAccount,
     }),
-    [profile, ready, signIn, signOut, updateProfile, deleteAccount],
+    [profile, ready, signIn, signOut, updateProfile, deleteAccount, refreshAccount],
   );
 
   return (
