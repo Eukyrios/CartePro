@@ -8,6 +8,7 @@ Flask-Talisman
 Flask-CORS
 Faker
 pytest
+flasgger
 Flask-SQLAlchemy
 Flask-Login
 Werkzeug
