@@ -5,9 +5,20 @@ trap "echo -e '\n Arrêt des serveurs...'; kill 0" SIGINT
 
 echo "Démarrage du Backend ..."
 cd src/backend
-# Tente d'activer l'environnement virtuel
-source .venv-1/bin/activate 2>/dev/null || source venv/bin/activate 2>/dev/null
-python3 app.py &
+# L'interpréteur du venv, appelé par son chemin. Et surtout : on s'arrête ici
+# si aucun venv n'existe. La version précédente avalait l'échec avec un
+# 2>/dev/null, lançait le python système sans Flask, et le backend mourait sur
+# un ModuleNotFoundError perdu dans les logs du front — l'interface se
+# contentant d'afficher « La requête a échoué » sur chaque appel d'API.
+if [ -x .venv-1/bin/python ]; then
+  BACKEND_PY=.venv-1/bin/python
+elif [ -x venv/bin/python ]; then
+  BACKEND_PY=venv/bin/python
+else
+  echo "Aucun environnement Python : lancez 'make install' d'abord." >&2
+  exit 1
+fi
+"$BACKEND_PY" app.py &
 cd ../..
 
 echo "Démarrage du Frontend..."

@@ -4,6 +4,7 @@ import { formatEuros } from "@/components/data/ledger";
 import VectorMark from "./VectorMark";
 import {
   DEFAULT_CARD_STYLE,
+  displayNameOf,
   useAccount,
 } from "@/components/account/AccountProvider";
 import type {
@@ -141,6 +142,10 @@ export default function CreditCard3D({
   const { profile } = useAccount();
   const card = style ?? profile?.cardStyle ?? DEFAULT_CARD_STYLE;
   const paying = state === "payment";
+  /* Le titulaire est celui qui est connecté — une carte porte le nom de son
+     porteur. Hors connexion, sur la page d'accueil, personne n'est titulaire
+     de rien : la ligne annonce la place plutôt que d'inventer un nom. */
+  const holder = profile ? displayNameOf(profile) : "Votre nom";
 
   return (
     // The query container every cqw below resolves against. It has to be an
@@ -212,14 +217,17 @@ export default function CreditCard3D({
             <div className="mb-[3cqw] text-[3.4cqw] tracking-[0.1em] opacity-40">
               0210 8820 1150 0222
             </div>
-            <div className="flex items-end justify-between text-[3cqw]">
-              <div>
+            <div className="flex items-end justify-between gap-[4cqw] text-[3cqw]">
+              {/* Le nom vient du compte : il peut être une raison sociale
+                  longue. Il se coupe plutôt que de pousser la date et le CVV
+                  hors de la carte. */}
+              <div className="min-w-0">
                 <div className="text-[2.1cqw] font-black tracking-[0.14em] opacity-40">
                   TITULAIRE
                 </div>
-                <div>ALEX MARTIN</div>
+                <div className="truncate uppercase">{holder}</div>
               </div>
-              <div className="flex items-end gap-[6cqw]">
+              <div className="flex shrink-0 items-end gap-[6cqw]">
                 <div className="text-right">
                   <div className="text-[2.1cqw] font-black tracking-[0.14em] opacity-40">
                     EXPIRE LE

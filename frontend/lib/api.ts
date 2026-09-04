@@ -25,6 +25,13 @@ export type ApiPartner = {
   ville: string;
   codePostal: string;
   amountCents: number;
+  /** Chemin de la photographie, servie par le front depuis /public. */
+  photo: string;
+  /** Conventionné « Partenaire Officiel du Ministère » — statut administratif. */
+  officiel: boolean;
+  /** Coup de cœur du Ministre — sélection éditoriale, sans rapport avec le
+   *  conventionnement : un partenaire peut être l'un, l'autre, les deux ou
+   *  aucun. */
   featured: boolean;
 };
 

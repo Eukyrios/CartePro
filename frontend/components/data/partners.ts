@@ -257,20 +257,25 @@ function fold(value: string) {
 }
 
 /**
- * One page of the catalogue for a given query. Synchronous while the list is
- * local; the signature is already the shape a fetch would return, so the
- * screen does not change when this starts hitting the network.
+ * Every partner in `partners` that the query matches, in declaration order and
+ * without paging.
+ *
+ * What the catalogue's drifting row needs: it shows the whole result and lets
+ * the reader push it along, so cutting the list into pages of three would only
+ * have to be undone. `searchPartnerList` pages over this same function, so the
+ * row and a page filter identically — there is one predicate here, not two.
  */
-export function searchPartnerList(
+export function matchingPartnerList(
   partners: readonly Partner[],
   query: PartnerQuery = {},
-): PartnerPage {
+): readonly Partner[] {
+  // Folded once for the whole list rather than once per partner.
   const search = fold(query.search ?? "");
   const city = fold(query.city ?? "");
   const postcode = fold(query.postcode ?? "");
   const categoryId = query.categoryId ?? "";
 
-  const matches = partners.filter((partner) => {
+  return partners.filter((partner) => {
     if (categoryId && partner.categoryId !== categoryId) return false;
     if (city && !fold(partner.city).includes(city)) return false;
     if (postcode && !partner.postcode.startsWith(postcode)) return false;
@@ -283,6 +288,23 @@ export function searchPartnerList(
     }
     return true;
   });
+}
+
+/** The local network's matches, unpaged. */
+export function matchingPartners(query: PartnerQuery = {}): readonly Partner[] {
+  return matchingPartnerList(PARTNERS, query);
+}
+
+/**
+ * One page of the catalogue for a given query. Synchronous while the list is
+ * local; the signature is already the shape a fetch would return, so the
+ * screen does not change when this starts hitting the network.
+ */
+export function searchPartnerList(
+  partners: readonly Partner[],
+  query: PartnerQuery = {},
+): PartnerPage {
+  const matches = matchingPartnerList(partners, query);
 
   const pages = Math.max(1, Math.ceil(matches.length / PARTNERS_PER_PAGE));
   const page = Math.min(Math.max(query.page ?? 1, 1), pages);

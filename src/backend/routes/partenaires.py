@@ -16,13 +16,22 @@ def catalogue():
         data_json = p.partner_data if isinstance(p.partner_data, dict) else {}
         
         catalogue.append({
-            "id": str(p.id),
+            # Le slug, pas la clé primaire : c'est lui qui tient dans une URL
+            # et qui survit à un nouveau seed, et c'est par lui que la page de
+            # paiement retrouve le partenaire. Repli sur l'id pour un compte
+            # créé depuis l'interface, qui n'a pas de slug.
+            "id": p.username or str(p.id),
             "nom": p.company_name or p.username or "Partenaire sans nom",
             "secteur": data_json.get("secteur", "Non défini"),
             "adresse": data_json.get("adresse", ""),
             "ville": data_json.get("ville", ""),
             "codePostal": data_json.get("codePostal", ""),
             "amountCents": int(data_json.get("amountCents", 0) or 0),
+            "photo": data_json.get("photo", ""),
+            # Le conventionnement « Partenaire Officiel du Ministère », qui est
+            # un statut administratif — distinct de `featured`, qui est le coup
+            # de cœur éditorial du Ministre.
+            "officiel": bool(data_json.get("official", False)),
             "featured": data_json.get("featured", False)
         })
         
