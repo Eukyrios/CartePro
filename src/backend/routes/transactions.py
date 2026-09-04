@@ -20,6 +20,20 @@ def valider_transaction():
     if not token_qr or montant is None or not partenaire_id:
         return jsonify({"status": "error", "message": "Le token du QR code, le partenaire et le montant sont requis."}), 400
 
+    # 🛡️ IDEMPOTENCE : On vérifie si ce QR code a déjà déclenché un encaissement
+    existing_tx = Transaction.query.filter_by(idempotency_key=token_qr).first()
+    if existing_tx:
+        # On renvoie 200 (OK) et non 201, avec les infos de la transaction passée
+        salarie_actuel = User.query.get(existing_tx.salarie_id)
+        return jsonify({
+            "status": "success",
+            "message": "Transaction déjà traitée (Idempotence).",
+            "details": {
+                "transaction_id": existing_tx.id,
+                "nouveau_solde_salarie": salarie_actuel.solde
+            }
+        }), 200
+
     try:
         montant = Decimal(str(montant))
         if montant <= 0:
@@ -28,33 +42,40 @@ def valider_transaction():
         # 1. Décodage du jeton pour identifier le client
         decoded_payload = jwt.decode(token_qr, SECRET_KEY, algorithms=["HS256"])
         user_id = decoded_payload.get("user_id")
-        if user_id != int(get_jwt_identity()):
-            return jsonify({"status": "error", "message": "QR code non associé à ce compte."}), 403
+        
+        # Le jeton d'authentification appartient au partenaire qui déclenche l'encaissement
+        if int(partenaire_id) != int(get_jwt_identity()):
+            return jsonify({"status": "error", "message": "Vous n'êtes pas autorisé à encaisser pour ce partenaire."}), 403
 
-        # 2. Récupération des acteurs depuis la base de données
-        salarie = User.query.get(user_id)
-        partenaire = User.query.get(partenaire_id)
+        # 🔒 CONCURRENCE : SELECT ... FOR UPDATE
+        # Ces requêtes bloquent la ligne en base de données. Toute autre requête essayant 
+        # de lire/écrire ce même utilisateur sera mise en pause jusqu'au db.session.commit()
+        salarie = db.session.query(User).with_for_update().filter_by(id=user_id).first()
+        partenaire = db.session.query(User).with_for_update().filter_by(id=partenaire_id).first()
 
         if not salarie or not partenaire or partenaire.role != "partenaire":
+            db.session.rollback()
             return jsonify({"status": "error", "message": "Salarié ou partenaire introuvable."}), 404
 
-        # 3. Vérification des fonds
+        # Vérification stricte du solde (ne peut jamais être négatif)
         if Decimal(str(salarie.solde)) < montant:
+            db.session.rollback()
             return jsonify({"status": "error", "message": "Solde insuffisant pour effectuer cette transaction."}), 400
 
-        # 4. Écriture irréversible (Transfert d'argent)
-        salarie.solde = float(Decimal(str(salarie.solde)) - montant)
-        partenaire.solde = float(Decimal(str(partenaire.solde)) + montant)
+        # Écriture irréversible
+        salarie.solde = round(float(Decimal(str(salarie.solde)) - montant), 2)
+        partenaire.solde = round(float(Decimal(str(partenaire.solde)) + montant), 2)
 
-        # 5. Création de la trace dans l'historique
+        # Création de la trace incluant la clé d'idempotence
         nouvelle_transaction = Transaction(
             salarie_id=salarie.id,
             partenaire_id=partenaire.id,
-            montant=float(montant)
+            montant=float(montant),
+            idempotency_key=token_qr
         )
 
         db.session.add(nouvelle_transaction)
-        db.session.commit()
+        db.session.commit() # Relâche les verrous FOR UPDATE
 
         return jsonify({
             "status": "success",
@@ -72,9 +93,8 @@ def valider_transaction():
     except (ValueError, InvalidOperation):
         return jsonify({"status": "error", "message": "Le montant formaté est invalide."}), 400
     except Exception as e:
-        db.session.rollback() # Annule tout transfert partiel en cas d'erreur serveur
+        db.session.rollback()
         return jsonify({"status": "error", "message": f"Erreur interne : {str(e)}"}), 500
-
 
 @transactions_bp.route('/me', methods=['GET'])
 @jwt_required()
