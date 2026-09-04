@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
 from sqlalchemy import CheckConstraint
+from sqlalchemy import event
 
 db = SQLAlchemy()
 
@@ -43,6 +44,10 @@ class Transaction(db.Model):
     montant = db.Column(db.Float, nullable=False)
     date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     statut = db.Column(db.String(20), default="validee") # "validee" ou "annulee"
+    
+    # 🔒 Clé d'idempotence pour bloquer les doubles scans
+    idempotency_key = db.Column(db.String(512), unique=True, nullable=True) 
+
     __table_args__ = (
         CheckConstraint("montant > 0", name="ck_transaction_montant_positive"),
     )
@@ -50,3 +55,11 @@ class Transaction(db.Model):
     # Relations pour accéder facilement aux objets User liés
     salarie = db.relationship("User", foreign_keys=[salarie_id])
     partenaire = db.relationship("User", foreign_keys=[partenaire_id])
+
+@event.listens_for(Transaction, 'before_update')
+def block_transaction_update(mapper, connection, target):
+    raise Exception("Règle comptable : Une transaction validée est immuable. Les UPDATE sont interdits.")
+
+@event.listens_for(Transaction, 'before_delete')
+def block_transaction_delete(mapper, connection, target):
+    raise Exception("Règle comptable : Une transaction validée est immuable. Les DELETE sont interdits.")

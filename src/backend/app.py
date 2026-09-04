@@ -5,6 +5,7 @@ from flask_jwt_extended import JWTManager
 from sqlalchemy import inspect, text
 import os
 
+
 # 1. Importations de la base de données et de l'authentification (Partie de ton mate)
 from models import db
 from auth import (
@@ -22,11 +23,28 @@ from routes.salaries import salaries_bp
 from routes.partenaires import partenaires_bp
 from routes.admin import admin_bp
 from routes.transactions import transactions_bp
+from routes.sirh import sirh_bp
+from flask import jsonify
+from flasgger import Swagger
+
+
+def health_check():
+    return jsonify({
+        "status": "up",
+        "version": "1.0.0",
+        "environment": "local"
+    }), 200
 
 def create_app():
     app = Flask(__name__)
     CORS(app)
-    
+
+    app.config['SWAGGER'] = {
+        'title': 'CartePro API',
+        'uiversion': 3,
+        'openapi': '3.0.0'
+    }
+    Swagger(app)
     # Configuration globale (Fusion de vos deux environnements)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-en-dev")
     app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "change-me-en-dev")
@@ -59,12 +77,14 @@ def create_app():
     app.add_url_rule("/api/auth/profile", view_func=api_update_profile, methods=["PUT"])
     app.add_url_rule("/api/auth/password", view_func=api_change_password, methods=["PUT"])
     app.add_url_rule("/api/auth/account", view_func=api_delete_account, methods=["DELETE"])
+    app.add_url_rule("/health", view_func=health_check, methods=["GET"])
 
     # Enregistrement de tes routes API RESTful (Ta partie)
     app.register_blueprint(salaries_bp, url_prefix='/api/salaries')
     app.register_blueprint(partenaires_bp, url_prefix='/api/partenaires')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
+    app.register_blueprint(sirh_bp, url_prefix='/api/v1')
 
     # Création automatique des tables SQLite si elles n'existent pas
     with app.app_context():
