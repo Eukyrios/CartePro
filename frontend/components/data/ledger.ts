@@ -40,6 +40,12 @@ export type Transaction = {
 
 export type QrToken = {
   /**
+   * Le partenaire pour qui le jeton a été émis. Ce n'est pas une donnée
+   * personnelle — c'est le commerçant — et cela permet à un écran de savoir si
+   * le jeton en cours est le sien plutôt que de le déduire du montant.
+   */
+  partnerId?: string;
+  /**
    * Random, and the whole of what the QR carries besides its expiry: no name,
    * no email, no employer, no amount — the partner's terminal resolves the
    * token against the backend, so nothing personal ever leaves the screen.
@@ -194,10 +200,9 @@ export function formatEuros(cents: number): string {
 }
 
 /**
- * The one place an amount is judged. Rejects anything that is not a whole
- * number of cents strictly above zero — the check a database CHECK constraint
- * will own — and anything above the available balance, with the reason spelled
- * out so the screen can print it rather than inventing its own wording.
+ * La validité intrinsèque d'un montant : un nombre entier de centimes,
+ * strictement positif. C'est la contrainte que portera un CHECK en base, et
+ * elle vaut à l'émission comme au paiement.
  */
 function refuseAmount(amountCents: number): string | null {
   if (!Number.isFinite(amountCents) || !Number.isInteger(amountCents)) {
@@ -206,9 +211,21 @@ function refuseAmount(amountCents: number): string | null {
   if (amountCents <= 0) {
     return "Le montant doit être strictement supérieur à zéro.";
   }
+  return null;
+}
+
+/**
+ * Le solde, jugé au moment de payer et non à l'émission.
+ *
+ * Émettre un QR n'est pas débiter : un terminal produit un code, et c'est sa
+ * présentation qui est acceptée ou refusée. Séparer les deux permet au QR
+ * d'être toujours émis, sans rien céder sur la règle — le solde ne peut pas
+ * devenir négatif, et le refus dit pourquoi.
+ */
+function refuseAgainstBalance(amountCents: number): string | null {
   const available = balanceCents();
   if (amountCents > available) {
-    return `Montant supérieur au solde disponible (${formatEuros(available)}).`;
+    return `Paiement refusé : ${formatEuros(amountCents)} dépasse votre solde de ${formatEuros(amountCents - available)}. Solde disponible : ${formatEuros(available)}.`;
   }
   return null;
 }
@@ -221,16 +238,23 @@ function newId(): string {
 }
 
 /**
- * Issues a payment token for an amount, replacing any token already live.
- * Instant here; the two-second budget is the server's to meet.
+ * Émet un jeton de paiement, en remplaçant celui qui serait encore en cours.
+ * Instantané ici ; les deux secondes annoncées sont au serveur de les tenir.
+ *
+ * Le solde n'est pas consulté : un montant valide donne toujours un QR. Ce
+ * qu'il vaut face au solde se décide dans payWithToken.
  */
-export function issueToken(amountCents: number): Issued | Refusal {
+export function issueToken(
+  amountCents: number,
+  partnerId?: string,
+): Issued | Refusal {
   const reason = refuseAmount(amountCents);
   if (reason) return { ok: false, reason };
 
   const issuedAt = Date.now();
   const token: QrToken = {
     id: newId(),
+    partnerId,
     amountCents,
     issuedAt,
     expiresAt: issuedAt + QR_TTL_MS,
@@ -268,8 +292,12 @@ export function payWithToken(
     };
   }
 
-  const reason = refuseAmount(token.amountCents);
-  if (reason) return { ok: false, reason };
+  // Les deux contrôles au moment qui compte : le montant lui-même, puis le
+  // solde tel qu'il est maintenant — il a pu bouger depuis l'émission.
+  const invalid = refuseAmount(token.amountCents);
+  if (invalid) return { ok: false, reason: invalid };
+  const overBalance = refuseAgainstBalance(token.amountCents);
+  if (overBalance) return { ok: false, reason: overBalance };
 
   const now = Date.now();
   const transaction: Transaction = {

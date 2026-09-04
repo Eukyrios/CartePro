@@ -32,6 +32,15 @@ export type Partner = {
    * cost more than the demo balance, so the refusal can be shown.
    */
   amountCents: number;
+  /**
+   * Conventionné « Partenaire Officiel du Ministère ».
+   *
+   * Statut administratif, décidé par le Ministère et porté par les données :
+   * il n'a rien à voir avec le « Coup de cœur du Ministre », qui est une
+   * sélection éditoriale et changeante (voir data/ministerPicks). Un partenaire
+   * peut être l'un, l'autre, les deux ou aucun.
+   */
+  official: boolean;
 };
 
 const PARTNERS: Partner[] = [
@@ -43,6 +52,7 @@ const PARTNERS: Partner[] = [
     city: "Rambouillet",
     postcode: "78120",
     photo: "/partenaires/poney-dream-78.svg",
+    official: true,
     amountCents: 2500,
   },
   {
@@ -53,6 +63,7 @@ const PARTNERS: Partner[] = [
     city: "Paris",
     postcode: "75011",
     photo: "/partenaires/kostumparty.svg",
+    official: false,
     amountCents: 1800,
   },
   {
@@ -63,6 +74,7 @@ const PARTNERS: Partner[] = [
     city: "Brive-la-Gaillarde",
     postcode: "19100",
     photo: "/partenaires/glaces-correze.svg",
+    official: false,
     amountCents: 450,
   },
   {
@@ -73,6 +85,7 @@ const PARTNERS: Partner[] = [
     city: "Toulouse",
     postcode: "31000",
     photo: "/partenaires/chapelier-fontaine.svg",
+    official: true,
     amountCents: 2900,
   },
   {
@@ -83,6 +96,7 @@ const PARTNERS: Partner[] = [
     city: "Nantes",
     postcode: "44000",
     photo: "/partenaires/table-des-quais.svg",
+    official: false,
     amountCents: 1900,
   },
   {
@@ -93,6 +107,7 @@ const PARTNERS: Partner[] = [
     city: "Grenoble",
     postcode: "38000",
     photo: "/partenaires/librairie-bellevue.svg",
+    official: true,
     amountCents: 1650,
   },
   {
@@ -103,6 +118,7 @@ const PARTNERS: Partner[] = [
     city: "Marseille",
     postcode: "13001",
     photo: "/partenaires/atelier-savon-marseille.svg",
+    official: false,
     amountCents: 900,
   },
   {
@@ -113,6 +129,7 @@ const PARTNERS: Partner[] = [
     city: "Chaudes-Aigues",
     postcode: "15110",
     photo: "/partenaires/thermes-chaudes-aigues.svg",
+    official: true,
     amountCents: 3200,
   },
   {
@@ -123,6 +140,7 @@ const PARTNERS: Partner[] = [
     city: "Le Mont-Dore",
     postcode: "63240",
     photo: "/partenaires/gite-monts-dore.svg",
+    official: false,
     amountCents: 8900,
   },
   {
@@ -133,6 +151,7 @@ const PARTNERS: Partner[] = [
     city: "Lille",
     postcode: "59800",
     photo: "/partenaires/cinema-rex-lille.svg",
+    official: true,
     amountCents: 750,
   },
   {
@@ -143,6 +162,7 @@ const PARTNERS: Partner[] = [
     city: "Fréjus",
     postcode: "83600",
     photo: "/partenaires/accrobranche-esterel.svg",
+    official: false,
     amountCents: 2200,
   },
   {
@@ -153,6 +173,7 @@ const PARTNERS: Partner[] = [
     city: "Toulouse",
     postcode: "31000",
     photo: "/partenaires/primeur-victor-hugo.svg",
+    official: false,
     amountCents: 1200,
   },
   {
@@ -163,6 +184,7 @@ const PARTNERS: Partner[] = [
     city: "Vannes",
     postcode: "56000",
     photo: "/partenaires/creperie-armor.svg",
+    official: false,
     amountCents: 1450,
   },
   {
@@ -173,6 +195,7 @@ const PARTNERS: Partner[] = [
     city: "Gérardmer",
     postcode: "88400",
     photo: "/partenaires/spa-vosges.svg",
+    official: false,
     amountCents: 5500,
   },
   {
@@ -183,6 +206,7 @@ const PARTNERS: Partner[] = [
     city: "Biot",
     postcode: "06410",
     photo: "/partenaires/musee-verre-biot.svg",
+    official: true,
     amountCents: 600,
   },
   {
@@ -193,6 +217,7 @@ const PARTNERS: Partner[] = [
     city: "Vayrac",
     postcode: "46110",
     photo: "/partenaires/camping-etang-bleu.svg",
+    official: false,
     amountCents: 4200,
   },
 ];
@@ -273,6 +298,11 @@ export function searchPartnerList(
 
 export function searchPartners(query: PartnerQuery = {}): PartnerPage {
   return searchPartnerList(PARTNERS, query);
+}
+
+/** Les conventionnés, pour les écrans qui les distinguent du reste du réseau. */
+export function officialPartners(): readonly Partner[] {
+  return PARTNERS.filter((partner) => partner.official);
 }
 
 /** Every partner, for the places that need the whole list rather than a page. */

@@ -42,62 +42,90 @@ function mmss(msLeft: number) {
  * throughout — it is the same card either way, and swapping its state under
  * the reader's eyes was noise.
  *
- * The rules are the ledger's (data/ledger). This screen only prints what the
- * ledger refuses, in the ledger's own words.
+ * Les règles sont celles du serveur : cet écran demande un jeton, l'envoie à
+ * la validation, et n'imprime que ce que l'API refuse, dans ses mots.
  */
 export default function PartnerPayment({ partner }: { partner: Partner }) {
   const router = useRouter();
   const { profile, refreshAccount } = useAccount();
   const balance = profile?.balanceCents ?? 0;
-  const [token, setToken] = useState<{ id: string; raw: string; expiresAt: number } | null>(null);
+  const [token, setToken] = useState<{
+    id: string;
+    raw: string;
+    expiresAt: number;
+    usedAt?: number;
+  } | null>(null);
 
   const [refusal, setRefusal] = useState<string | null>(null);
   const [paid, setPaid] = useState<string | null>(null);
   // The token expiring is a change on screen, so a clock has to drive it.
   const [now, setNow] = useState(() => Date.now());
 
-  const status = !token ? "none" : now >= token.expiresAt ? "expired" : "active";
-  /* Judged before the press as well as inside the ledger: a button that can
-     only ever be refused should say so rather than look broken when nothing
-     happens. The ledger still has the last word — the balance can change
-     between this render and the click. */
-  const affordable = partner.amountCents <= balance;
-  // A token issued for another partner is not this page's business.
-  const mine = token ? status : "none";
+  /* Le jeton vient du serveur et vit dans l'état local de cette page : il n'y a
+     plus rien à rattacher à un partenaire, la page démontée l'emporte avec
+     elle. Pas d'enquête sur le solde avant la presse non plus : émettre n'est
+     pas débiter, et c'est le serveur qui juge au moment de valider. */
+  const mine = !token
+    ? "none"
+    : token.usedAt
+      ? "used"
+      : now >= token.expiresAt
+        ? "expired"
+        : "active";
 
   useEffect(() => {
-    if (status !== "active") return;
+    if (mine !== "active") return;
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [status]);
+  }, [mine]);
 
   async function generate() {
     setPaid(null);
     try {
-      const result = await api<{ raw_token_for_testing: string; expiration: string }>("/api/salaries/paiement/qr", { method: "POST" });
-      setToken({ id: result.raw_token_for_testing.slice(-16), raw: result.raw_token_for_testing, expiresAt: Date.parse(result.expiration) });
+      const result = await api<{
+        raw_token_for_testing: string;
+        expiration: string;
+      }>("/api/salaries/paiement/qr", { method: "POST" });
+      setToken({
+        id: result.raw_token_for_testing.slice(-16),
+        raw: result.raw_token_for_testing,
+        expiresAt: Date.parse(result.expiration),
+      });
       setRefusal(null);
       setNow(Date.now());
     } catch (error) {
-      setRefusal(error instanceof Error ? error.message : "Impossible de générer le QR.");
+      setRefusal(
+        error instanceof Error ? error.message : "Impossible de générer le QR.",
+      );
     }
   }
 
   async function pay() {
     if (!token) return;
     try {
-      await api<{ details: { nouveau_solde_salarie: number } }>("/api/transactions/valider", {
-        method: "POST",
-        body: JSON.stringify({ qr_token: token.raw, montant: partner.amountCents / 100, partenaire_id: partner.id }),
-      });
+      await api<{ details: { nouveau_solde_salarie: number } }>(
+        "/api/transactions/valider",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            qr_token: token.raw,
+            montant: partner.amountCents / 100,
+            partenaire_id: partner.id,
+          }),
+        },
+      );
       await refreshAccount();
-      setToken(null);
+      // Marqué utilisé plutôt qu'effacé : le code reste à l'écran, éteint, et
+      // « QR déjà utilisé » a de quoi s'afficher.
+      setToken({ ...token, usedAt: Date.now() });
       setPaid(
         `${formatEuros(partner.amountCents)} chez ${partner.name}. Solde mis à jour.`,
       );
       setRefusal(null);
     } catch (error) {
-      setRefusal(error instanceof Error ? error.message : "Le paiement a échoué.");
+      setRefusal(
+        error instanceof Error ? error.message : "Le paiement a échoué.",
+      );
       setPaid(null);
     }
   }
@@ -107,8 +135,8 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
        payment block are each capped in vh so the whole thing fits under the
        76px bar without scrolling. 100dvh rather than 100vh so a mobile
        browser's collapsing toolbar does not cut the bottom off. */
-    <section className="grid min-h-[calc(100dvh-76px)] content-center py-6">
-      <div className="mb-8 flex items-center gap-4">
+    <section className="grid min-h-[calc(100dvh-76px)] content-center py-3">
+      <div className="mb-5 flex items-center gap-4">
         {/* Back to wherever you came from — the catalogue, or the Minister's
             selection. A fresh tab has no history to go back through, so that
             case lands on the space instead of doing nothing. */}
@@ -145,129 +173,138 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
 
       {/* The heading spans both columns, so the photo and the card start on the
           same line below it. */}
-      <h1 className="text-[clamp(26px,3.4vw,44px)] leading-[0.88] font-black tracking-[-0.06em]">
-        Payer chez
-        <br />
-        <em className="text-cp-accent font-serif font-normal">
-          {partner.name}.
-        </em>
-      </h1>
+      <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-5">
+        <div className="flex flex-wrap items-start gap-x-12 gap-y-4">
+          <h1 className="text-[clamp(28px,3.4vw,48px)] leading-[0.88] font-black tracking-[-0.055em]">
+            Payer chez
+            <br />
+            <em className="text-cp-accent font-serif font-normal">
+              {partner.name}.
+            </em>
+          </h1>
 
-      <div className="mt-7 grid items-start gap-8 lg:grid-cols-2 lg:gap-12">
-        <div>
-          {/* Tall enough to reach the rule that opens the payment block in the
-              other column: that rule sits at the panel's height plus its top
-              margin, which is about 36vh on a full-height window. */}
+          {/* La catégorie et le lieu tiennent au nom : ils se lisent avec lui,
+              pas sous la photo. */}
+          <div className="pt-1">
+            <p className="text-cp-accent text-[12px] font-black tracking-[0.16em] uppercase">
+              {partnerCategoryLabel(partner.categoryId)}
+            </p>
+            <address className="text-cp-fg mt-3 text-[19px] leading-[1.55] not-italic">
+              {partner.address}
+              <br />
+              <span className="text-cp-muted">
+                {partner.postcode} {partner.city}
+              </span>
+            </address>
+          </div>
+        </div>
+
+        {/* Statut administratif porté par les données : affiché seulement pour
+            les partenaires conventionnés, et à hauteur de titre parce que c'est
+            ce que le porteur doit voir avant de payer. */}
+        {partner.official && (
+          <p className="border-cp-official text-cp-official w-[17rem] shrink-0 border-2 px-6 py-5 text-[15px] leading-[1.3] font-black tracking-[0.08em] uppercase">
+            Partenaire Officiel du Ministère
+          </p>
+        )}
+      </div>
+
+      {/* Trois rangées, et c'est ce qui tient l'alignement : la mention, le QR,
+          puis ce qui se dit du QR. La colonne de gauche occupe les deux
+          premières, si bien que son bas est exactement le bas du QR — sans
+          qu'aucune hauteur soit écrite à la main. La rangée du QR est la seule
+          élastique : la photo prend ce que la carte laisse. */}
+      <div className="mt-5 grid gap-x-8 gap-y-0 lg:grid-cols-2 lg:grid-rows-[auto_1fr_auto] lg:gap-x-14">
+        {/* Gauche : le partenaire, puis la carte sous son adresse. */}
+        <div className="mb-8 flex flex-col lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:mb-0">
+          {/* Élastique à partir de lg : la photo absorbe la hauteur restante,
+              c'est-à-dire le bas du QR moins la carte. Elle garde son cadrage
+              9/5 en pile mobile, où rien ne fixe la hauteur de la colonne. */}
           <PartnerPhoto
             partner={partner}
             withName={false}
-            className="aspect-[4/3] max-h-[36vh] min-h-[180px] w-full"
+            className="aspect-[9/5] min-h-[150px] w-full lg:aspect-auto lg:flex-1"
           />
-          {/* Bigger than the micro-type used elsewhere: with only a category
-              and three lines of address under a large photo, the column read
-              as empty. */}
-          <p className="text-cp-accent mt-7 text-[11px] font-black tracking-[0.16em] uppercase">
-            {partnerCategoryLabel(partner.categoryId)}
-          </p>
-          <address className="text-cp-fg mt-5 text-[19px] leading-[1.55] not-italic">
-            {partner.address}
-            <br />
-            <span className="text-cp-muted">
-              {partner.postcode} {partner.city}
-            </span>
-          </address>
+
+          {/* Pleine largeur : le bord droit de la carte tombe sur celui de la
+              photo. Sa hauteur suit (rapport 1,6), et c'est elle qui décide de
+              ce qui reste à la photo. */}
+          <CardStage
+            className="mt-5 w-full shrink-0"
+            insetClassName="px-[13%] py-[1.5vh]"
+            tagClassName="top-[7%] right-[9%] rotate-[4deg]"
+          >
+            <CreditCard3D balanceCents={balance} />
+          </CardStage>
         </div>
 
-        <div>
-          {/* The same panel the hero presents the card on: blueprint grid and
-              the tilted tag. */}
-          <CardStage className="w-full">
-            {/* The card is sized off the height budget: 44vh of width is about
-                27vh of card, since the card is 1.6:1. */}
-            <div className="mx-auto w-full max-w-[min(100%,44vh)]">
-              <CreditCard3D balanceCents={balance} />
-            </div>
-          </CardStage>
+        {/* Droite : l'emplacement du QR, et rien d'autre. Le bouton attend au
+            centre ; le code se matérialise par-dessus, à la place qu'il occupe
+            déjà, de sorte que rien ne bouge autour de lui. */}
+        <div className="flex lg:col-start-2 lg:row-start-1 lg:justify-end">
+          <p className={SIMULATION_NOTICE}>
+            Paiement réel enregistré en base de données
+          </p>
+        </div>
 
-          <div className="border-t-cp-fg mt-6 grid items-start gap-6 border-t-2 pt-5 sm:grid-cols-[minmax(0,1fr)_170px]">
-            <div>
-              <p className={SIMULATION_NOTICE}>
-                Paiement réel enregistré en base de données
-              </p>
+        <div className="lg:col-start-2 lg:row-start-2">
+          <div className="border-cp-border bg-cp-page relative ms-auto mt-4 grid aspect-square w-full max-w-[min(100%,62vh)] place-items-center overflow-hidden rounded-2xl border bg-[linear-gradient(to_right,rgba(27,58,107,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(27,58,107,0.10)_1px,transparent_1px)] bg-[length:18px_18px] dark:bg-[linear-gradient(to_right,rgba(234,240,251,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,240,251,0.12)_1px,transparent_1px)]">
+            <button type="button" onClick={generate} className={BTN_SOLID}>
+              {mine === "none" ? "Générer le QR" : "Nouveau QR"}
+            </button>
 
-              {/* The partner's price, stated rather than asked for. */}
-              <p className={`text-cp-muted mt-4 ${MICRO}`}>Montant demandé</p>
-              <p className="mt-1 text-[clamp(26px,3vw,36px)] leading-[0.9] font-black tracking-[-0.05em]">
-                {formatEuros(partner.amountCents)}
-              </p>
-              <p className="text-cp-muted mt-2 text-[13px]">
-                Votre solde : {formatEuros(balance)}
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={generate}
-                  disabled={!affordable}
-                  className={BTN_SOLID}
-                >
-                  {mine === "active" ? "Nouveau QR" : "Générer le QR"}
-                </button>
-                {mine === "active" && (
-                  <button type="button" onClick={pay} className={BTN_OUTLINE}>
-                    Simuler le scan
-                  </button>
-                )}
-              </div>
-
-              {!affordable && (
-                <p className={`${NOTE_DANGER} mt-5`}>
-                  Ce partenaire demande{" "}
-                  {formatEuros(partner.amountCents - balance)} de plus que votre
-                  solde. Aucun QR ne peut être émis pour ce montant.
-                </p>
-              )}
-
-              {/* The refusal is the point: it says why, in the ledger's words. */}
-              {refusal && affordable && (
-                <p role="alert" className={`${NOTE_DANGER} mt-5`}>
-                  {refusal}
-                </p>
-              )}
-              {paid && (
-                <div className={`${NOTE_POSITIVE} mt-5`}>
-                  <p role="status">{paid}</p>
-                  <Link
-                    href="/espace#historique"
-                    className="mt-2 inline-block font-black underline underline-offset-4"
-                  >
-                    Voir dans l&apos;historique
-                  </Link>
+            {mine !== "none" && (
+              <div className="bg-cp-page absolute inset-0 grid place-items-center p-[5%]">
+                <div className="aspect-square h-full max-h-full w-auto max-w-full">
+                  <TokenQr tokenId={token!.id} dimmed={mine !== "active"} />
                 </div>
-              )}
-            </div>
-
-            {/* The QR's frame is always here, at one fixed size: an empty
-                blueprint square before, the code itself after. Swapping the
-                contents of a frame moves nothing below it. */}
-            <div className="w-full max-w-[170px]">
-              {mine === "none" ? (
-                <div
-                  aria-hidden="true"
-                  className="border-cp-border bg-cp-page aspect-square w-full rounded-2xl border bg-[linear-gradient(to_right,rgba(27,58,107,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(27,58,107,0.10)_1px,transparent_1px)] bg-[length:14px_14px] dark:bg-[linear-gradient(to_right,rgba(234,240,251,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,240,251,0.12)_1px,transparent_1px)]"
-                />
-              ) : (
-                    <TokenQr tokenId={token!.id} dimmed={mine !== "active"} />
-              )}
-              <p className={`text-cp-fg mt-3 min-h-[2.4em] ${MICRO}`}>
-                {mine === "none" && "En attente du QR"}
-                {mine === "active" && (
-                  <>Valable {mmss(token!.expiresAt - now)} — usage unique</>
-                )}
-                {mine === "expired" && "QR expiré"}
-              </p>
-            </div>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Ce qui se dit du QR : sous lui, à sa largeur, pour que le bouton de
+            scan tombe sur son bord droit. */}
+        <div className="ms-auto w-full max-w-[min(100%,62vh)] lg:col-start-2 lg:row-start-3">
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <p className={`text-cp-fg ${MICRO}`}>
+              {mine === "none" && "En attente du QR"}
+              {mine === "active" && (
+                <>Valable {mmss(token!.expiresAt - now)} — usage unique</>
+              )}
+              {mine === "used" && "QR déjà utilisé"}
+              {mine === "expired" && "QR expiré"}
+            </p>
+            {mine === "active" && (
+              <button
+                type="button"
+                onClick={pay}
+                className={`${BTN_OUTLINE} ms-auto`}
+              >
+                Simuler le scan
+              </button>
+            )}
+          </div>
+
+          {/* Le refus n'a plus de bloc permanent : il apparaît quand le registre
+              refuse, ce que la règle demande — un débit supérieur au solde est
+              refusé et dit pourquoi. */}
+          {refusal && (
+            <p role="alert" className={`${NOTE_DANGER} mt-4`}>
+              {refusal}
+            </p>
+          )}
+          {paid && (
+            <div className={`${NOTE_POSITIVE} mt-4`}>
+              <p role="status">{paid}</p>
+              <Link
+                href="/espace#historique"
+                className="mt-2 inline-block font-black underline underline-offset-4"
+              >
+                Voir dans l&apos;historique
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </section>

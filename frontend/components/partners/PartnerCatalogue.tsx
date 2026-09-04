@@ -69,6 +69,12 @@ export default function PartnerCatalogue() {
             postcode: item.codePostal || "",
             photo: "/partenaires/glaces-correze.svg",
             amountCents: item.amountCents,
+            /* Faux jusqu'à ce que l'API expose le conventionnement : `featured`
+               est la mise en avant éditoriale du Ministre, pas le statut
+               « Partenaire Officiel du Ministère », et les confondre
+               apposerait un tampon administratif sur une sélection de goût.
+               Un badge absent se corrige, un badge faux se croit. */
+            official: false,
           })),
         ),
       )
@@ -77,13 +83,19 @@ export default function PartnerCatalogue() {
 
   const categories = useMemo(
     () =>
-      (partners.length ? [...new Set(partners.map((partner) => partner.categoryId))] : categoriesInUse().map((category) => category.id)).map((categoryId) => ({
+      (partners.length
+        ? [...new Set(partners.map((partner) => partner.categoryId))]
+        : categoriesInUse().map((category) => category.id)
+      ).map((categoryId) => ({
         value: categoryId,
         label: partnerCategoryLabel(categoryId),
       })),
     [partners],
   );
-  const cities = useMemo(() => [...new Set(partners.map((partner) => partner.city))].sort(), [partners]);
+  const cities = useMemo(
+    () => [...new Set(partners.map((partner) => partner.city))].sort(),
+    [partners],
+  );
 
   // searchPartners clamps the page itself, so a filter change that shortens the
   // list can never leave the view on a page that no longer exists.
@@ -238,7 +250,9 @@ export default function PartnerCatalogue() {
       </div>
 
       {!loaded ? (
-        <p className="text-cp-muted border-cp-border border-b py-10 text-sm">Chargement du réseau…</p>
+        <p className="text-cp-muted border-cp-border border-b py-10 text-sm">
+          Chargement du réseau…
+        </p>
       ) : result.total === 0 ? (
         <p className="text-cp-muted border-cp-border border-b py-10 text-sm">
           Aucun partenaire ne correspond à cette recherche. Essayez un autre
