@@ -208,7 +208,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
           <CardStage
             className="mt-5 w-full shrink-0"
             insetClassName="px-[13%] py-[1.5vh]"
-            tagClassName="top-[8%] right-[16%] rotate-[4deg]"
+            tagClassName="top-[7%] right-[9%] rotate-[4deg]"
           >
             <CreditCard3D balanceCents={balance} />
           </CardStage>
