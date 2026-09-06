@@ -16,6 +16,9 @@ type Props = {
   audience: AuthAudience;
   mode: AuthMode;
   form: AuthFormApi;
+  /** Ce que le serveur a refusé, dans ses mots. */
+  error?: string | null;
+  busy?: boolean;
   onModeChange: (mode: AuthMode) => void;
   onSubmit: (e: React.FormEvent) => void;
 };
@@ -47,6 +50,8 @@ export default function AuthForm({
   audience,
   mode,
   form,
+  error,
+  busy,
   onModeChange,
   onSubmit,
 }: Props) {
@@ -81,13 +86,13 @@ export default function AuthForm({
             {demo.label}
           </Micro>
           <p className="text-cp-fg mt-2 font-mono text-[12px] break-all">
-            {demo.profile.email} · {demo.password}
+            {demo.email} · {demo.password}
           </p>
           {/* One tap on a tablet beats typing a password into a demo. */}
           <button
             type="button"
             onClick={() => {
-              setValue("email", demo.profile.email);
+              setValue("email", demo.email);
               setValue("password", demo.password);
             }}
             className={`text-cp-fg decoration-cp-accent mt-2.5 underline underline-offset-4 hover:decoration-2 ${MICRO}`}
@@ -121,8 +126,23 @@ export default function AuthForm({
         </a>
       </div>
 
-      <Button type="submit" variant="solid" arrow className="mb-4 w-full">
-        {submitLabelFor(audience, mode)}
+      {/* Le refus du serveur, juste au-dessus du bouton qui l'a provoqué —
+          c'est là qu'on regarde après avoir cliqué, et `role="alert"` le fait
+          annoncer sans déplacer le focus hors du formulaire. */}
+      {error && (
+        <Note tone="danger" role="alert" className="mb-4">
+          {error}
+        </Note>
+      )}
+
+      <Button
+        type="submit"
+        variant="solid"
+        arrow
+        disabled={busy}
+        className="mb-4 w-full"
+      >
+        {busy ? "Un instant…" : submitLabelFor(audience, mode)}
       </Button>
 
       <div className="text-cp-muted text-[12px]">

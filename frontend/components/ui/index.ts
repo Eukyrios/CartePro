@@ -19,6 +19,7 @@ export { default as Display } from "./Display";
 export { default as EmptyState } from "./EmptyState";
 export { default as FieldGrid } from "./FieldGrid";
 export { default as FilterGrid } from "./FilterGrid";
+export { default as HatchedPanel } from "./HatchedPanel";
 export { default as IconButton } from "./IconButton";
 export { default as IdentityStrip } from "./IdentityStrip";
 export { default as Micro } from "./Micro";

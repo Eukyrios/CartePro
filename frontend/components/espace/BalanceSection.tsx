@@ -6,25 +6,40 @@ import Display from "@/components/ui/Display";
 import Screen from "@/components/ui/Screen";
 import SimulationNotice from "@/components/ui/SimulationNotice";
 import { useBalance } from "@/components/account/useBalance";
+import type { ReactNode } from "react";
 
 /**
- * The first screen of the space: the greeting, the card, and what there is
- * left to spend — in that order.
+ * Le premier écran d'un espace : le bonjour, la carte, et ce qu'on peut en
+ * faire — dans cet ordre.
  *
- * The amount is phrased as a capacity rather than a remainder: "il vous reste"
- * frames a credit as something running out. The figure is on the card itself,
- * so the message beside it says what can be done with it rather than printing
- * it a second time at display size.
+ * Écran du salarié : lui seul a une carte à dépenser. L'espace partenaire n'en
+ * a pas — la carte y est barrée sur la fiche d'un partenaire, là où elle
+ * explique l'absence du bouton de paiement, et pas dans un écran à elle.
  *
- * The simulation notice is here in the open, because a monetary value is.
+ * Le montant est formulé comme une capacité, pas comme un reste : « il vous
+ * reste » présente un crédit comme quelque chose qui s'épuise. Le chiffre est
+ * sur la carte elle-même, donc le message à côté dit ce qu'on peut en faire
+ * plutôt que de l'imprimer une deuxième fois à taille d'affichage.
+ *
+ * La mention de simulation est là, à découvert, parce qu'un montant l'est.
  */
-export default function BalanceSection({ firstName }: { firstName: string }) {
+export default function BalanceSection({
+  name,
+  notice,
+  children,
+}: {
+  /** Le prénom d'un salarié, la raison sociale d'un partenaire. */
+  name: string;
+  notice: ReactNode;
+  /** La phrase sous la carte. Elle dit ce que ce solde permet. */
+  children?: ReactNode;
+}) {
   const balance = useBalance();
 
   return (
     <Screen id="solde" gap={10}>
       <div>
-        <Display level={1} accent={`${firstName}.`} br={false}>
+        <Display level={1} accent={`${name}.`} br={false}>
           Bonjour{" "}
         </Display>
       </div>
@@ -34,29 +49,37 @@ export default function BalanceSection({ firstName }: { firstName: string }) {
       </div>
 
       <div>
-        <SimulationNotice>Simulation — aucun paiement réel</SimulationNotice>
-        <p
-          aria-live="polite"
-          /* Le seul clamp() hors de DISPLAY, et assumé : c'est une phrase, pas
-             un titre — elle se lit à taille d'affichage sans en être un. */
-          className="text-cp-fg mt-3 max-w-[560px] text-[clamp(19px,2.2vw,26px)] leading-[1.35] font-black tracking-[-0.03em]"
-        >
-          {balance > 0 ? (
-            <>
-              Vous pouvez encore dépenser {formatEuros(balance)} chez les
-              partenaires du réseau.{" "}
-              <em className="text-cp-accent font-serif font-normal">
-                Votre crédit ne s&apos;expire pas.
-              </em>
-            </>
-          ) : (
-            <>
-              Vous avez utilisé tout votre crédit. Le prochain versement de
-              votre employeur apparaîtra ici.
-            </>
-          )}
-        </p>
+        <SimulationNotice>{notice}</SimulationNotice>
+        {children && (
+          <p
+            aria-live="polite"
+            /* Le seul clamp() hors de DISPLAY, et assumé : c'est une phrase, pas
+               un titre — elle se lit à taille d'affichage sans en être un. */
+            className="text-cp-fg mt-3 max-w-[560px] text-[clamp(19px,2.2vw,26px)] leading-[1.35] font-black tracking-[-0.03em]"
+          >
+            {children}
+          </p>
+        )}
       </div>
     </Screen>
+  );
+}
+
+/** La phrase du salarié : ce qu'il peut encore dépenser. */
+export function SpendingStatement() {
+  const balance = useBalance();
+  return balance > 0 ? (
+    <>
+      Vous pouvez encore dépenser {formatEuros(balance)} chez les partenaires du
+      réseau.{" "}
+      <em className="text-cp-accent font-serif font-normal">
+        Votre crédit ne s&apos;expire pas.
+      </em>
+    </>
+  ) : (
+    <>
+      Vous avez utilisé tout votre crédit. Le prochain versement de votre
+      employeur apparaîtra ici.
+    </>
   );
 }

@@ -6,7 +6,7 @@ import SectionNav from "@/components/layout/SectionNav";
 import PartnerCatalogue from "@/components/espace/PartnerCatalogue";
 import EmptyState from "@/components/ui/EmptyState";
 import Note from "@/components/ui/Note";
-import BalanceSection from "./BalanceSection";
+import BalanceSection, { SpendingStatement } from "./BalanceSection";
 import HistorySection from "./HistorySection";
 import MinisterPicksSection from "./MinisterPicksSection";
 import type { RailSection } from "@/components/layout/SectionNav";
@@ -67,7 +67,12 @@ export default function EmployeeSpace() {
   return (
     <>
       {/* The greeting belongs to the first screen, with the card. */}
-      <BalanceSection firstName={profile.username.split(" ")[0]} />
+      <BalanceSection
+        name={profile.username.split(" ")[0]}
+        notice="Simulation — aucun paiement réel"
+      >
+        <SpendingStatement />
+      </BalanceSection>
       <MinisterPicksSection />
       <PartnerCatalogue />
       <HistorySection />

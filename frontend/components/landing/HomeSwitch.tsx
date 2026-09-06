@@ -1,6 +1,6 @@
 "use client";
 
-import EmployeeSpace from "@/components/espace/EmployeeSpace";
+import AccountSpace from "@/components/account/AccountSpace";
 import PageMain from "@/components/ui/PageMain";
 import { useAccount } from "@/components/account/AccountProvider";
 import LandingPage from "./LandingPage";
@@ -17,17 +17,17 @@ import LandingPage from "./LandingPage";
  * while the session lives in localStorage rather than a cookie the server can
  * read, and the reason the space also keeps its own address at /espace.
  *
- * A partenaire keeps the landing page: their own space is not built yet, and
- * their account is reached from the menu.
+ * Les deux audiences ont désormais leur espace, et c'est `AccountSpace` qui
+ * choisit : un partenaire connecté est chez lui ici autant qu'un salarié.
  */
 export default function HomeSwitch() {
   const { profile, ready } = useAccount();
 
-  if (!ready || profile?.audience !== "employee") return <LandingPage />;
+  if (!ready || !profile) return <LandingPage />;
 
   return (
     <PageMain snap>
-      <EmployeeSpace />
+      <AccountSpace />
     </PageMain>
   );
 }

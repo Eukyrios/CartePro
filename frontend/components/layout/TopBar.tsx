@@ -24,6 +24,9 @@ export default function TopBar({ onLogin, onLogout }: Props) {
   const { profile, ready, signIn, signOut } = useAccount();
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");
+  /** Le refus du serveur, affiché dans le dialogue et effacé à sa fermeture. */
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
 
   function openModal(m: AuthMode) {
     setMode(m);
@@ -32,15 +35,30 @@ export default function TopBar({ onLogin, onLogout }: Props) {
 
   function closeModal() {
     setModalOpen(false);
+    setAuthError(null);
   }
 
-  function handleSubmit(payload: AuthSubmitPayload) {
-    // Replace with real auth calls as needed. The password is redacted here: it
-    // must never be logged or stored in clear, only hashed server-side.
-    console.log({ ...payload, password: "[redacted]" });
-    signIn(payload);
-    if (onLogin) onLogin();
-    closeModal();
+  /**
+   * Le dialogue reste ouvert tant que la connexion n'a pas abouti, et le refus
+   * s'affiche dedans : le fermer sur un échec effacerait la saisie et le
+   * message avec elle.
+   */
+  async function handleSubmit(payload: AuthSubmitPayload) {
+    setAuthError(null);
+    setAuthBusy(true);
+    try {
+      await signIn(payload);
+      if (onLogin) onLogin();
+      closeModal();
+    } catch (error) {
+      setAuthError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de contacter le serveur.",
+      );
+    } finally {
+      setAuthBusy(false);
+    }
   }
 
   function handleSignOut() {
@@ -96,6 +114,9 @@ export default function TopBar({ onLogin, onLogout }: Props) {
       </Navbar>
 
       <AuthModal
+        error={authError}
+        busy={authBusy}
+        onDismissError={() => setAuthError(null)}
         open={modalOpen}
         mode={mode}
         onModeChange={setMode}

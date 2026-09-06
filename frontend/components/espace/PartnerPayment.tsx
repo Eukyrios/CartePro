@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import CardStage, { CardTag } from "@/components/card/CardStage";
 import CreditCard3D from "@/components/card/CreditCard3D";
 import { formatEuros } from "@/components/data/ledger";
+import { useAccount } from "@/components/account/AccountProvider";
 import { useBalance } from "@/components/account/useBalance";
 import { partnerCategoryLabel } from "@/components/data/partnerCategories";
 import PartnerPhoto from "@/components/ui/PartnerPhoto";
@@ -14,6 +15,7 @@ import Breadcrumb from "@/components/ui/Breadcrumb";
 import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
 import Display from "@/components/ui/Display";
+import HatchedPanel from "@/components/ui/HatchedPanel";
 import IconButton from "@/components/ui/IconButton";
 import Micro from "@/components/ui/Micro";
 import Modal from "@/components/ui/Modal";
@@ -54,7 +56,13 @@ function mmss(msLeft: number) {
  */
 export default function PartnerPayment({ partner }: { partner: Partner }) {
   const router = useRouter();
+  const { profile } = useAccount();
   const balance = useBalance();
+  /* Un partenaire consulte cette page comme une fiche : il regarde un confrère
+     du réseau, il ne le paie pas. La carte s'affiche donc barrée et le QR reste
+     hors d'atteinte — c'est la même page, avec une porte fermée, plutôt qu'une
+     seconde page à maintenir en parallèle. */
+  const canPay = profile?.audience !== "partner";
   const [open, setOpen] = useState(false);
   const { token, state, refusal, remaining, issue } = useQrToken();
 
@@ -89,7 +97,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
           trail={[
             { label: "Mon espace", href: "/espace" },
             { label: "Le réseau", href: "/espace#reseau" },
-            { label: "Payer" },
+            { label: canPay ? "Payer" : "Fiche" },
           ]}
         />
       </div>
@@ -98,7 +106,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
           photographie, où il se lit avec elle. */}
       <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-5">
         <Display level={1} accent={`${partner.name}.`}>
-          Payer chez
+          {canPay ? "Payer chez" : "La fiche de"}
         </Display>
 
         {/* Statut administratif porté par les données : affiché seulement pour
@@ -143,39 +151,86 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
             colonne, la carte garde sa taille au milieu. */}
         <div className="flex flex-col">
           <SimulationNotice>
-            Émission réelle — aucun débit à ce stade
+            {canPay
+              ? "Simulation — aucun débit réel à ce stade"
+              : "Fiche consultée depuis un compte partenaire"}
           </SimulationNotice>
 
           {/* La carte est le déclencheur : on la présente, le code apparaît.
               Un vrai bouton, donc le clavier l'atteint et l'annonce. */}
-          <button
-            type="button"
-            onClick={present}
-            aria-haspopup="dialog"
-            className="focus-visible:outline-cp-accent mt-4 flex-1 cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-offset-4"
-          >
-            <CardStage
-              className="h-full w-full"
-              insetClassName="grid h-full place-items-center p-[6%]"
-              tagClassName="hidden"
-            >
-              {/* Taille inchangée : la carte ne grandit pas avec le panneau,
-                  elle se centre dedans. Le repère se place par rapport à elle,
-                  pas au panneau, sans quoi il flotterait dans le vide. */}
-              <div className="relative w-[min(100%,430px)]">
-                <CreditCard3D balanceCents={balance} />
-                <CardTag className="top-[-13%] right-[-4%] rotate-[4deg]" />
-              </div>
-            </CardStage>
-          </button>
+          {canPay ? (
+            <>
+              <button
+                type="button"
+                onClick={present}
+                aria-haspopup="dialog"
+                className="focus-visible:outline-cp-accent mt-4 flex-1 cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-offset-4"
+              >
+                <CardStage
+                  className="h-full w-full"
+                  insetClassName="grid h-full place-items-center p-[6%]"
+                  tagClassName="hidden"
+                >
+                  {/* Taille inchangée : la carte ne grandit pas avec le panneau,
+                      elle se centre dedans. Le repère se place par rapport à
+                      elle, pas au panneau, sans quoi il flotterait dans le
+                      vide. */}
+                  <div className="relative w-[min(100%,430px)]">
+                    <CreditCard3D balanceCents={balance} />
+                    <CardTag className="top-[-13%] right-[-4%] rotate-[4deg]" />
+                  </div>
+                </CardStage>
+              </button>
 
-          <Micro as="p" tone="muted" className="mt-3">
-            Cliquez la carte
-            <Slash />
-            {state === "active"
-              ? `QR valable ${mmss(remaining)}`
-              : "le QR s'affiche par-dessus"}
-          </Micro>
+              <Micro as="p" tone="muted" className="mt-3">
+                Cliquez la carte
+                <Slash />
+                {state === "active"
+                  ? `QR valable ${mmss(remaining)}`
+                  : "le QR s'affiche par-dessus"}
+              </Micro>
+            </>
+          ) : (
+            <>
+              {/* Pas de `flex-1` ici, contrairement à la version cliquable : le
+                  panneau du salarié remplit la colonne parce qu'il est le
+                  bouton, celui-ci n'a qu'à tenir la carte. L'étirer produisait
+                  une grande zone hachurée vide sous elle, et une page qui
+                  débordait de l'écran. */}
+              <HatchedPanel
+                className="mt-4"
+                reason={
+                  <>
+                    Cette carte appartient aux salariés. En tant que partenaire,
+                    vous <strong className="font-black">encaissez</strong> leurs
+                    paiements — vous n&apos;en émettez pas.
+                  </>
+                }
+                action={
+                  <Button href="/espace#encaissement" arrow>
+                    Encaisser un paiement
+                  </Button>
+                }
+              >
+                <CardStage
+                  className="w-full"
+                  insetClassName="grid place-items-center p-[6%]"
+                  tagClassName="hidden"
+                >
+                  <div className="relative w-[min(100%,430px)]">
+                    <CreditCard3D balanceCents={balance} />
+                    <CardTag className="top-[-13%] right-[-4%] rotate-[4deg]" />
+                  </div>
+                </CardStage>
+              </HatchedPanel>
+
+              <Micro as="p" tone="muted" className="mt-3">
+                Fiche partenaire
+                <Slash />
+                aucun paiement depuis ce compte
+              </Micro>
+            </>
+          )}
         </div>
       </div>
 
@@ -210,6 +265,28 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
             </Micro>
           )}
         </BlueprintFrame>
+
+        {/* Le code en clair, sous le dessin : la caméra du partenaire n'est pas
+            branchée dans ce démonstrateur, donc le code se copie et se colle
+            d'un espace à l'autre. C'est aussi ce qu'une vraie caméra lirait. */}
+        {token && (
+          <div className="border-cp-border mt-4 border-t pt-4">
+            <Micro as="p" tone="muted">
+              Code à présenter au partenaire
+            </Micro>
+            <div className="mt-2 flex flex-wrap items-start gap-3">
+              <code className="text-cp-fg bg-cp-surface min-w-0 flex-1 px-3 py-2 font-mono text-[11px] leading-[1.5] break-all">
+                {token.raw}
+              </code>
+              <Button
+                onClick={() => navigator.clipboard?.writeText(token.raw)}
+                className="shrink-0"
+              >
+                Copier
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Micro as="p">

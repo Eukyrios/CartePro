@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import EmployeeSpace from "@/components/espace/EmployeeSpace";
+import AccountSpace from "@/components/account/AccountSpace";
 import PageMain from "@/components/ui/PageMain";
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function EspacePage() {
   return (
     <PageMain snap>
-      <EmployeeSpace />
+      <AccountSpace />
     </PageMain>
   );
 }

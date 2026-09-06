@@ -170,6 +170,24 @@ export default function Atelier() {
           ),
         },
         {
+          name: "HatchedPanel",
+          note: "Ce qu'un partenaire voit à la place de la carte de paiement : le contenu reste visible, barré, et la raison est du vrai texte par-dessus. Cacher l'objet laisserait « où est ma carte ? » sans réponse.",
+          render: () => (
+            <UI.HatchedPanel
+              className="max-w-[420px]"
+              reason={
+                <>
+                  Cette carte appartient aux salariés. En tant que partenaire,
+                  vous <strong className="font-black">encaissez</strong>.
+                </>
+              }
+              action={<UI.Button>Encaisser un paiement</UI.Button>}
+            >
+              <div className="bg-cp-surface border-cp-border h-[220px] border" />
+            </UI.HatchedPanel>
+          ),
+        },
+        {
           name: "BlueprintFrame",
           render: () => (
             <div className="grid gap-5 sm:grid-cols-2">

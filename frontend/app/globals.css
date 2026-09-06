@@ -696,3 +696,22 @@ html:has(.snap-sections) {
     transition: none;
   }
 }
+
+/*
+ * La zone hachurée : ce qu'un partenaire voit à la place de la carte de
+ * paiement.
+ *
+ * Des hachures plutôt qu'un simple voile gris : un aplat translucide se lit
+ * comme « en cours de chargement », alors que des rayures diagonales disent
+ * « barré, pas pour vous » — c'est la convention des zones interdites, et elle
+ * se comprend sans lire le texte qui l'accompagne. Le pas est en pixels, pas
+ * en pourcentage, pour que l'inclinaison reste la même quelle que soit la
+ * taille du panneau.
+ */
+.hatched {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--cp-fg) 12%, transparent) 0 2px,
+    transparent 2px 11px
+  );
+}

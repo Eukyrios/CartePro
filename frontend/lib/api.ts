@@ -46,7 +46,29 @@ export function clearAccessToken() {
   window.localStorage.removeItem(TOKEN_KEY);
 }
 
-export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+/**
+ * Un refus du serveur, avec le statut qui l'accompagne.
+ *
+ * Le message seul ne suffit pas à tous les appelants : l'encaissement doit
+ * distinguer un code déjà utilisé (que le serveur accepte, en 200) d'un code
+ * refusé (400) et d'un partenaire qui n'est pas le bon (403). Classer ces cas
+ * en lisant le texte du message serait une grammaire de plus à maintenir.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+/** L'appel, avec le statut conservé. */
+export async function apiWithStatus<T>(
+  path: string,
+  init: RequestInit = {},
+): Promise<{ status: number; data: T }> {
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
   const token = accessToken();
@@ -58,8 +80,17 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     message?: string;
   };
   if (!response.ok) {
-    throw new Error(data.error || data.message || "La requête a échoué.");
+    throw new ApiError(
+      data.error || data.message || "La requête a échoué.",
+      response.status,
+    );
   }
+  return { status: response.status, data };
+}
+
+/** L'appel courant : le corps de la réponse, et rien d'autre. */
+export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const { data } = await apiWithStatus<T>(path, init);
   return data;
 }
 

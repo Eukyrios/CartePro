@@ -64,7 +64,8 @@ type Account = {
   profile: Profile | null;
   /** False during the first paint, while the stored session is still unknown. */
   ready: boolean;
-  signIn: (payload: AuthSubmitPayload) => Promise<boolean>;
+  /** Lève l'erreur du serveur telle quelle : c'est à l'écran de l'afficher. */
+  signIn: (payload: AuthSubmitPayload) => Promise<void>;
   signOut: () => void;
   updateProfile: (profile: Profile) => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -149,38 +150,37 @@ export default function AccountProvider({
     restoreSession();
   }, [refreshAccount]);
 
+  /**
+   * Connecte ou inscrit, et **laisse remonter le refus du serveur**.
+   *
+   * Un `alert()` du navigateur tenait ce rôle : une boîte grise, hors de la
+   * page, hors du design, qui bloque tout et qu'aucun lecteur d'écran ne
+   * rattache au formulaire d'où elle vient. Le message appartient à l'écran qui
+   * a posé la question — c'est le dialogue d'authentification qui l'affiche
+   * désormais, dans ses propres mots et à sa place.
+   */
   const signIn = useCallback(
     async (payload: AuthSubmitPayload) => {
       const { audience, mode, username, email, password, partner } = payload;
-      try {
-        const data = await api<{
-          access_token: string;
-          user: Parameters<typeof userProfile>[0];
-        }>(`/api/auth/${mode === "login" ? "login" : "register"}`, {
-          method: "POST",
-          body: JSON.stringify({
-            email,
-            password,
-            ...(mode === "signup"
-              ? { username, audience, partner: partner ?? {} }
-              : {}),
-          }),
-        });
-        window.localStorage.setItem("access_token", data.access_token);
-        const next = userProfile(data.user);
-        persist({
-          ...next,
-          cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle },
-        });
-        return true;
-      } catch (error) {
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Impossible de contacter le serveur.",
-        );
-        return false;
-      }
+      const data = await api<{
+        access_token: string;
+        user: Parameters<typeof userProfile>[0];
+      }>(`/api/auth/${mode === "login" ? "login" : "register"}`, {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          password,
+          ...(mode === "signup"
+            ? { username, audience, partner: partner ?? {} }
+            : {}),
+        }),
+      });
+      window.localStorage.setItem("access_token", data.access_token);
+      const next = userProfile(data.user);
+      persist({
+        ...next,
+        cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle },
+      });
     },
     [persist],
   );

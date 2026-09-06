@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { TabItem, Tabs } from "flowbite-react";
 import Modal from "@/components/ui/Modal";
 import AuthForm from "./AuthForm";
@@ -106,6 +106,16 @@ type Props = {
   onModeChange: (mode: AuthMode) => void;
   onClose: () => void;
   onSubmit: (payload: AuthSubmitPayload) => void;
+  /** Le refus du serveur, affiché dans le formulaire lui-même. */
+  error?: string | null;
+  /** Vrai pendant l'appel : le bouton le dit plutôt que de rester inerte. */
+  busy?: boolean;
+  /**
+   * Efface le refus affiché. Appelé quand on change d'onglet ou de mode : un
+   * « mot de passe incorrect » adressé au formulaire salarié n'a rien à dire
+   * au formulaire partenaire.
+   */
+  onDismissError?: () => void;
 };
 
 /** Tab order, left to right. The first entry is the default tab. */
@@ -129,19 +139,22 @@ export default function AuthModal({
   onModeChange,
   onClose,
   onSubmit,
+  error,
+  busy,
+  onDismissError,
 }: Props) {
   const [audience, setAudience] = useState<AuthAudience>(DEFAULT_AUDIENCE);
   const form = useAuthForm();
 
   const partnerSignup = audience === "partner" && mode === "signup";
 
-  // Every open starts on the default tab. Closing unmounts Flowbite's Tabs, so
-  // its internal active tab resets to the first one; resetting the audience
-  // here keeps the two in step instead of leaving a hidden panel holding the
-  // form.
-  useEffect(() => {
-    if (open) setAudience(DEFAULT_AUDIENCE);
-  }, [open]);
+  /* Pas de remise à zéro de l'audience à l'ouverture, et c'est important : le
+     dialogue est un <dialog> qui reste monté une fois fermé, donc les onglets
+     de Flowbite gardent leur onglet actif. Forcer l'audience de notre côté les
+     désaccordait — l'onglet montrait « Partenaires » pendant que l'audience
+     disait « employee », aucun des deux panneaux ne correspondait, et le
+     dialogue s'affichait vide jusqu'à ce qu'on change d'onglet à la main. Les
+     deux ne changent plus que par le même geste : un clic sur un onglet. */
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -212,7 +225,10 @@ export default function AuthModal({
               },
             },
           }}
-          onActiveTabChange={(index) => setAudience(AUDIENCES[index])}
+          onActiveTabChange={(index) => {
+            setAudience(AUDIENCES[index]);
+            onDismissError?.();
+          }}
         >
           {/* Only the active panel holds the form: Flowbite renders every
               panel (hiding inactive ones), which would otherwise duplicate
@@ -224,7 +240,12 @@ export default function AuthModal({
                   audience={tabAudience}
                   mode={mode}
                   form={form}
-                  onModeChange={onModeChange}
+                  error={error}
+                  busy={busy}
+                  onModeChange={(next) => {
+                    onDismissError?.();
+                    onModeChange(next);
+                  }}
                   onSubmit={handleSubmit}
                 />
               )}

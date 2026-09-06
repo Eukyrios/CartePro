@@ -127,18 +127,49 @@ def valider_transaction():
 @transactions_bp.route('/me', methods=['GET'])
 @jwt_required()
 def mes_transactions():
+    """Les mouvements du compte connecté, du plus récent au plus ancien.
+
+    La même route répond aux deux audiences, parce que c'est la même question
+    posée par deux côtés du comptoir : un salarié voit ce qu'il a dépensé
+    (`debit`), un partenaire ce qu'il a encaissé (`credit`). Le `label` suit :
+    chez qui pour l'un, de qui pour l'autre — un identifiant partiel du salarié,
+    jamais son email.
+    """
     user_id = int(get_jwt_identity())
-    transactions = Transaction.query.filter_by(
-        salarie_id=user_id, statut="validee"
-    ).order_by(Transaction.date.desc()).all()
+    utilisateur = User.query.get(user_id)
+    est_partenaire = bool(utilisateur and utilisateur.role == "partenaire")
+
+    query = Transaction.query.filter_by(statut="validee")
+    query = query.filter_by(
+        partenaire_id=user_id
+    ) if est_partenaire else query.filter_by(salarie_id=user_id)
+    transactions = query.order_by(Transaction.date.desc()).all()
+
     return jsonify({"transactions": [
         {
             "id": str(transaction.id),
             "at": transaction.date.isoformat(),
-            "kind": "debit",
+            "kind": "credit" if est_partenaire else "debit",
             "amountCents": round(transaction.montant * 100),
-            "label": transaction.partenaire.company_name or transaction.partenaire.username,
+            "label": (
+                _libelle_salarie(transaction.salarie)
+                if est_partenaire
+                else (transaction.partenaire.company_name or transaction.partenaire.username)
+            ),
             "partnerId": str(transaction.partenaire.id),
         }
         for transaction in transactions
     ]}), 200
+
+
+def _libelle_salarie(salarie):
+    """Le salarié tel qu'un partenaire peut le voir : son nom, rien de plus.
+
+    Un encaissement n'a pas à révéler l'adresse email de qui a payé — c'est
+    l'identifiant de connexion de cette personne. Le nom d'utilisateur suffit à
+    reconnaître une opération dans une liste, et à défaut il ne reste que le
+    numéro de la ligne.
+    """
+    if not salarie:
+        return "Salarié"
+    return salarie.username or f"Salarié #{salarie.id}"

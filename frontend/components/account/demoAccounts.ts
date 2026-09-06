@@ -1,101 +1,46 @@
 import type { AuthAudience } from "@/components/auth/AuthModal";
-import type { Profile } from "./AccountProvider";
 
 /**
- * Demonstration accounts shipped in the build's starting data: one per type of
- * user, filled in as if the person had been using Ticket Tout for a while, so the
- * app can be opened and shown without registering anything first.
+ * Les comptes de démonstration proposés sous le formulaire de connexion, pour
+ * qu'on puisse ouvrir l'application et la montrer sans rien créer.
  *
- * The type is imported for its shape only, so this module stays plain data with
- * no runtime dependency on the provider that reads it.
+ * **Ce sont ceux que `make seed` écrit en base** — voir `backend/seed.py`, qui
+ * les imprime aussi à la fin de son exécution. C'était de fausses identités
+ * inventées ici, du temps où la connexion se jouait dans le navigateur : elles
+ * n'ont jamais existé côté serveur, si bien que le bouton « Remplir ces
+ * identifiants » remplissait des identifiants systématiquement refusés.
+ *
+ * Ces deux listes doivent donc bouger ensemble. Si le seed change un email ou
+ * le mot de passe, ce fichier le suit — sinon le raccourci ment de nouveau.
  */
 export type DemoAccount = {
-  /** How the account is announced in the sign-in dialog. */
+  audience: AuthAudience;
+  /** Comment le compte est annoncé dans le dialogue de connexion. */
   label: string;
-  /** Same password for both, so there is only one thing to remember. */
+  email: string;
+  /** Le même pour tous les comptes semés : une seule chose à retenir. */
   password: string;
-  profile: Profile;
 };
 
-/** One password for every demo account. */
-export const DEMO_PASSWORD = "Demo1234!";
+/** Le mot de passe commun, tel que `backend/seed.py` le pose. */
+export const DEMO_PASSWORD = "TicketTout2026";
 
-/**
- * The employé: a complete card style, since customising the card is what an
- * employé's private space is for.
- */
-const EMPLOYEE: DemoAccount = {
-  label: "Compte employé de démonstration",
-  password: DEMO_PASSWORD,
-  profile: {
+/** Dans l'ordre des onglets, pour que le dialogue puisse choisir par audience. */
+export const DEMO_ACCOUNTS: DemoAccount[] = [
+  {
     audience: "employee",
-    username: "Camille Fontaine",
-    email: "employe@tickettout.fr",
-    balanceCents: 3250, // 👈 Ajout ici
-    partner: {
-      raisonSociale: "",
-      siren: "",
-      objetSocial: "",
-      categorie: "",
-      adresse: "",
-      ville: "",
-      codePostal: "",
-      nomRepresentant: "",
-    },
-    cardStyle: {
-      color: "#1b3a6b",
-      text: "#ffffff",
-      pattern: "waves",
-      metalness: 45,
-    },
+    label: "Compte salarié de démonstration",
+    email: "camille.durand@ministere.gouv.fr",
+    password: DEMO_PASSWORD,
   },
-};
-
-const PARTNER: DemoAccount = {
-  label: "Compte partenaire de démonstration",
-  password: DEMO_PASSWORD,
-  profile: {
+  {
     audience: "partner",
-    username: "Chapelier Fontaine",
-    email: "partenaire@tickettout.fr",
-    balanceCents: 0, // 👈 Ajout ici
-    partner: {
-      raisonSociale: "Chapelier Fontaine",
-      siren: "404833048",
-      objetSocial: "Chapellerie artisanale et accessoires de costume",
-      categorie: "Culture",
-      adresse: "9 rue des Filatiers",
-      ville: "Toulouse",
-      codePostal: "31000",
-      nomRepresentant: "Élise Chapelier",
-    },
-    cardStyle: {
-      color: "#0a0a0b",
-      text: "#ffffff",
-      pattern: "grid",
-      metalness: 15,
-    },
+    label: "Compte partenaire de démonstration",
+    email: "contact@poney-dream-78.fr",
+    password: DEMO_PASSWORD,
   },
-};
-
-/** In tab order, so the sign-in dialog can pick by audience. */
-export const DEMO_ACCOUNTS: DemoAccount[] = [EMPLOYEE, PARTNER];
+];
 
 export function demoAccountFor(audience: AuthAudience) {
-  return DEMO_ACCOUNTS.find(
-    (account) => account.profile.audience === audience,
-  ) as DemoAccount;
-}
-
-/**
- * The demo account these credentials sign into, if any. Email is matched
- * case-insensitively — a tablet keyboard capitalises the first letter.
- */
-export function findDemoAccount(email: string, password: string) {
-  const wanted = email.trim().toLowerCase();
-  return DEMO_ACCOUNTS.find(
-    (account) =>
-      account.profile.email.toLowerCase() === wanted &&
-      account.password === password,
-  );
+  return DEMO_ACCOUNTS.find((account) => account.audience === audience);
 }
