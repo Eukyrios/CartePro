@@ -7,6 +7,7 @@ import CardStage, { CardTag } from "@/components/card/CardStage";
 import CreditCard3D from "@/components/card/CreditCard3D";
 import { formatEuros } from "@/components/data/ledger";
 import { useAccount } from "@/components/account/AccountProvider";
+import SignInButton from "@/components/auth/SignInButton";
 import { useBalance } from "@/components/account/useBalance";
 import { partnerCategoryLabel } from "@/components/data/partnerCategories";
 import PartnerPhoto from "@/components/ui/PartnerPhoto";
@@ -48,6 +49,11 @@ function mmss(msLeft: number) {
  * kept square beside it. Nothing in the section moves when it opens — a modal
  * is out of flow, which is the point.
  *
+ * Trois publics, un seul écran : le salarié paie, le partenaire et le visiteur
+ * voient la même carte barrée (voir `mode` plus bas). La fiche est prérendue et
+ * publique — c'est ce qui permet de la partager, et ce qui oblige la carte à
+ * dire elle-même à qui elle appartient.
+ *
  * Le jeton est émis par le serveur (voir useQrToken) et **rien n'est débité à
  * ce stade** : la validation, /api/transactions/valider, n'est pas appelée ici.
  * Elle l'était (voir l'historique git de ce fichier) et le sera de nouveau
@@ -56,13 +62,29 @@ function mmss(msLeft: number) {
  */
 export default function PartnerPayment({ partner }: { partner: Partner }) {
   const router = useRouter();
-  const { profile } = useAccount();
+  const { profile, ready } = useAccount();
   const balance = useBalance();
-  /* Un partenaire consulte cette page comme une fiche : il regarde un confrère
-     du réseau, il ne le paie pas. La carte s'affiche donc barrée et le QR reste
-     hors d'atteinte — c'est la même page, avec une porte fermée, plutôt qu'une
-     seconde page à maintenir en parallèle. */
-  const canPay = profile?.audience !== "partner";
+
+  /* Qui regarde cette fiche, et ce qu'il a le droit d'en faire.
+     — "pay"     : un salarié connecté, le seul à pouvoir émettre un QR ;
+     — "partner" : un partenaire, qui regarde un confrère du réseau ;
+     — "visitor" : personne — la page est prérendue et publique, on y arrive
+                   depuis le coup de cœur de l'accueil sans être connecté.
+     Dans les deux derniers cas la carte s'affiche barrée et le QR reste hors
+     d'atteinte : c'est la même page, avec une porte fermée, plutôt que deux
+     autres pages à maintenir en parallèle.
+
+     `!ready` compte comme visiteur, et pas l'inverse : c'est exactement ce que
+     le serveur a rendu, la session vivant dans localStorage. Rendre l'écran
+     payable en attendant montrerait une carte utilisable à quelqu'un qui ne
+     l'est peut-être pas. */
+  const mode =
+    !ready || !profile
+      ? "visitor"
+      : profile.audience === "partner"
+        ? "partner"
+        : "pay";
+  const canPay = mode === "pay";
   const [open, setOpen] = useState(false);
   const { token, state, refusal, remaining, issue } = useQrToken();
 
@@ -86,19 +108,35 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
             case lands on the space instead of doing nothing. */}
         <IconButton
           label="Retour à la page précédente"
+          /* Un onglet neuf n'a pas d'historique à remonter : on retombe alors
+             sur l'espace, ou sur l'accueil quand personne n'est connecté —
+             l'espace renverrait un visiteur vers une invitation à se
+             connecter, ce qui n'est pas un retour. */
           onClick={() =>
-            window.history.length > 1 ? router.back() : router.push("/espace")
+            window.history.length > 1
+              ? router.back()
+              : router.push(mode === "visitor" ? "/" : "/espace")
           }
         >
           ←
         </IconButton>
 
+        {/* Le fil d'Ariane suit le chemin qu'on a réellement pu prendre : sans
+            compte, ni « Mon espace » ni « Le réseau » ne s'ouvrent. */}
         <Breadcrumb
-          trail={[
-            { label: "Mon espace", href: "/espace" },
-            { label: "Le réseau", href: "/espace#reseau" },
-            { label: canPay ? "Payer" : "Fiche" },
-          ]}
+          trail={
+            mode === "visitor"
+              ? [
+                  { label: "Accueil", href: "/" },
+                  { label: "Coup de cœur", href: "/#coup-de-coeur" },
+                  { label: "Fiche" },
+                ]
+              : [
+                  { label: "Mon espace", href: "/espace" },
+                  { label: "Le réseau", href: "/espace#reseau" },
+                  { label: canPay ? "Payer" : "Fiche" },
+                ]
+          }
         />
       </div>
 
@@ -138,22 +176,17 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
               {partner.postcode} {partner.city}
             </span>
           </address>
-
-          {/* La devise, dans la serif de la marque — la même phrase que
-              l'accueil, pour que la page de paiement appartienne visiblement au
-              même ensemble. */}
-          <p className="border-t-cp-border text-cp-fg mt-auto border-t pt-4 font-serif text-[22px] leading-[1.25] italic">
-            Dépenser autrement.
-          </p>
         </div>
 
         {/* Droite : la carte, et rien d'autre. Le panneau prend toute la
             colonne, la carte garde sa taille au milieu. */}
         <div className="flex flex-col">
           <SimulationNotice>
-            {canPay
+            {mode === "pay"
               ? "Simulation — aucun débit réel à ce stade"
-              : "Fiche consultée depuis un compte partenaire"}
+              : mode === "partner"
+                ? "Fiche consultée depuis un compte partenaire"
+                : "Fiche publique — la carte demande une connexion"}
           </SimulationNotice>
 
           {/* La carte est le déclencheur : on la présente, le code apparaît.
@@ -200,16 +233,30 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
               <HatchedPanel
                 className="mt-4"
                 reason={
-                  <>
-                    Cette carte appartient aux salariés. En tant que partenaire,
-                    vous <strong className="font-black">encaissez</strong> leurs
-                    paiements — vous n&apos;en émettez pas.
-                  </>
+                  mode === "partner" ? (
+                    <>
+                      Cette carte appartient aux salariés. En tant que
+                      partenaire, vous{" "}
+                      <strong className="font-black">encaissez</strong> leurs
+                      paiements — vous n&apos;en émettez pas.
+                    </>
+                  ) : (
+                    <>
+                      Cette carte est celle des salariés. Connectez-vous avec un
+                      compte salarié pour{" "}
+                      <strong className="font-black">payer</strong> chez ce
+                      partenaire.
+                    </>
+                  )
                 }
                 action={
-                  <Button href="/espace#encaissement" arrow>
-                    Encaisser un paiement
-                  </Button>
+                  mode === "partner" ? (
+                    <Button href="/espace#encaissement" arrow>
+                      Encaisser un paiement
+                    </Button>
+                  ) : (
+                    <SignInButton arrow>Se connecter</SignInButton>
+                  )
                 }
               >
                 <CardStage
@@ -225,9 +272,11 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
               </HatchedPanel>
 
               <Micro as="p" tone="muted" className="mt-3">
-                Fiche partenaire
+                {mode === "partner" ? "Fiche partenaire" : "Fiche publique"}
                 <Slash />
-                aucun paiement depuis ce compte
+                {mode === "partner"
+                  ? "aucun paiement depuis ce compte"
+                  : "le paiement demande un compte salarié"}
               </Micro>
             </>
           )}

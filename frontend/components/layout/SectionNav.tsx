@@ -19,7 +19,8 @@ export type RailSection = {
 const LANDING_SECTIONS: readonly RailSection[] = [
   { id: "accueil", index: "", label: "Accueil" },
   { id: "fonctionnement", index: "01", label: "Fonctionnement" },
-  { id: "confiance", index: "02", label: "Confiance" },
+  { id: "coup-de-coeur", index: "02", label: "Coup de cœur" },
+  { id: "confiance", index: "03", label: "Confiance" },
 ];
 
 /**

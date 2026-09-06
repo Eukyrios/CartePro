@@ -35,13 +35,23 @@ const PICKS: MinisterPick[] = [
   },
 ];
 
-/** The selection, with each pick's partner resolved. Skips unknown ids. */
-export function ministerPicks(): readonly {
+/**
+ * Le coup de cœur affiché : la tête de la liste, son partenaire résolu.
+ *
+ * Un seul, et c'est le premier — donc changer de coup de cœur, c'est remonter
+ * une entrée. Les suivantes restent la réserve du Ministère, et le jour où
+ * l'espace d'administration ordonnera cette liste, l'interface n'en saura rien.
+ *
+ * `null` si la sélection est vide ou si aucune de ses entrées ne désigne un
+ * partenaire connu : une section sans contenu s'efface, elle ne s'excuse pas.
+ */
+export function ministerPick(): {
   pick: MinisterPick;
   partner: Partner;
-}[] {
-  return PICKS.flatMap((pick) => {
+} | null {
+  for (const pick of PICKS) {
     const partner = partnerById(pick.partnerId);
-    return partner ? [{ pick, partner }] : [];
-  });
+    if (partner) return { pick, partner };
+  }
+  return null;
 }

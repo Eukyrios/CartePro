@@ -25,12 +25,21 @@ export default function PartnerTile({
   onClick,
   tabIndex,
   className,
+  photoClassName,
+  nameClassName,
 }: {
   partner: Partner;
   children: ReactNode;
   /** Defaults to that partner's payment page. */
   href?: string;
   withName?: boolean;
+  /**
+   * The photograph's frame, when a caller needs another shape than the row's
+   * 4/3 — a lone featured tile is taller than one of twelve in a grid.
+   */
+  photoClassName?: string;
+  /** The name laid over it, likewise. */
+  nameClassName?: string;
   onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
   /** -1 on the decorative copies of a looping row. */
   tabIndex?: number;
@@ -46,7 +55,12 @@ export default function PartnerTile({
         className,
       )}
     >
-      <PartnerPhoto partner={partner} withName={withName} />
+      <PartnerPhoto
+        partner={partner}
+        withName={withName}
+        className={photoClassName}
+        nameClassName={nameClassName}
+      />
       {children}
     </Link>
   );

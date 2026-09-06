@@ -1,14 +1,12 @@
 import { CardTag } from "@/components/card/CardStage";
 import CreditCard3D from "@/components/card/CreditCard3D";
+import Button from "@/components/ui/Button";
 import Display from "@/components/ui/Display";
-import Micro from "@/components/ui/Micro";
 import Screen from "@/components/ui/Screen";
-import Slash from "@/components/ui/Slash";
 
 /**
- * The landing hero: a narrow vertical rail, the headline column, and the
- * credit-card visual on a tinted panel. Three columns on desktop, stacked on
- * mobile, matching the original's 48px / 1fr / 47% grid.
+ * The landing hero: the headline column and the credit-card visual on a tinted
+ * panel, side by side on desktop and stacked on mobile.
  *
  * No "use client" needed: nothing here holds state or handlers, and the card's
  * tilt is pure CSS.
@@ -25,18 +23,11 @@ export default function HeroSection() {
       snap={false}
       align="stretch"
       density="tight"
-      className="lg:grid-cols-[48px_1fr_47%]"
+      /* Deux colonnes, plus trois : la bande de 48 px portait le texte de
+         tranche « Ticket Tout / 2026 — France », et une colonne vide à la
+         place de celui-ci décalerait l'accroche sans rien y mettre. */
+      className="lg:grid-cols-[1fr_47%]"
     >
-      {/* Vertical rail. Sideways text has no mobile equivalent, so it is
-          dropped there exactly as the original does. */}
-      <Micro
-        as="div"
-        className="border-cp-border hidden items-center justify-between border-r px-3.5 py-6 [writing-mode:vertical-rl] lg:flex"
-      >
-        <span>Ticket Tout / 2026</span>
-        <span>France</span>
-      </Micro>
-
       {/* No minimum height on mobile: the column is sized by its content, so
           removing the calls to action does not leave a tall empty gap above
           the card panel. */}
@@ -57,6 +48,15 @@ export default function HeroSection() {
             Un crédit mis à disposition par votre employeur, à utiliser chez les
             partenaires Ticket Tout.
           </p>
+
+          {/* Une porte vers le réseau, avant qu'on ait à faire défiler pour le
+              découvrir : le coup de cœur est le seul partenaire nommé de la
+              page d'accueil. Une ancre, donc elle se copie et se partage. */}
+          <div className="mt-8">
+            <Button href="#coup-de-coeur" arrow>
+              Le coup de cœur du Ministre
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -84,12 +84,6 @@ export default function HeroSection() {
         </div>
 
         <CardTag />
-
-        <Micro as="p" className="absolute right-[30px] bottom-[25px]">
-          01
-          <Slash />
-          04
-        </Micro>
       </div>
     </Screen>
   );

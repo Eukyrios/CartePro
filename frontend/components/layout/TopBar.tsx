@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DarkThemeToggle, Navbar, NavbarBrand } from "flowbite-react";
 import AuthButtons from "@/components/auth/AuthButtons";
 import AuthModal from "@/components/auth/AuthModal";
+import { onAuthIntent } from "@/components/auth/authIntent";
 import UserMenu from "./UserMenu";
 import BrandLogo from "@/components/brand/BrandLogo";
 import {
@@ -32,6 +33,11 @@ export default function TopBar({ onLogin, onLogout }: Props) {
     setMode(m);
     setModalOpen(true);
   }
+
+  /* Le dialogue s'ouvre aussi depuis les pages — la carte barrée de l'accueil
+     y envoie. Voir auth/authIntent : la barre est hors de leur arbre, donc
+     l'appel passe par un événement plutôt que par des props. */
+  useEffect(() => onAuthIntent(openModal), []);
 
   function closeModal() {
     setModalOpen(false);
