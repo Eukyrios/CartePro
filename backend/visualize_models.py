@@ -15,12 +15,32 @@ from sqlalchemy_data_model_visualizer import (
 )
 
 # Import des modèles depuis ton fichier models.py
-from models import User, Transaction
+from models import (
+    Abondement,
+    Admin,
+    Categorie,
+    CoupDeCoeur,
+    Decision,
+    Employeur,
+    Partenaire,
+    Salaries,
+    Transaction,
+)
 
 
 if __name__ == "__main__":
     # Liste des modèles à visualiser
-    models = [User, Transaction]
+    models = [
+        Employeur,
+        Categorie,
+        Salaries,
+        Partenaire,
+        Admin,
+        Transaction,
+        Abondement,
+        CoupDeCoeur,
+        Decision,
+    ]
 
     output_file_name = "data_model_diagram"
 

@@ -31,7 +31,22 @@ from datetime import datetime, timedelta, timezone
 from faker import Faker
 
 from app import create_app
-from models import db, User, Transaction
+from accounts import PATTERNS
+from models import (
+    Abondement,
+    Admin,
+    Categorie,
+    CoupDeCoeur,
+    CoupDeCoeurStatut,
+    Employeur,
+    MotifCarte,
+    Partenaire,
+    PartnerStatus,
+    Salaries,
+    Transaction,
+    TransactionStatut,
+    db,
+)
 from services.csv_service import generate_transactions_csv
 
 fake = Faker('fr_FR')
@@ -335,43 +350,82 @@ DEFAULT_CARD_STYLE = {
 }
 
 
-def make_partner(entry):
-    """Un compte partenaire à partir d'une entrée du réseau.
+# Les mots du Ministre sur ses coups de cœur, par slug.
+#
+# Le schéma leur donne une colonne — `CoupDeCoeur.mot_du_ministre` — donc ils
+# vivent en base et non plus seulement dans le front. Les quatre phrases sont
+# celles de `frontend/components/data/ministerPicks.ts` : la même sélection,
+# les mêmes mots, jusqu'à ce que l'espace d'administration prenne la main.
+MOTS_DU_MINISTRE = {
+    "poney-dream-78": "Parfait pour ressouder une équipe et renouer avec la nature.",
+    "kostumparty": "La créativité est la clé du bonheur au travail.",
+    "glaces-correze": "Soutenir l'artisanat français, un parfum à la fois.",
+    "chapelier-fontaine": "L'élégance française.",
+}
 
-    `username` porte le slug : c'est l'identifiant que l'API expose et que la
-    page de paiement résout. `raisonSociale` est dans partner_data parce que
-    c'est ce que le profil affiche, et le conventionnement y est aussi — c'est
-    une donnée du Ministère, pas une décoration de l'interface.
+
+def _categories(session):
+    """Une categorie par secteur cite dans le reseau, creee une fois."""
+    noms = sorted({entry["secteur"] for entry in NETWORK})
+    par_nom = {}
+    for nom in noms:
+        categorie = Categorie(nom=nom)
+        session.add(categorie)
+        par_nom[nom] = categorie
+    session.flush()
+    return par_nom
+
+
+def make_partner(entry, categories):
+    """Un compte partenaire a partir d'une entree du reseau.
+
+    Le `slug` est l'identifiant que l'API expose et que la page de paiement
+    resout — il vient des donnees, pas d'une cle primaire, parce que les pages
+    du front sont pre-rendues sur lui.
+
+    Le conventionnement est un statut du Ministere : `valide` pour un
+    partenaire officiel, `en_attente` pour les autres. C'est lui que l'espace
+    partenaire lit pour ouvrir ou barrer l'encaissement.
     """
-    partner = User(
-        email=f"contact@{entry['slug']}.fr",
-        username=entry["slug"],
-        company_name=entry["nom"],
-        role="partenaire",
-        audience="partner",
-        solde=0.0,
-        partner_data={
-            "raisonSociale": entry["nom"],
-            "secteur": entry["secteur"],
-            "adresse": entry["adresse"],
-            "ville": entry["ville"],
-            "codePostal": entry["codePostal"],
-            "photo": entry["photo"],
-            "amountCents": entry["amountCents"],
-            "official": entry["official"],
-            "featured": entry["featured"],
-            # Vide pour la plupart : la section de presentation ne parait pas
-            # sur une fiche qui n'en a pas, et c'est le cas courant.
-            "presentationTitre": "",
-            "presentationTexte": "",
-            "siteWeb": "",
-            "horaires": {},
-            **PRESENTATIONS.get(entry["slug"], {}),
-        },
-        card_style={},
+    presentation = PRESENTATIONS.get(entry["slug"], {})
+    partenaire = Partenaire(
+        slug=entry["slug"],
+        raison_sociale=entry["nom"],
+        # Un SIREN par partenaire, derive de son rang : le schema l'exige non
+        # nul et unique. Il ne pretend pas etre un vrai numero.
+        siren=f"{900000000 + NETWORK.index(entry):09d}",
+        objet_social=entry["secteur"],
+        categorie_id=categories[entry["secteur"]].id,
+        adresse=entry["adresse"],
+        ville=entry["ville"],
+        code_postal=entry["codePostal"],
+        email_contact=f"contact@{entry['slug']}.fr",
+        nom_representant=entry["nom"],
+        statut=PartnerStatus.valide if entry["official"] else PartnerStatus.en_attente,
+        image_partenaire=entry["photo"],
+        tarif=entry["amountCents"] / 100,
+        site_web=presentation.get("siteWeb", ""),
+        presentation_titre=presentation.get("presentationTitre", ""),
+        presentation_texte=presentation.get("presentationTexte", ""),
+        horaires=presentation.get("horaires", {}),
     )
-    partner.set_password(DEMO_PASSWORD)
-    return partner
+    partenaire.set_password(DEMO_PASSWORD)
+    return partenaire
+
+
+def make_salarie(email, prenom, nom, employeur):
+    salarie = Salaries(
+        nom=nom,
+        prenom=prenom,
+        email=email,
+        employeur_id=employeur.id,
+        couleur_carte=DEFAULT_CARD_STYLE["color"],
+        couleur_texte=DEFAULT_CARD_STYLE["text"],
+        motif=MotifCarte(PATTERNS[DEFAULT_CARD_STYLE["pattern"]]),
+        effet_metallise=DEFAULT_CARD_STYLE["metalness"],
+    )
+    salarie.set_password(DEMO_PASSWORD)
+    return salarie
 
 
 def run_seed():
@@ -380,130 +434,151 @@ def run_seed():
         db.drop_all()
         db.create_all()
 
-        # 2. Le réseau : seize partenaires renseignés.
-        partenaires = [make_partner(entry) for entry in NETWORK]
+        # 1. L'employeur du dispositif, et les categories du reseau.
+        employeur = Employeur(raison_sociale="Ministere du Job et Bonheur")
+        db.session.add(employeur)
+        db.session.flush()
+        categories = _categories(db.session)
+
+        # 2. Le reseau : seize partenaires renseignes.
+        partenaires = [make_partner(entry, categories) for entry in NETWORK]
         for partenaire in partenaires:
             db.session.add(partenaire)
+        db.session.flush()
 
-        # 3. Les cinquante salariés du panel, avec dotation initiale.
-        # Salariés 0 à 2 : ciblage solde = 0. Salariés 3 et 4 : solde < 5.
-        soldes_initiaux = [50.0, 12.5, 100.0, 50.0, 20.0]
+        # 3. Le coup de coeur du Ministre : une entree datee, avec ses mots.
+        # C'est une table a part et non un booleen, parce qu'une decision
+        # editoriale se date et se retire.
+        for entry, partenaire in zip(NETWORK, partenaires):
+            if entry["featured"]:
+                db.session.add(CoupDeCoeur(
+                    partenaire_id=partenaire.id,
+                    mot_du_ministre=MOTS_DU_MINISTRE.get(
+                        entry["slug"], f"Un choix du Ministre : {entry['nom']}."
+                    ),
+                    statut=CoupDeCoeurStatut.actif,
+                    horodatage=REFERENCE_DATE,
+                ))
+
+        # 4. Les cinquante salaries du panel, et leur dotation.
+        # Salaries 0 a 2 : cibles a solde nul. Salaries 3 et 4 : sous 5 euros.
+        dotations_ciblees = [50.0, 12.5, 100.0, 50.0, 20.0]
         salaries = []
+        dotations = []
         for i in range(50):
-            dotation = soldes_initiaux[i] if i < 5 else round(random.uniform(60, 200), 2)
-            salarie = User(
-                email=f"salarie{i}@ministere.gouv.fr",
-                username=f"{fake.first_name()}{i}",
-                role="user",
-                audience="employee",
-                solde=dotation,
-                card_style=DEFAULT_CARD_STYLE.copy(),
+            dotation = dotations_ciblees[i] if i < 5 else round(random.uniform(60, 200), 2)
+            salarie = make_salarie(
+                f"salarie{i}@ministere.gouv.fr", fake.first_name(), f"Salarie{i}", employeur
             )
-            salarie.set_password(DEMO_PASSWORD)
             db.session.add(salarie)
             salaries.append(salarie)
+            dotations.append(dotation)
 
-        # 4. Les comptes de démonstration nommés : un salarié, un admin. Le
-        # partenaire de démonstration est le premier du réseau, déjà créé.
-        demo_employee = User(
-            email=DEMO_EMPLOYEE_EMAIL,
-            username="Camille Durand",
-            role="user",
-            audience="employee",
-            solde=DEMO_EMPLOYEE_BALANCE,
-            card_style=DEFAULT_CARD_STYLE.copy(),
-        )
-        demo_employee.set_password(DEMO_PASSWORD)
+        # 5. Les comptes de demonstration nommes. Le partenaire de
+        # demonstration est le premier du reseau, deja cree.
+        demo_employee = make_salarie(DEMO_EMPLOYEE_EMAIL, "Camille", "Durand", employeur)
         db.session.add(demo_employee)
 
-        admin = User(
-            email=DEMO_ADMIN_EMAIL,
-            username="admin",
-            role="admin",
-            audience="employee",
-        )
+        admin = Admin(email=DEMO_ADMIN_EMAIL, nom="Agent du Ministere")
         admin.set_password(DEMO_PASSWORD)
         db.session.add(admin)
+        db.session.flush()
+
+        # 6. Les abondements : c'est eux qui font le solde. Dans le schema
+        # normalise, un salarie n'a pas de colonne « solde » — il a des credits
+        # employeur moins des transactions validees.
+        for salarie, dotation in zip(salaries, dotations):
+            db.session.add(Abondement(
+                employeur_id=employeur.id,
+                salarie_id=salarie.id,
+                montant=dotation,
+                horodatage=REFERENCE_DATE,
+                agent_admin_id=admin.id,
+            ))
+        db.session.add(Abondement(
+            employeur_id=employeur.id,
+            salarie_id=demo_employee.id,
+            montant=DEMO_EMPLOYEE_BALANCE,
+            horodatage=REFERENCE_DATE,
+            agent_admin_id=admin.id,
+        ))
         db.session.commit()
 
-        # 5. Planification des 200 transactions
+        # 7. Planification des 200 operations.
         events = []
-
-        # Scénarios forcés pour atteindre les exigences du cabinet
-        # Salarié 0 (finit à 0€ avec 1 refus)
         events.extend([
-            {"emp": salaries[0], "amt": 30.0, "day": 1},
-            {"emp": salaries[0], "amt": 20.0, "day": 5},
-            {"emp": salaries[0], "amt": 10.0, "day": 10} # Sera refusé
+            {"i": 0, "amt": 30.0, "day": 1},
+            {"i": 0, "amt": 20.0, "day": 5},
+            {"i": 0, "amt": 10.0, "day": 10},  # sera refusee
         ])
-        # Salarié 1 (finit à 0€ avec 1 refus)
         events.extend([
-            {"emp": salaries[1], "amt": 12.5, "day": 2},
-            {"emp": salaries[1], "amt": 5.0,  "day": 8}  # Sera refusé
+            {"i": 1, "amt": 12.5, "day": 2},
+            {"i": 1, "amt": 5.0, "day": 8},    # sera refusee
         ])
-        # Salarié 2 (finit à 0€)
-        events.append({"emp": salaries[2], "amt": 100.0, "day": 15})
-        # Salariés 3 et 4 (finissent sous les 5€)
-        events.append({"emp": salaries[3], "amt": 47.0, "day": 20}) # Reste 3€
-        events.append({"emp": salaries[4], "amt": 16.0, "day": 25}) # Reste 4€
-
-        # Scénarios aléatoires pour les autres pour atteindre 200
+        events.append({"i": 2, "amt": 100.0, "day": 15})
+        events.append({"i": 3, "amt": 47.0, "day": 20})  # reste 3 euros
+        events.append({"i": 4, "amt": 16.0, "day": 25})  # reste 4 euros
         for _ in range(200 - len(events)):
             events.append({
-                "emp": random.choice(salaries[5:]),
+                "i": random.randint(5, 49),
                 "amt": round(random.uniform(5, 50), 2),
-                "day": random.randint(1, 89)
+                "day": random.randint(1, 89),
             })
+        events.sort(key=lambda e: e["day"])
 
-        # Tri par chronologie absolue pour respecter l'immuabilité temporelle
-        events.sort(key=lambda x: x["day"])
-
-        # 6. Exécution transactionnelle
+        # 8. Ecriture. Le solde est suivi ici, en memoire, parce qu'il n'existe
+        # pas en colonne : une operation qui depasse le disponible est refusee,
+        # et une refusee ne s'ecrit pas. Le schema n'a pas de statut « refusee »
+        # — et c'est juste : un paiement refuse n'a pas eu lieu, il n'est pas
+        # une ecriture comptable. Le refus reste demontrable en direct, quand un
+        # partenaire tente d'encaisser plus que le solde.
+        restant = {i: dotation for i, dotation in enumerate(dotations)}
         refus = 0
-        for i, ev in enumerate(events):
-            salarie = ev["emp"]
+        ecrites = 0
+        for n, ev in enumerate(events):
+            salarie = salaries[ev["i"]]
             montant = ev["amt"]
-            partenaire = random.choice(partenaires)
-            date_trans = REFERENCE_DATE + timedelta(days=ev["day"], minutes=i*15)
-
-            statut = "validee"
-            if salarie.solde >= montant:
-                salarie.solde -= montant
-                partenaire.solde += montant
-            else:
-                statut = "refusee"
+            if restant[ev["i"]] + 1e-9 < montant:
                 refus += 1
-
-            t = Transaction(
+                continue
+            partenaire = random.choice(partenaires)
+            restant[ev["i"]] = round(restant[ev["i"]] - montant, 2)
+            db.session.add(Transaction(
                 salarie_id=salarie.id,
                 partenaire_id=partenaire.id,
                 montant=montant,
-                date=date_trans,
-                statut=statut
-            )
-            db.session.add(t)
+                horodatage=REFERENCE_DATE + timedelta(days=ev["day"], minutes=n * 15),
+                statut=TransactionStatut.validee,
+                reference_qr=f"SEED-{n:04d}",
+                idempotency_key=f"SEED-{n:04d}",
+                sens_ecriture="debit",
+            ))
+            ecrites += 1
 
         db.session.commit()
 
-        # 7. Génération et écriture du CSV local
+        # 9. Generation et ecriture du CSV local
         csv_data = generate_transactions_csv()
         with open('transactions.csv', 'w', encoding='utf-8') as f:
             f.write(csv_data)
 
-        vides = sum(1 for s in salaries if s.solde == 0)
-        maigres = sum(1 for s in salaries if 0 < s.solde < 5)
+        vides = sum(1 for v in restant.values() if v == 0)
+        maigres = sum(1 for v in restant.values() if 0 < v < 5)
         conventionnes = sum(1 for e in NETWORK if e["official"])
 
-        print(f"✅ {len(NETWORK)} partenaires renseignés, dont {conventionnes} conventionnés.")
-        print(f"✅ 50 salariés + 1 salarié de démonstration, {len(events)} transactions ({refus} refusées).")
-        print(f"✅ Cas limites : {vides} soldes à zéro, {maigres} sous les 5 €.")
-        print("✅ Export local 'transactions.csv' généré à la racine.")
+        print(f"OK {len(NETWORK)} partenaires renseignes, dont {conventionnes} conventionnes.")
+        print(f"OK 50 salaries + 1 salarie de demonstration, {ecrites} transactions ecrites ({refus} operations refusees, non ecrites).")
+        print(f"OK Cas limites : {vides} soldes a zero, {maigres} sous les 5 EUR.")
+        print("OK Export local 'transactions.csv' genere a la racine.")
         print()
-        print("Comptes de démonstration — mot de passe : " + DEMO_PASSWORD)
-        print(f"  salarié     {DEMO_EMPLOYEE_EMAIL}  ({DEMO_EMPLOYEE_BALANCE:.2f} €)")
-        print(f"  partenaire  contact@{NETWORK[0]['slug']}.fr  ({NETWORK[0]['nom']})")
+        print("Comptes de demonstration - mot de passe : " + DEMO_PASSWORD)
+        print(f"  salarie     {DEMO_EMPLOYEE_EMAIL}  ({DEMO_EMPLOYEE_BALANCE:.2f} EUR)")
+        print(f"  partenaire  contact@{NETWORK[0]['slug']}.fr  ({NETWORK[0]['nom']}, conventionne)")
+        non_conv = next(e for e in NETWORK if not e["official"])
+        print(f"  partenaire  contact@{non_conv['slug']}.fr  ({non_conv['nom']}, en attente)")
         print(f"  admin       {DEMO_ADMIN_EMAIL}")
-        print("  (les 50 salariés du panel : salarie0@ministere.gouv.fr … salarie49@, même mot de passe)")
+        print("  (les 50 salaries du panel : salarie0@ministere.gouv.fr ... salarie49@, meme mot de passe)")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run_seed()

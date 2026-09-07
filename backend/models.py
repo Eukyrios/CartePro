@@ -100,6 +100,11 @@ class Salaries(db.Model):
 class Partenaire(db.Model):
     __tablename__ = "partenaires"
     id = db.Column(db.Integer, primary_key=True)
+    # Le slug : l'identifiant qui tient dans une URL. Le catalogue l'expose et
+    # /espace/partenaire/<slug> le resout, donc il doit etre stable et unique.
+    # Une cle primaire ne convient pas : elle change a chaque nouveau seed, et
+    # les pages du front sont pre-rendues sur ces slugs.
+    slug = db.Column(db.String(120), unique=True, nullable=False, index=True)
     raison_sociale = db.Column(db.String(255), nullable=False)
     siren = db.Column(db.String(9), nullable=False, unique=True)  # contrôlé via Luhn côté applicatif
     objet_social = db.Column(db.String(255), nullable=True)
@@ -113,11 +118,50 @@ class Partenaire(db.Model):
     statut = db.Column(SQLEnum(PartnerStatus), nullable=False, default=PartnerStatus.en_attente)
     image_partenaire = db.Column(db.String(512), nullable=True)  # URL ou chemin
 
+    # Le tarif inscrit sur la fiche : ce que le partenaire demande. C'est le
+    # commercant qui fixe son prix, jamais le salarie — d'où sa place ici et
+    # non sur la transaction.
+    tarif = db.Column(db.Float, nullable=False, default=0.0)
+
+    # La presentation que le partenaire ecrit lui-meme, depuis ses parametres,
+    # et que sa fiche publique affiche. Facultative de bout en bout : une fiche
+    # sans presentation n'affiche pas la section.
+    site_web = db.Column(db.String(255), nullable=False, default="")
+    presentation_titre = db.Column(db.String(120), nullable=False, default="")
+    presentation_texte = db.Column(db.Text, nullable=False, default="")
+    # Un texte libre par jour, sept cles. Vide veut dire ferme. JSON parce que
+    # sept colonnes pour sept jours n'apprendraient rien de plus a la base.
+    horaires = db.Column(db.JSON, nullable=False, default=dict)
+
     # Relations
     categorie = db.relationship("Categorie")
     transactions = db.relationship("Transaction", back_populates="partenaire", cascade="all, delete-orphan")
     coups_de_coeur = db.relationship("CoupDeCoeur", back_populates="partenaire", cascade="all, delete-orphan")
     decisions = db.relationship("Decision", back_populates="partenaire", cascade="all, delete-orphan")
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+# -----------------------------------------------------------------------------
+# Administrateur
+# -----------------------------------------------------------------------------
+class Admin(db.Model):
+    """L'agent du Ministere : celui qui conventionne et qui abonde.
+
+    `Abondement.agent_admin_id` et `Decision.agent_id` referencaient deja un
+    administrateur, mais par un entier nu sans table derriere. Les deux routes
+    protegees (`/api/admin/transactions.csv`, la suppression d'un partenaire)
+    verifient un role « admin » dans le jeton : sans compte, elles etaient
+    inatteignables.
+    """
+    __tablename__ = "admins"
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    nom = db.Column(db.String(150), nullable=False, default="Agent du Ministere")
+    password_hash = db.Column(db.String(256), nullable=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

@@ -1,93 +1,102 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
-from models import db, User
+from models import CoupDeCoeur, CoupDeCoeurStatut, Partenaire, PartnerStatus, db
 
 partenaires_bp = Blueprint('partenaires', __name__)
 
+
+def _est_coup_de_coeur(partenaire):
+    """Le coup de coeur du Ministre est une entree active, pas un booleen.
+
+    Le schema en fait une table a part — avec le mot du Ministre et un
+    horodatage — parce que c'est une decision editoriale qui se date et se
+    retire. L'API, elle, expose toujours un booleen : le front n'a pas a
+    connaitre cette histoire pour poser un badge.
+    """
+    return any(
+        cdc.statut == CoupDeCoeurStatut.actif for cdc in partenaire.coups_de_coeur
+    )
+
+
+def _entree(partenaire):
+    return {
+        # Le slug, pas la cle primaire : c'est lui qui tient dans une URL et
+        # qui survit a un nouveau seed, et c'est par lui que la page de
+        # paiement retrouve le partenaire.
+        "id": partenaire.slug,
+        "nom": partenaire.raison_sociale,
+        "secteur": partenaire.categorie.nom if partenaire.categorie else "Non defini",
+        "adresse": partenaire.adresse or "",
+        "ville": partenaire.ville or "",
+        "codePostal": partenaire.code_postal or "",
+        "amountCents": round((partenaire.tarif or 0) * 100),
+        "photo": partenaire.image_partenaire or "",
+        # Le conventionnement « Partenaire Officiel du Ministere » : un statut
+        # administratif, distinct du coup de coeur, qui est un gout.
+        "officiel": partenaire.statut == PartnerStatus.valide,
+        "featured": _est_coup_de_coeur(partenaire),
+        # La presentation que le partenaire ecrit lui-meme, depuis ses
+        # parametres. Elle sort ici parce que sa fiche est publique : le profil
+        # complet, lui, demande le jeton de son proprietaire.
+        "siteWeb": partenaire.site_web or "",
+        "presentationTitre": partenaire.presentation_titre or "",
+        "presentationTexte": partenaire.presentation_texte or "",
+        "horaires": partenaire.horaires or {},
+    }
+
+
 @partenaires_bp.route('/catalogue', methods=['GET'])
 def catalogue():
-    # 1. On va chercher tous les utilisateurs ayant le rôle partenaire
-    partenaires_db = User.query.filter_by(role='partenaire').all()
-    
-    # 2. On formate le JSON pour le frontend
-    catalogue = []
-    for p in partenaires_db:
-        # On gère le fait que partner_data puisse être vide
-        data_json = p.partner_data if isinstance(p.partner_data, dict) else {}
-        
-        catalogue.append({
-            # Le slug, pas la clé primaire : c'est lui qui tient dans une URL
-            # et qui survit à un nouveau seed, et c'est par lui que la page de
-            # paiement retrouve le partenaire. Repli sur l'id pour un compte
-            # créé depuis l'interface, qui n'a pas de slug.
-            "id": p.username or str(p.id),
-            "nom": p.company_name or p.username or "Partenaire sans nom",
-            "secteur": data_json.get("secteur", "Non défini"),
-            "adresse": data_json.get("adresse", ""),
-            "ville": data_json.get("ville", ""),
-            "codePostal": data_json.get("codePostal", ""),
-            "amountCents": int(data_json.get("amountCents", 0) or 0),
-            "photo": data_json.get("photo", ""),
-            # Le conventionnement « Partenaire Officiel du Ministère », qui est
-            # un statut administratif — distinct de `featured`, qui est le coup
-            # de cœur éditorial du Ministre.
-            "officiel": bool(data_json.get("official", False)),
-            "featured": data_json.get("featured", False),
-            # La presentation que le partenaire ecrit lui-meme, depuis ses
-            # parametres. Elle sort ici parce que sa fiche est publique : le
-            # profil complet, lui, demande le jeton de son proprietaire.
-            # Chaines vides quand rien n'a ete saisi, jamais None : le front
-            # teste la longueur, pas la nullite.
-            "siteWeb": data_json.get("siteWeb", "") or "",
-            "presentationTitre": data_json.get("presentationTitre", "") or "",
-            "presentationTexte": data_json.get("presentationTexte", "") or "",
-            # Les horaires, un texte libre par jour. Le front complete les
-            # jours absents : ici on passe ce qu'il y a, sans le reconstruire.
-            "horaires": data_json.get("horaires") or {}
-        })
-        
-    return jsonify(catalogue), 200
+    return jsonify([_entree(p) for p in Partenaire.query.all()]), 200
+
 
 @partenaires_bp.route('/coup-de-coeur', methods=['GET'])
 def get_coup_de_coeur():
-    # On récupère tous les partenaires
-    partenaires_db = User.query.filter_by(role='partenaire').all()
-    
-    # On cherche le premier qui possède "featured: true" dans son dictionnaire JSON
-    featured = next(
-        (p for p in partenaires_db if isinstance(p.partner_data, dict) and p.partner_data.get("featured") is True), 
-        None
+    """Le coup de coeur actif le plus recent, avec le mot du Ministre."""
+    choix = (
+        CoupDeCoeur.query.filter_by(statut=CoupDeCoeurStatut.actif)
+        .order_by(CoupDeCoeur.horodatage.desc())
+        .first()
     )
-    
-    if featured:
+    retour = None
+    if choix and choix.partenaire:
         retour = {
-            "id": featured.id,
-            "nom": featured.company_name or featured.username,
-            "secteur": featured.partner_data.get("secteur", "Non défini")
+            "id": choix.partenaire.slug,
+            "nom": choix.partenaire.raison_sociale,
+            "secteur": (
+                choix.partenaire.categorie.nom
+                if choix.partenaire.categorie
+                else "Non defini"
+            ),
+            "mot": choix.mot_du_ministre,
         }
-    else:
-        retour = None
+    return jsonify({"status": "success", "coup_de_coeur": retour}), 200
 
-    return jsonify({
-        "status": "success",
-        "coup_de_coeur": retour
-    }), 200
 
-# J'ai ajouté l'ID dans l'URL pour que ce soit RESTful (ex: /admin/supprimer/3)
 @partenaires_bp.route('/admin/supprimer/<int:partenaire_id>', methods=['DELETE'])
 @jwt_required()
 def supprimer_partenaire(partenaire_id):
     claims = get_jwt()
-    
+
     if claims.get("role") != "admin":
-        return jsonify({"error": "Accès refusé. Réservé aux administrateurs."}), 403
-        
-    partenaire = User.query.get(partenaire_id)
-    if not partenaire or partenaire.role != 'partenaire':
-        return jsonify({"error": "Partenaire introuvable dans la base de données."}), 404
-        
-    # Suppression définitive en base de données
+        return jsonify({"error": "Acces refuse. Reserve aux administrateurs."}), 403
+
+    partenaire = db.session.get(Partenaire, partenaire_id)
+    if not partenaire:
+        return jsonify({"error": "Partenaire introuvable dans la base de donnees."}), 404
+
+    # Un partenaire qui a encaisse porte une comptabilite immuable : la
+    # supprimer essaierait d'effacer ses transactions, ce que le modele
+    # interdit. On le suspend plutot que de le detruire — et c'est aussi ce
+    # qu'une administration fait d'un partenaire ecarte.
+    if partenaire.transactions:
+        partenaire.statut = PartnerStatus.suspendu
+        db.session.commit()
+        return jsonify({
+            "message": f"Le partenaire {partenaire.raison_sociale} a des operations "
+                       f"enregistrees : il a ete suspendu, pas supprime."
+        }), 200
+
     db.session.delete(partenaire)
     db.session.commit()
-        
-    return jsonify({"message": f"Le partenaire {partenaire.company_name or partenaire.id} a été supprimé."}), 200
+    return jsonify({"message": f"Le partenaire {partenaire.raison_sociale} a ete supprime."}), 200

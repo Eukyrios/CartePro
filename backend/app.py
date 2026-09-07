@@ -2,7 +2,6 @@ from flask import Flask
 from flask_cors import CORS
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from sqlalchemy import inspect, text
 import os
 
 
@@ -48,7 +47,17 @@ def create_app():
     # Configuration globale (Fusion de vos deux environnements)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-en-dev")
     app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "change-me-en-dev")
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+    # La base, choisie par l'environnement plutôt qu'écrite en dur.
+    #
+    # Ce n'est pas de la configurabilité pour le plaisir : les tests avaient
+    # besoin d'une base à eux, ils la posaient *après* `create_app()`, et
+    # Flask-SQLAlchemy avait déjà construit son moteur sur `app.db`. Leur
+    # `drop_all()` effaçait donc la démonstration semée, à chaque exécution.
+    # Ici l'URI est lue avant que le moteur existe, et un test qui pose
+    # TICKET_TOUT_DATABASE_URI ne peut plus se tromper de base.
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+        "TICKET_TOUT_DATABASE_URI", "sqlite:///app.db"
+    )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -86,51 +95,17 @@ def create_app():
     app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
     app.register_blueprint(sirh_bp, url_prefix='/api/v1')
 
-    # Création automatique des tables SQLite si elles n'existent pas
+    # Création automatique des tables SQLite si elles n'existent pas.
+    #
+    # Plus de rattrapage de colonnes en place : il visait la table `users`, que
+    # la refonte du schéma a supprimée. Un schéma normalisé ne se rattrape pas
+    # par des ALTER TABLE successifs — une base née avant la refonte doit être
+    # refaite, et c'est `make seed` qui le fait.
     with app.app_context():
         db.create_all()
-        _upgrade_existing_database()
 
     return app
 
-
-def _upgrade_existing_database():
-    """Ajoute en place les colonnes manquantes à une base SQLite existante.
-
-    `db.create_all()` crée les tables absentes, jamais les colonnes absentes :
-    une base née avant l'ajout d'un champ garde son ancien schéma et la
-    première requête sur le nouveau champ échoue en « no such column ». D'où
-    ce rattrapage, idempotent, à chaque démarrage.
-    """
-    inspector = inspect(db.engine)
-    additions = {
-        "users": {
-            "audience": "VARCHAR(20) NOT NULL DEFAULT 'employee'",
-            "partner_data": "JSON NOT NULL DEFAULT '{}'",
-            "card_style": "JSON NOT NULL DEFAULT '{}'",
-            "solde": "FLOAT NOT NULL DEFAULT 50.0",
-        },
-        "transactions": {
-            # Sans UNIQUE ici : SQLite refuse une contrainte d'unicité dans un
-            # ALTER TABLE ADD COLUMN. L'index unique créé juste après porte la
-            # garantie, qui est ce qui rend l'encaissement idempotent.
-            "idempotency_key": "VARCHAR(512)",
-        },
-    }
-    for table, columns in additions.items():
-        existing = {column["name"] for column in inspector.get_columns(table)}
-        for name, definition in columns.items():
-            if name not in existing:
-                db.session.execute(
-                    text(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
-                )
-    db.session.execute(
-        text(
-            "CREATE UNIQUE INDEX IF NOT EXISTS ix_transactions_idempotency_key "
-            "ON transactions (idempotency_key)"
-        )
-    )
-    db.session.commit()
 
 if __name__ == "__main__":
     app = create_app()

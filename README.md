@@ -17,6 +17,9 @@ make dev       # back sur :5000, front sur :3000
 au préalable, le script s'arrête avec un message plutôt que de démarrer un
 backend sans Flask.
 
+`make seed` n'est pas optionnel après le passage au schéma normalisé : une base
+née avant lui n'a pas les mêmes tables, et `db.create_all()` ne migre rien.
+
 ### Comptes de démonstration
 
 Mot de passe commun : `TicketTout2026`.
@@ -29,13 +32,23 @@ Mot de passe commun : `TicketTout2026`.
 | admin | `admin@ministere.gouv.fr` |
 
 Le panel du cabinet est semé avec : 16 partenaires renseignés (dont 6
-conventionnés), 50 salariés, 200 transactions, et les cas limites exigés — trois
-soldes à zéro, deux sous cinq euros, des refus.
+conventionnés), 50 salariés, 200 opérations planifiées — 161 écrites, 39
+refusées — et les cas limites exigés : trois soldes à zéro, plusieurs sous cinq
+euros.
+
+Une opération refusée ne s'écrit pas : le schéma n'a pas de statut « refusée »,
+et c'est juste — un paiement refusé n'a pas eu lieu, il n'est pas une écriture
+comptable. Le refus reste démontrable en direct, quand un partenaire tente
+d'encaisser plus que le solde disponible.
 
 ## Structure
 
 ```
-backend/     Flask : app.py, auth.py, models.py, routes/, seed.py
+backend/     Flask : app.py, auth.py, accounts.py, models.py, routes/, seed.py
+             `models.py` porte le schéma normalisé (Employeur, Salaries,
+             Partenaire, Transaction, Abondement, CoupDeCoeur, Decision,
+             Admin) ; `accounts.py` traduit ces tables vers le contrat que le
+             front consomme, pour qu'aucune route n'ait à le refaire
 frontend/    Next.js — voir frontend/components/README.md pour la répartition
 docs/
   brand-book/  Le brand book : sources HTML, captures, et le PDF de 15 pages
