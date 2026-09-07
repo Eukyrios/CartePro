@@ -54,9 +54,6 @@ export default function Footer() {
             par `gap` et non par des marges, pour qu'il ne reste pas une marge
             basse orpheline quand la colonne devient une ligne. */}
         <div className="flex max-w-[250px] flex-col gap-3 text-[11px] leading-[1.5] lg:max-w-none lg:flex-row lg:items-end lg:gap-8">
-          <p className="text-white/70 lg:max-w-[180px]">
-            Le crédit salarié, pensé comme un produit simple.
-          </p>
           <FooterLinkGroup className="text-[11px] lg:shrink-0">
             {FOOTER_LINKS.map((link) => (
               <FooterLink
@@ -72,13 +69,27 @@ export default function Footer() {
               </FooterLink>
             ))}
           </FooterLinkGroup>
-          {/* La mention de démonstrateur ferme le bloc, après l'accroche et les
-              liens : le pied de page est monté une fois dans le gabarit racine,
-              donc cette ligne est le seul endroit d'où elle atteint réellement
-              « toutes les pages ». Elle est en clair et non en micro-typo
-              capitale — une mention qu'on doit plisser les yeux pour lire
-              n'informe personne. */}
-          <p className="font-semibold lg:max-w-[280px]">
+          {/* La mention de démonstrateur ferme le bloc : le pied de page est
+              monté une fois dans le gabarit racine, donc cette ligne est le
+              seul endroit d'où elle atteint réellement « toutes les pages ».
+              Elle est en clair et non en micro-typo capitale — une mention
+              qu'on doit plisser les yeux pour lire n'informe personne.
+
+              D'un seul tenant dès `lg`, et c'est ce qui a coûté sa place à
+              l'accroche « Le crédit salarié, pensé comme un produit simple. »
+              qui la précédait. Mesuré à 1024 px, la plus étroite des largeurs
+              où le pied passe en ligne : le logotype, l'accroche, les liens,
+              la mention insécable et le copyright réclamaient ensemble
+              ~1030 px pour ~880 px disponibles, et la rangée débordait des
+              115 px du pied — la mention s'y retrouvait rognée, donc
+              illisible. Entre une accroche décorative et une mention de
+              conformité qui doit se lire d'une traite, c'est l'accroche qui
+              part.
+
+              En dessous de `lg` la coupure revient, et il le faut : le bloc
+              s'y empile, le pied n'a plus de hauteur fixe, et 382 px de texte
+              insécable déborderaient d'une fenêtre de téléphone. */}
+          <p className="font-semibold lg:whitespace-nowrap">
             {MENTION_DEMONSTRATEUR}
           </p>
         </div>

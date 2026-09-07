@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAccount } from "@/components/account/AccountProvider";
 import { useCataloguePartner } from "@/components/data/useCataloguePartner";
@@ -10,7 +9,6 @@ import TransactionsSection, {
 } from "@/components/transactions/TransactionsSection";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import EmptyState from "@/components/ui/EmptyState";
-import IconButton from "@/components/ui/IconButton";
 import Note from "@/components/ui/Note";
 import PageMain from "@/components/ui/PageMain";
 import { api } from "@/lib/api";
@@ -45,7 +43,6 @@ type AdminTransaction = {
  * côté serveur, donc appeler l'API sans le rôle échoue, garde ou pas.
  */
 export default function PartnerReceipts({ slug }: { slug: string }) {
-  const router = useRouter();
   const { profile, ready } = useAccount();
   const { entry, loaded } = useCataloguePartner(slug);
   const [rows, setRows] = useState<readonly TransactionRow[]>([]);
@@ -109,35 +106,17 @@ export default function PartnerReceipts({ slug }: { slug: string }) {
         title="Les recettes de"
         accent={`${nom}.`}
         br
-        /* Le même en-tête que la fiche d'un partenaire — bouton de retour de
-           40px et fil d'Ariane sur une ligne : les deux écrans sont ouverts
-           depuis une tuile d'une liste, et on en repart par le même geste. Une
-           ligne de surtitre seule, posée contre le titre, donnait un haut
-           d'écran serré ; la rangée respire parce qu'elle a la hauteur du
-           bouton. */
+        /* Le même en-tête que la fiche d'un partenaire : les deux écrans sont
+           ouverts depuis une tuile d'une liste, et on en repart par le même
+           geste — une entrée du fil d'Ariane, qui nomme sa destination. */
         eyebrow={
-          <div className="flex items-center gap-4">
-            <IconButton
-              label="Retour à la page précédente"
-              /* Un onglet neuf n'a pas d'historique à remonter : on retombe
-                 alors sur l'écran des recettes de l'espace, d'où viennent les
-                 tuiles qui mènent ici. */
-              onClick={() =>
-                window.history.length > 1
-                  ? router.back()
-                  : router.push("/espace#recettes")
-              }
-            >
-              ←
-            </IconButton>
-            <Breadcrumb
-              trail={[
-                { label: "Administration", href: "/espace" },
-                { label: "Les recettes", href: "/espace#recettes" },
-                { label: "Historique des paiements" },
-              ]}
-            />
-          </div>
+          <Breadcrumb
+            trail={[
+              { label: "Administration", href: "/espace" },
+              { label: "Les recettes", href: "/espace#recettes" },
+              { label: "Historique des paiements" },
+            ]}
+          />
         }
         rows={rows}
         state={state}

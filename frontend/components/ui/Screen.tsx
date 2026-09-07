@@ -79,12 +79,21 @@ type Props = {
    * True for a screen whose content can be taller than the viewport — a long
    * paginated list, say.
    *
-   * It marks the page `snap-free`, which drops the scroll-snapping from
-   * mandatory to proximity (see globals.css). Mandatory snapping has to come
-   * to rest *on* a snap point, so half of a two-screen section is unreachable:
-   * the scroll keeps being pulled back to its top. Proximity only engages near
-   * a boundary, so the section scrolls freely and the one-screen sections around
-   * it still snap.
+   * L'écran reçoit alors un **second point d'accroche**, collé à son bas : on
+   * s'accroche à son sommet, puis à son pied, et les deux vues couvrent sa
+   * hauteur entière. L'accrochage obligatoire doit venir au repos *sur* un
+   * point d'accroche, donc sans ce second point la moitié basse d'un écran de
+   * deux écrans était inatteignable — le défilement était ramené à son sommet.
+   *
+   * Ce réglage **n'affaiblit plus l'accrochage de la page**. Il a posé un
+   * temps une classe qui faisait passer tout le document en `proximity`, et
+   * avant cela en `none` : dans les deux cas une seule section longue changeait
+   * le comportement de toutes les autres, puisque le sélecteur portait sur le
+   * document. En `none`, trois des quatre pages avaient perdu tout accrochage ;
+   * en `proximity`, l'accrochage ne s'engageait plus qu'au voisinage d'une
+   * frontière, si bien qu'un défilement s'arrêtant entre deux sections courtes
+   * y restait. Le point d'accroche supplémentaire règle le cas de l'écran long
+   * sans rien changer aux autres.
    */
   long?: boolean;
   /**
@@ -118,7 +127,10 @@ export default function Screen({
         layout === "grid" ? "grid" : "flex flex-col",
         HEIGHTS[height],
         snap && "snap-start",
-        long && "snap-free",
+        /* `relative` uniquement ici : la sentinelle ci-dessous est
+           positionnée, et faire de *chaque* écran un bloc conteneur
+           déplacerait les enfants absolus des autres. */
+        long && "snap-long relative",
         rule && "border-cp-border border-b",
         align === "center" &&
           (layout === "grid" ? "content-center" : "justify-center"),
@@ -131,6 +143,12 @@ export default function Screen({
       )}
     >
       {children}
+      {/* Le second point d'accroche d'un écran long, collé à son bas.
+          Voir `long` : sans lui, la moitié basse d'un écran de deux écrans est
+          hors d'atteinte sous accrochage obligatoire. Un div vide plutôt qu'un
+          `::after` — sur une section en `grid`, un pseudo-élément devient un
+          élément de grille et s'ajoute à la mise en page. */}
+      {long && <div aria-hidden="true" className="snap-long-tail" />}
     </section>
   );
 }

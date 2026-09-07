@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import CardStage, { CardTag } from "@/components/card/CardStage";
 import CreditCard3D from "@/components/card/CreditCard3D";
 import { formatEuros } from "@/components/data/ledger";
@@ -17,7 +16,6 @@ import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
 import Display from "@/components/ui/Display";
 import HatchedPanel from "@/components/ui/HatchedPanel";
-import IconButton from "@/components/ui/IconButton";
 import Micro from "@/components/ui/Micro";
 import Modal from "@/components/ui/Modal";
 import Note from "@/components/ui/Note";
@@ -61,7 +59,6 @@ function mmss(msLeft: number) {
  * affiche, laisse expirer et réémet, sans toucher au solde.
  */
 export default function PartnerPayment({ partner }: { partner: Partner }) {
-  const router = useRouter();
   const { profile, ready } = useAccount();
   const { categories } = useCategories();
   const balance = useBalance();
@@ -113,25 +110,12 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
       rule={false}
       density="tight"
     >
-      <div className="mb-5 flex items-center gap-4">
-        {/* Back to wherever you came from — the catalogue, or the administration's
-            selection. A fresh tab has no history to go back through, so that
-            case lands on the space instead of doing nothing. */}
-        <IconButton
-          label="Retour à la page précédente"
-          /* Un onglet neuf n'a pas d'historique à remonter : on retombe alors
-             sur l'espace, ou sur l'accueil quand personne n'est connecté —
-             l'espace renverrait un visiteur vers une invitation à se
-             connecter, ce qui n'est pas un retour. */
-          onClick={() =>
-            window.history.length > 1
-              ? router.back()
-              : router.push(mode === "visitor" ? "/" : "/espace")
-          }
-        >
-          ←
-        </IconButton>
-
+      {/* Pas de bouton de retour : le fil d'Ariane en est un, et chacune de ses
+          entrées dit où elle mène — ce qu'une flèche ne dit pas. Le logotype de
+          la barre haute ramène à l'espace par-dessus le marché. Le bouton
+          doublait donc deux gestes déjà là, et il fallait lui inventer une
+          destination quand l'onglet n'avait pas d'historique. */}
+      <div className="mb-5">
         {/* Le fil d'Ariane suit le chemin qu'on a réellement pu prendre : sans
             compte, ni « Mon espace » ni « Le réseau » ne s'ouvrent. */}
         <Breadcrumb

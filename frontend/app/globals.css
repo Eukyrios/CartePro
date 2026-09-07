@@ -593,27 +593,76 @@ html:has(.snap-sections) {
 }
 
 /*
- * A page holding a screen that outgrows the viewport does not snap at all —
- * see `Screen`'s `long`.
+ * Un ecran plus haut que la fenetre recoit un second point d'accroche, colle a
+ * son bas — voir le `long` de `Screen`.
  *
- * This is the catch named above, met for real. Mandatory snapping has to come
- * to rest *on* a snap point, so the lower half of a two-screen section was
- * unreachable: the scroll was pulled back to its top every time.
+ * C'est le piege nomme plus haut, rencontre pour de vrai : l'accrochage
+ * obligatoire doit venir au repos *sur* un point d'accroche, donc la moitie
+ * basse d'une section de deux ecrans etait inatteignable. Avec ce point-ci, on
+ * s'accroche au sommet de la section puis a son pied, et les deux vues
+ * couvrent sa hauteur entiere.
  *
- * Proximity was tried first and is not enough. It still snaps, only more
- * politely, and the page bottom is exactly where that hurts: the last section
- * starts 115px above the end of the document — the footer's height — so the
- * nearest snap point to the very bottom is that section's *start*. Scrolling
- * down to read the footer put the scroll within snapping distance of it and
- * pulled the footer straight back off screen.
+ * Deux remedes ont ete essayes avant, et tous deux portaient sur le document
+ * entier — `html:has(...)` ne sait pas viser une seule section. `none`
+ * d'abord : trois des quatre pages ont perdu tout accrochage, une seule
+ * section longue suffisant a le desactiver partout. `proximity` ensuite :
+ * l'accrochage ne s'engageait plus qu'au voisinage d'une frontiere, si bien
+ * qu'un defilement arrete entre deux sections courtes — toutes deux plus
+ * basses que la fenetre, donc parfaitement accrochables — y restait. Mesure
+ * avec un vrai geste de defilement : `mandatory` plus cette sentinelle
+ * s'arrete a 900, 1800 puis 2101 sur l'espace partenaire, jamais entre deux.
  *
- * So: no snapping on these pages. It is the same remedy as the short-viewport
- * guard below, for the same reason — a section that cannot fit between two snap
- * points is better off with ordinary scrolling. The section rail still works:
- * it navigates by anchor, and `scroll-behavior: smooth` above carries it.
+ * `end` et non `start` : la fin de la sentinelle s'aligne sur la fin de la
+ * fenetre, donc la position d'accroche est « le bas de la section touche le bas
+ * de l'ecran ». Alignee sur son debut, elle aurait colle une bande de 1px en
+ * haut d'une fenetre vide.
+ *
+ * `position: absolute` cote `Screen`, et `relative` pose sur les seules
+ * sections longues : un bloc conteneur ajoute a tous les ecrans deplacerait
+ * les enfants absolus des autres.
  */
-html:has(.snap-free) {
-  scroll-snap-type: none;
+.snap-long-tail {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  scroll-snap-align: end;
+  pointer-events: none;
+}
+
+/*
+ * Sur ces pages-là, le pied de page est lui-même un point d'accroche.
+ *
+ * Sans cette regle, le defilement s'arretait exactement 115px avant la fin du
+ * document — la hauteur du pied : mesure `y = 2726` pour un maximum de 2841
+ * chez le salarie, et `1986` pour 2101 chez le partenaire. Le dernier point
+ * d'accroche etait le *debut* de la derniere section, et le pied restait
+ * dessous, hors de l'ecran.
+ *
+ * La cause tient a une seule chose : une section `long` depasse
+ * `screen-minus-footer`. Une section normale plus le pied font exactement une
+ * fenetre, donc s'accrocher a la derniere section montre deja le pied ; une
+ * section de 926px ou de 1086px, non. Donner au pied son propre point
+ * d'accroche ferme l'ecart : mesure `y = 2841` sur 2841 et `2101` sur 2101,
+ * pied entierement visible, et les sections courtes s'accrochent toujours.
+ *
+ * `end` et non `start` : le pied fait 115px, donc s'aligner sur son debut le
+ * collerait en haut d'une fenetre vide. Aligne sur sa fin, il se pose au bas
+ * de l'ecran, la ou un pied de page se lit.
+ *
+ * La regle porte sur toutes les pages qui s'accrochent, et non sur les seules
+ * pages a section longue. Elle devait s'y limiter — la derniere section et le
+ * pied font normalement une fenetre a elles deux, donc le pied est deja
+ * visible quand on s'accroche a cette section — mais une section finale qui
+ * n'est pas en `screen-minus-footer` casse cette hypothese : mesure sur
+ * l'espace d'administration, ou aucune section n'est longue, un defilement
+ * bloque a 37px de la fin avec le pied hors de l'ecran. Un point d'accroche
+ * sur le pied ne coute rien quand il tient deja dans la fenetre — sa position
+ * d'accroche se confond alors avec celle de la derniere section — et il
+ * rattrape le cas ou il n'y tient pas.
+ */
+html:has(.snap-sections) footer {
+  scroll-snap-align: end;
 }
 
 /* Too short to guarantee a section fits: fall back to ordinary scrolling

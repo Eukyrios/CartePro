@@ -113,8 +113,12 @@ export default function PartnerRequestsSection({
        du document plutôt que sur une ancre. Même réglage que l'accueil et que
        le premier écran de l'espace partenaire.
 
-       Rien ici ne peut le faire déborder : le tableau défile dans sa propre
-       fenêtre, et la pagination borne le reste. */
+       Rien ici ne peut le faire déborder, et c'est pourquoi cet écran n'est
+       **pas** `long` : le tableau défile dans sa propre fenêtre, la pagination
+       borne le reste, et la section mesure exactement la fenêtre moins la
+       barre haute — 824px dans une fenêtre de 900. Un écran `long` reçoit un
+       point d'accroche de plus, collé à son bas ; celui-ci n'en a pas besoin,
+       son sommet suffit. */
     <Screen
       id="demandes"
       height="below-bar"
@@ -122,7 +126,6 @@ export default function PartnerRequestsSection({
       rule={false}
       align="start"
       density="offset"
-      long
       aria-labelledby="demandes-titre"
     >
       <div>
