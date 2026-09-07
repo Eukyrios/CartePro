@@ -592,6 +592,30 @@ html:has(.snap-sections) {
   scroll-snap-type: y mandatory;
 }
 
+/*
+ * A page holding a screen that outgrows the viewport does not snap at all —
+ * see `Screen`'s `long`.
+ *
+ * This is the catch named above, met for real. Mandatory snapping has to come
+ * to rest *on* a snap point, so the lower half of a two-screen section was
+ * unreachable: the scroll was pulled back to its top every time.
+ *
+ * Proximity was tried first and is not enough. It still snaps, only more
+ * politely, and the page bottom is exactly where that hurts: the last section
+ * starts 115px above the end of the document — the footer's height — so the
+ * nearest snap point to the very bottom is that section's *start*. Scrolling
+ * down to read the footer put the scroll within snapping distance of it and
+ * pulled the footer straight back off screen.
+ *
+ * So: no snapping on these pages. It is the same remedy as the short-viewport
+ * guard below, for the same reason — a section that cannot fit between two snap
+ * points is better off with ordinary scrolling. The section rail still works:
+ * it navigates by anchor, and `scroll-behavior: smooth` above carries it.
+ */
+html:has(.snap-free) {
+  scroll-snap-type: none;
+}
+
 /* Too short to guarantee a section fits: fall back to ordinary scrolling
    rather than risk stranding content between snap points. */
 @media (max-height: 700px) {

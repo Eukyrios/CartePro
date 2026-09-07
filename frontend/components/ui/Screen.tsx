@@ -31,6 +31,24 @@ const HEIGHTS = {
 
 const GAPS = { 0: "", 6: "gap-6", 9: "gap-9", 10: "gap-10" } as const;
 
+const DENSITIES = {
+  /** The normal case: 4rem of air above and below. */
+  normal: "py-16",
+  /** For a screen capped under the bar, where 4rem pushes content off. */
+  tight: "py-3",
+  /**
+   * For a screen that can grow past the viewport — see `long`.
+   *
+   * Such a screen cannot be centred: its content is taller than the box, so
+   * `content-center` has nothing to centre and the heading ends up jammed
+   * under the top bar. The other screens start low only because they *are*
+   * centred, so their gap comes from their own short content — there is no
+   * padding to copy from them. This offset is that gap, written down: enough
+   * air that a long screen reads as placed rather than pushed against the bar.
+   */
+  offset: "pt-[12vh] pb-16",
+} as const;
+
 type Props = {
   children: ReactNode;
   /** The scroll-snap anchor and the id the section rail scrolls to. */
@@ -40,14 +58,35 @@ type Props = {
   snap?: boolean;
   /** The 2px bottom rule that separates one screen from the next. */
   rule?: boolean;
-  /** "center" packs the content in the middle; "stretch" lets it fill. */
-  align?: "center" | "stretch";
+  /**
+   * "center" packs the content in the middle; "stretch" lets it fill; "start"
+   * pins it to the top.
+   *
+   * "start" is for a screen whose content changes height while it is read. On
+   * "center", a block that grows re-centres, so everything above it slides up —
+   * the balance screen's heading moved by 55px the moment its QR panel filled
+   * in. Pinning the top makes the heading's place a property of the screen and
+   * not of whatever is happening lower down.
+   */
+  align?: "center" | "stretch" | "start";
   layout?: "grid" | "flex";
-  /** "tight" is for a screen capped under the bar, where 4rem pushes content off. */
-  density?: "normal" | "tight";
+  /** How much air above and below. See `DENSITIES`. */
+  density?: keyof typeof DENSITIES;
   /** "page" screens carry their own horizontal gutter; "container" inherit it. */
   gutter?: "container" | "page";
   gap?: keyof typeof GAPS;
+  /**
+   * True for a screen whose content can be taller than the viewport — a long
+   * paginated list, say.
+   *
+   * It marks the page `snap-free`, which drops the scroll-snapping from
+   * mandatory to proximity (see globals.css). Mandatory snapping has to come
+   * to rest *on* a snap point, so half of a two-screen section is unreachable:
+   * the scroll keeps being pulled back to its top. Proximity only engages near
+   * a boundary, so the section scrolls freely and the one-screen sections around
+   * it still snap.
+   */
+  long?: boolean;
   /**
    * Additive only. This component owns padding, min-height, the rule, the snap
    * anchor and the display mode — pass grid *templates*, backgrounds and ink.
@@ -67,6 +106,7 @@ export default function Screen({
   density = "normal",
   gutter = "container",
   gap = 0,
+  long = false,
   className,
   ...rest
 }: Props) {
@@ -78,10 +118,13 @@ export default function Screen({
         layout === "grid" ? "grid" : "flex flex-col",
         HEIGHTS[height],
         snap && "snap-start",
+        long && "snap-free",
         rule && "border-cp-border border-b",
         align === "center" &&
           (layout === "grid" ? "content-center" : "justify-center"),
-        density === "tight" ? "py-3" : "py-16",
+        align === "start" &&
+          (layout === "grid" ? "content-start" : "justify-start"),
+        DENSITIES[density],
         gutter === "page" && "px-6 lg:px-[7vw] lg:py-[110px]",
         GAPS[gap],
         className,

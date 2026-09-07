@@ -42,11 +42,18 @@ export default function BalanceSection({
   // Mise à jour du solde en temps réel — le partenaire encaisse de son côté.
   useBalancePoll(true);
 
+  /*
+   * `align="start"` : le panneau de droite change de hauteur quand le QR est
+   * généré, et un écran centré aurait fait remonter le bonjour de 55px à ce
+   * moment-là. Le titre tient sa place, quoi qu'il arrive plus bas.
+   */
   return (
-    <Screen id="solde" height="below-bar" snap={false} gap={10}>
+    <Screen id="solde" height="below-bar" snap={false} gap={10} align="start">
       <div>
-        <Display level={1} accent={`${name}.`} br={false}>
-          Bonjour{" "}
+        {/* Deux lignes, comme tous les autres titres de display : « Bonjour »
+            en sans, le prénom en serif dessous. */}
+        <Display level={1} accent={`${name}.`}>
+          Bonjour
         </Display>
       </div>
 
