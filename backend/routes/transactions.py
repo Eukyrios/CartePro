@@ -134,28 +134,45 @@ def mes_transactions():
     (`debit`), un partenaire ce qu'il a encaissé (`credit`). Le `label` suit :
     chez qui pour l'un, de qui pour l'autre — un identifiant partiel du salarié,
     jamais son email.
+
+    Un remboursement forcé par l'administration (statut "remboursement", voir
+    `routes/admin.py`) inverse ce sens : c'est de l'argent qui revient au
+    salarié et qui repart du partenaire. La ligne validée d'origine reste
+    listée telle quelle à côté — elle est immuable, jamais corrigée en place.
     """
     user_id = int(get_jwt_identity())
     utilisateur = User.query.get(user_id)
     est_partenaire = bool(utilisateur and utilisateur.role == "partenaire")
 
-    query = Transaction.query.filter_by(statut="validee")
+    query = Transaction.query.filter(Transaction.statut.in_(["validee", "remboursement"]))
     query = query.filter_by(
         partenaire_id=user_id
     ) if est_partenaire else query.filter_by(salarie_id=user_id)
     transactions = query.order_by(Transaction.date.desc()).all()
 
+    def kind_for(transaction):
+        is_refund = transaction.reverses_transaction_id is not None
+        if est_partenaire:
+            return "debit" if is_refund else "credit"
+        return "credit" if is_refund else "debit"
+
+    def label_for(transaction):
+        contrepartie = (
+            _libelle_salarie(transaction.salarie)
+            if est_partenaire
+            else (transaction.partenaire.company_name or transaction.partenaire.username)
+        )
+        if transaction.reverses_transaction_id is not None:
+            return f"Remboursement — {contrepartie}"
+        return contrepartie
+
     return jsonify({"transactions": [
         {
             "id": str(transaction.id),
             "at": transaction.date.isoformat(),
-            "kind": "credit" if est_partenaire else "debit",
+            "kind": kind_for(transaction),
             "amountCents": round(transaction.montant * 100),
-            "label": (
-                _libelle_salarie(transaction.salarie)
-                if est_partenaire
-                else (transaction.partenaire.company_name or transaction.partenaire.username)
-            ),
+            "label": label_for(transaction),
             "partnerId": str(transaction.partenaire.id),
         }
         for transaction in transactions
