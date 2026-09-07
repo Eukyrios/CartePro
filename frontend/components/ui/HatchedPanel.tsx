@@ -20,6 +20,7 @@ export default function HatchedPanel({
   children,
   reason,
   action,
+  bleed = false,
   className,
 }: {
   /** Ce qui est barré. Décoratif dès lors qu'il est inutilisable. */
@@ -28,6 +29,20 @@ export default function HatchedPanel({
   reason: ReactNode;
   /** Ce qu'il faut faire à la place, s'il y a quelque chose à faire. */
   action?: ReactNode;
+  /**
+   * Les hachures débordent la colonne pour couvrir la largeur de la fenêtre.
+   *
+   * Pour un écran plein : barré à l'intérieur de la seule colonne de contenu,
+   * il laissait deux bandes blanches sur les côtés, et l'écran se lisait comme
+   * un panneau posé sur une page ouverte plutôt que comme une page fermée. Le
+   * contenu, lui, reste dans la colonne — c'est la fermeture qui va au bord,
+   * pas ce qu'elle recouvre.
+   *
+   * Suppose un ancêtre qui rogne l'axe horizontal (`PageMain` le fait avec
+   * `overflow-x-clip`), sans quoi les 100vw ajoutent la largeur de la barre de
+   * défilement au document.
+   */
+  bleed?: boolean;
   className?: string;
 }) {
   return (
@@ -46,7 +61,10 @@ export default function HatchedPanel({
 
       <div
         aria-hidden="true"
-        className="hatched pointer-events-none absolute inset-0 z-10"
+        className={cx(
+          "hatched pointer-events-none absolute inset-y-0 z-10",
+          bleed ? "left-1/2 w-screen -translate-x-1/2" : "inset-x-0",
+        )}
       />
 
       <div className="absolute inset-0 z-20 grid place-items-center p-6">

@@ -9,12 +9,13 @@ import BrandLogo from "@/components/brand/BrandLogo";
 import { MICRO } from "@/components/ui/surfaces";
 
 /**
- * TODO: the links are placeholders — point them at the real contact and legal
- * pages once those exist.
+ * Les conditions d'utilisation ont maintenant leur page ; « Contact » attend
+ * encore la sienne, et son `#` reste donc un aveu plutôt qu'un lien mort
+ * déguisé en adresse.
  */
 const FOOTER_LINKS = [
   { label: "Contact", href: "#" },
-  { label: "Conditions d'utilisation", href: "#" },
+  { label: "Conditions d'utilisation", href: "/conditions" },
 ];
 
 /**
@@ -47,6 +48,10 @@ export default function Footer() {
             {FOOTER_LINKS.map((link) => (
               <FooterLink
                 key={link.label}
+                /* `as={Link}` pour que /conditions se charge sans recharger la
+                   page, comme partout ailleurs — Flowbite rend une ancre nue
+                   sinon. Même traitement que NavbarBrand dans TopBar. */
+                as={Link}
                 href={link.href}
                 className="me-4 text-white/70 hover:text-white"
               >

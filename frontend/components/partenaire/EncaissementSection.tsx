@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { formatEuros } from "@/components/data/ledger";
 import BlueprintFrame from "@/components/ui/BlueprintFrame";
 import Button from "@/components/ui/Button";
@@ -41,6 +40,12 @@ const DATE = new Intl.DateTimeFormat("fr-FR", {
  * La caméra n'est pas branchée dans ce démonstrateur et l'écran le dit : le
  * scan simulé relit ce que le salarié vient de copier depuis sa propre fenêtre
  * de paiement. C'est ce qu'une caméra aurait lu sur son écran.
+ *
+ * Rien ici ne dit qu'un compte n'a pas le droit d'encaisser : c'est
+ * `PartnerSpace` qui barre l'écran entier quand l'établissement n'est pas
+ * conventionné. Cet écran ne connaît donc qu'un seul état d'empêchement, le
+ * `partnerId` encore absent le temps de la requête — et il se contente alors de
+ * laisser « Encaisser » désactivé, sans crier au refus.
  *
  * Aucun bouton d'annulation : l'encaissement est irréversible de ce côté. Et
  * rien ici ne réécrit les refus du serveur — code expiré, solde insuffisant,
@@ -137,23 +142,6 @@ export default function EncaissementSection({
           Simulation — aucun encaissement réel
         </SimulationNotice>
       </div>
-
-      {!partnerId && (
-        <Note tone="danger" role="alert">
-          <strong className="font-black">
-            Fiche introuvable au catalogue.
-          </strong>{" "}
-          Votre établissement n&apos;y figure pas encore, et l&apos;encaissement
-          a besoin de son identifiant. Vérifiez la raison sociale dans vos{" "}
-          <Link
-            href="/parametres"
-            className="font-black underline underline-offset-4"
-          >
-            paramètres
-          </Link>{" "}
-          : elle doit être exactement celle du réseau.
-        </Note>
-      )}
 
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,42%)_minmax(0,1fr)] lg:gap-14">
         {/* À gauche : viser. */}

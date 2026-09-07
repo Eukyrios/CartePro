@@ -314,11 +314,6 @@ export function searchPartners(query: PartnerQuery = {}): PartnerPage {
   return searchPartnerList(PARTNERS, query);
 }
 
-/** Les conventionnés, pour les écrans qui les distinguent du reste du réseau. */
-export function officialPartners(): readonly Partner[] {
-  return PARTNERS.filter((partner) => partner.official);
-}
-
 /** Every partner, for the places that need the whole list rather than a page. */
 export function allPartners(): readonly Partner[] {
   return PARTNERS;

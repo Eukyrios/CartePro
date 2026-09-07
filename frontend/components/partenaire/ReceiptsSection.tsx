@@ -51,9 +51,26 @@ const NO_FILTERS: Filters = { search: "", from: "", to: "", min: "" };
  */
 export default function ReceiptsSection({
   refreshKey = 0,
+  access = "open",
 }: {
   /** Change à chaque encaissement : la liste et le total se refont. */
   refreshKey?: number;
+  /**
+   * Le droit d'encaisser de l'établissement, qui décide s'il y a quelque chose
+   * à demander au serveur.
+   *
+   * — "open"    : conventionné, l'écran interroge la route.
+   * — "locked"  : pas conventionné. L'écran reste dessiné — c'est
+   *               `PartnerSpace` qui le barre — mais il ne demande rien et
+   *               n'affiche aucune ligne : un compte qui n'a pas le droit
+   *               d'encaisser n'a pas de recettes, et en montrer sous les
+   *               hachures affirmerait le contraire de la barrière.
+   * — "pending" : le droit n'est pas encore connu. Ni requête ni verdict : sans
+   *               ce troisième état, la première image était soit un refus
+   *               affiché à un partenaire en règle, soit un appel lancé pour
+   *               rien puis jeté.
+   */
+  access?: "pending" | "open" | "locked";
 }) {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
@@ -64,6 +81,15 @@ export default function ReceiptsSection({
   );
 
   useEffect(() => {
+    if (access === "pending") {
+      setState("loading");
+      return;
+    }
+    if (access === "locked") {
+      setReceipts([]);
+      setState("ready");
+      return;
+    }
     let cancelled = false;
     getReceivedTransactions()
       .then((rows) => {
@@ -75,7 +101,7 @@ export default function ReceiptsSection({
     return () => {
       cancelled = true;
     };
-  }, [refreshKey]);
+  }, [refreshKey, access]);
 
   const matches = useMemo(() => {
     const wanted = fold(filters.search);
@@ -195,9 +221,11 @@ export default function ReceiptsSection({
         </Note>
       ) : matches.length === 0 ? (
         <EmptyState>
-          {receipts.length === 0
-            ? "Aucun encaissement pour l'instant. Le premier code encaissé apparaîtra ici."
-            : "Aucun encaissement ne correspond à ces filtres. Élargissez la période ou effacez-les."}
+          {access === "locked"
+            ? "Aucune recette : votre établissement n'encaisse pas encore."
+            : receipts.length === 0
+              ? "Aucun encaissement pour l'instant. Le premier code encaissé apparaîtra ici."
+              : "Aucun encaissement ne correspond à ces filtres. Élargissez la période ou effacez-les."}
         </EmptyState>
       ) : (
         /* Défile dans l'écran plutôt que de l'étirer. */

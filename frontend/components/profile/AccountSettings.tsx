@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { officialPartners } from "@/components/data/partners";
 import CardStyleForm from "./CardStyleForm";
 import DeleteAccountCard from "./DeleteAccountCard";
 import ProfileForm from "./ProfileForm";
@@ -10,6 +9,7 @@ import {
   displayNameOf,
   useAccount,
 } from "@/components/account/AccountProvider";
+import { usePartnerEntry } from "@/components/account/usePartnerEntry";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import Button from "@/components/ui/Button";
 import Chip from "@/components/ui/Chip";
@@ -67,6 +67,21 @@ const PaletteIcon: FC<ComponentProps<"svg">> = (props) => (
  */
 type SectionId = "profil" | "style" | "securite" | "danger";
 
+/**
+ * Ce que la pastille d'identité affiche, selon le compte.
+ *
+ * « En attente de confirmation » n'est pas un ornement : c'est la réponse à la
+ * question que le partenaire vient poser ici quand son espace lui refuse
+ * l'encaissement. Le libellé conventionné est celui du réseau, mot pour mot,
+ * pour qu'une même distinction ne s'écrive pas de deux façons.
+ */
+const STATUT_LABEL = {
+  employe: "Employé",
+  partenaire: "Partenaire",
+  attente: "Partenaire en attente de confirmation",
+  officiel: "Partenaire Officiel du Ministère",
+} as const;
+
 const SECTIONS: ReadonlyArray<{
   id: SectionId;
   label: string;
@@ -100,6 +115,10 @@ const SECTIONS: ReadonlyArray<{
  */
 export default function AccountSettings() {
   const { profile, ready, updateProfile, deleteAccount } = useAccount();
+  /* Le conventionnement vient du réseau, et de la même source que l'espace
+     partenaire : les deux écrans doivent dire la même chose, sinon les
+     paramètres décernent un titre officiel au-dessus d'un espace verrouillé. */
+  const { entry: partnerEntry, loaded: partnerLoaded } = usePartnerEntry();
   const [section, setSection] = useState<SectionId>("profil");
 
   // The stored session is only readable after mount, so hold the page back
@@ -121,18 +140,6 @@ export default function AccountSettings() {
   }
 
   const isPartner = profile.audience === "partner";
-  /* Le conventionnement vit dans les données du réseau, pas dans le compte : on
-     le retrouve par la raison sociale, faute d'identifiant de partenaire dans
-     le profil. Cette jointure par le nom disparaîtra quand le backend donnera
-     un identifiant au compte partenaire. */
-  const official =
-    isPartner &&
-    officialPartners().some(
-      (partner) =>
-        partner.name.localeCompare(profile.partner.raisonSociale, "fr", {
-          sensitivity: "base",
-        }) === 0,
-    );
   const profileTitle = isPartner
     ? "Informations de l'entreprise"
     : "Mon profil";
@@ -143,6 +150,20 @@ export default function AccountSettings() {
   const shown = sections.some((entry) => entry.id === section)
     ? section
     : "profil";
+
+  /* Ce que la pastille annonce. « partenaire » couvre les deux moments où le
+     conventionnement n'est pas une réponse : la requête en cours, et un
+     établissement absent du réseau — dans les deux cas, affirmer « en attente
+     de confirmation » serait une déduction, pas une information. */
+  const statut: keyof typeof STATUT_LABEL = !isPartner
+    ? "employe"
+    : !partnerLoaded
+      ? "partenaire"
+      : partnerEntry === null
+        ? "partenaire"
+        : partnerEntry.officiel
+          ? "officiel"
+          : "attente";
 
   return (
     <>
@@ -160,20 +181,23 @@ export default function AccountSettings() {
           : "Gère les informations de ton profil et ton compte."}
       </p>
 
-      {/* Deux pastilles distinctes, et c'est délibéré : le type de compte est
-          un fait neutre, le conventionnement est un statut que le Ministère
-          accorde. Les confondre — comme le faisait la pastille ochre unique —
-          revenait à décorer tout compte partenaire d'un label officiel qu'il
-          n'a peut-être pas. */}
+      {/* Une seule pastille, qui dit le compte et son statut d'un même souffle
+          — parce que pour un partenaire les deux ne se lisent pas séparément :
+          savoir qu'on est « Partenaire » sans savoir si le Ministère a
+          conventionné l'établissement n'apprend pas ce qu'on est venu vérifier.
+          L'ochre reste réservé au conventionnement accordé ; l'attente est
+          neutre, car ce n'est pas une distinction. */}
       <IdentityStrip
         name={displayNameOf(profile)}
         email={profile.email}
         className="mb-10"
       >
-        <Chip className="ms-auto">{isPartner ? "Partenaire" : "Employé"}</Chip>
-        {official && (
-          <Chip tone="official">Partenaire Officiel du Ministère</Chip>
-        )}
+        <Chip
+          tone={statut === "officiel" ? "official" : "plain"}
+          className="ms-auto"
+        >
+          {STATUT_LABEL[statut]}
+        </Chip>
       </IdentityStrip>
 
       <div className="flex flex-col gap-8 md:flex-row md:items-start">

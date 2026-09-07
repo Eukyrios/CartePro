@@ -24,7 +24,8 @@ Mot de passe commun : `TicketTout2026`.
 | Type | Identifiant |
 |---|---|
 | salarié | `camille.durand@ministere.gouv.fr` — 32,50 € |
-| partenaire | `contact@poney-dream-78.fr` |
+| partenaire | `contact@poney-dream-78.fr` — conventionné |
+| partenaire non conventionné | `contact@kostumparty.fr` — encaissement et recettes barrés |
 | admin | `admin@ministere.gouv.fr` |
 
 Le panel du cabinet est semé avec : 16 partenaires renseignés (dont 6
@@ -38,6 +39,9 @@ backend/     Flask : app.py, auth.py, models.py, routes/, seed.py
 frontend/    Next.js — voir frontend/components/README.md pour la répartition
 docs/
   brand-book/  Le brand book : sources HTML, captures, et le PDF de 15 pages
+  03_Projet_CGU_Ticket_Tout.docx  Le projet de CGU. Document de référence,
+               transcrit dans frontend/components/legal/cgu.ts, que la page
+               /conditions affiche
 tools/       Les scripts qui produisent le brand book (voir plus bas)
 .github/     La CI : build du front et publication de l'artefact
 Makefile     install / seed / dev / clean

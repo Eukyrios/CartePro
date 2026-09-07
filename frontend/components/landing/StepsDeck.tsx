@@ -1,9 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Arrow, LogoMark } from "@/components/brand/Marks";
 import Display from "@/components/ui/Display";
-import Micro from "@/components/ui/Micro";
 import Pager from "@/components/ui/Pager";
 import { PANEL_BOX } from "@/components/ui/surfaces";
 
@@ -161,10 +159,15 @@ export default function StepsDeck({ steps }: { steps: readonly Step[] }) {
                   card: an opacity on the article itself made the whole thing
                   translucent — background included — so the cards underneath
                   showed through the pile. The card stays opaque and only its
-                  contents dim with depth. */}
+                  contents dim with depth.
+
+                  `justify-center` depuis que le bandeau du haut — la pastille,
+                  le numéro et la flèche — a été retiré : `justify-between`
+                  n'avait plus qu'un enfant en flux, et le titre se retrouvait
+                  collé en haut ou en bas d'une carte à moitié vide. */}
               <div
                 style={{ opacity: delta < 0 ? 1 + delta * 0.3 : 1 }}
-                className="relative flex h-full flex-col justify-between"
+                className="relative flex h-full flex-col justify-center"
               >
                 {/* The step number again, oversized and nearly transparent:
                     the card is tall enough that the middle was a void between
@@ -175,20 +178,6 @@ export default function StepsDeck({ steps }: { steps: readonly Step[] }) {
                 >
                   {step.index}
                 </span>
-
-                <div className="relative flex items-start justify-between">
-                  <Micro tone="accent" className="flex items-center gap-2.5">
-                    {/* Inline bar sizing rather than classes: LogoMark's own
-                        h-/w- utilities would otherwise win by emit order. */}
-                    <LogoMark
-                      className="bg-cp-accent size-5"
-                      barClassName="bg-cp-page"
-                      barStyle={{ height: 11, width: 2 }}
-                    />
-                    {step.index}
-                  </Micro>
-                  <Arrow className="text-cp-accent ml-0" />
-                </div>
 
                 <div className="relative">
                   <Display level={3} scale="card" className="mb-4">

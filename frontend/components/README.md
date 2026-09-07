@@ -12,8 +12,9 @@ page d'accueil.
 | `card/`       | La carte de paiement et son panneau. Trois écrans l'affichent (accueil, espace, paramètres).                                                                        | tout le monde         |
 | `forms/`      | Ce qu'un compte déclare, et ce qui le rend valide : les jeux de champs partagés entre l'inscription et les paramètres, plus `useDraft`.                             | auth, profile         |
 | `data/`       | Les données et leurs règles : réseau, catégories, coups de cœur, registre. Aucun JSX.                                                                               | tout le monde         |
-| `account/`    | Le compte connecté : contexte, comptes de démonstration, solde, et l'aiguillage vers l'espace qui lui correspond.                                                   | tout le monde         |
+| `account/`    | Le compte connecté : contexte, comptes de démonstration, solde, conventionnement du partenaire, et l'aiguillage vers l'espace qui lui correspond.                   | tout le monde         |
 | `layout/`     | Le châssis autour d'une page : barre haute, pied de page, menu utilisateur, rail de sections.                                                                       | les pages             |
+| `legal/`      | Le texte des CGU, transcrit de `docs/03_Projet_CGU_Ticket_Tout.docx`. Aucun JSX.                                                                                    | `app/conditions`      |
 | `minister/`   | L'éditorial du Ministre : le coup de cœur, montré au visiteur comme au salarié.                                                                                     | `landing/`, `espace/` |
 | `landing/`    | Le site vitrine : les sections de l'accueil et le deck des trois gestes.                                                                                            | `app/page.tsx`        |
 | `espace/`     | L'espace salarié : solde, réseau, historique, paiement.                                                                                                             | `app/espace/**`       |

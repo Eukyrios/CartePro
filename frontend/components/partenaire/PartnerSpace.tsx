@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useAccount } from "@/components/account/AccountProvider";
+import { usePartnerEntry } from "@/components/account/usePartnerEntry";
 import SectionNav from "@/components/layout/SectionNav";
 import PartnerCatalogue from "@/components/espace/PartnerCatalogue";
+import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
+import HatchedPanel from "@/components/ui/HatchedPanel";
 import Note from "@/components/ui/Note";
-import { api, type ApiPartner } from "@/lib/api";
 import EncaissementSection from "./EncaissementSection";
 import ReceiptsSection from "./ReceiptsSection";
 import type { RailSection } from "@/components/layout/SectionNav";
@@ -37,38 +39,22 @@ const SECTIONS: readonly RailSection[] = [
  *
  * Le catalogue est le même composant que dans l'espace salarié, sans
  * adaptation : un partenaire regarde le réseau dont il fait partie.
+ *
+ * Encaisser et compter ses recettes supposent un établissement conventionné :
+ * tant que le Ministère ne l'a pas accepté, les deux écrans s'affichent barrés
+ * (voir `gate` plus bas). Le réseau, lui, reste ouvert — consulter le
+ * catalogue ne demande l'accord de personne, et c'est ce qui donne au
+ * partenaire en attente une raison d'être là.
  */
 export default function PartnerSpace() {
   const { profile, ready } = useAccount();
-  const [me, setMe] = useState<ApiPartner | null>(null);
+  /* Sa fiche au réseau : le slug que l'encaissement envoie, le tarif proposé,
+     et le conventionnement qui décide de tout le reste. Les paramètres posent
+     la même question au même endroit — voir account/usePartnerEntry. */
+  const { entry: me, loaded } = usePartnerEntry();
   /* Incrémenté à chaque encaissement réussi : c'est le lien entre l'écran qui
      encaisse et celui qui compte. */
   const [encaissements, setEncaissements] = useState(0);
-
-  /* La fiche du partenaire connecté, prise dans le catalogue : c'est là que
-     vivent son slug — l'identifiant que l'encaissement doit envoyer — et le
-     tarif inscrit sur sa fiche. Le compte, lui, ne porte que son profil. */
-  useEffect(() => {
-    if (profile?.audience !== "partner") return;
-    let cancelled = false;
-    api<ApiPartner[]>("/api/partenaires/catalogue")
-      .then((partners) => {
-        if (cancelled) return;
-        const raison = profile.partner.raisonSociale;
-        setMe(
-          partners.find(
-            (partner) =>
-              partner.nom.localeCompare(raison, "fr", {
-                sensitivity: "base",
-              }) === 0,
-          ) ?? null,
-        );
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [profile]);
 
   if (!ready) {
     return <EmptyState variant="page">Chargement de votre espace…</EmptyState>;
@@ -86,18 +72,88 @@ export default function PartnerSpace() {
     );
   }
 
+  /* Ce qui manque au compte pour encaisser, s'il manque quelque chose.
+     — "unlisted"   : aucune fiche au catalogue. L'établissement n'est pas
+                      référencé du tout, et la raison sociale est la première
+                      chose à vérifier — d'où un bouton vers les paramètres.
+     — "unofficial" : une fiche, mais pas le conventionnement. Il n'y a rien à
+                      faire qu'attendre, donc pas d'action : un bouton qui
+                      n'avance à rien se lit comme une porte, alors que c'en
+                      est une fermée.
+     Rien avant `loaded` : barrer l'espace le temps d'une requête ferait
+     clignoter un refus à un partenaire parfaitement en règle. */
+  const gate = !loaded
+    ? null
+    : me === null
+      ? "unlisted"
+      : me.officiel
+        ? null
+        : "unofficial";
+
+  /* Le même panneau que la carte de la fiche partenaire : l'écran reste
+     visible dessous, hachuré, et la raison se lit par-dessus. Montrer
+     l'encaissement inutilisable répond à « où est-ce ? » ; l'escamoter
+     laisserait la question entière. */
+  const barrer = (screen: React.ReactNode, quoi: string) =>
+    gate === null ? (
+      screen
+    ) : (
+      <HatchedPanel
+        /* Un écran plein se barre jusqu'aux bords de la fenêtre : les
+           hachures arrêtées à la colonne de contenu laissaient deux bandes
+           blanches, et la page ne se lisait plus comme fermée. */
+        bleed
+        reason={
+          gate === "unlisted" ? (
+            <>
+              Votre établissement n&apos;est pas encore référencé au réseau, et{" "}
+              {quoi} en a besoin. Vérifiez que la raison sociale de vos
+              paramètres est exactement celle du réseau.
+            </>
+          ) : (
+            <>
+              Votre compte attend le{" "}
+              <strong className="font-black">conventionnement</strong> du
+              Ministère : un administrateur doit accepter votre établissement
+              comme Partenaire Officiel pour ouvrir {quoi}.
+            </>
+          )
+        }
+        action={
+          gate === "unlisted" ? (
+            <Button href="/parametres" arrow>
+              Vérifier ma fiche
+            </Button>
+          ) : undefined
+        }
+      >
+        {screen}
+      </HatchedPanel>
+    );
+
   return (
     <>
-      {/* Sans fiche au catalogue, la section le dit elle-même plutôt que
-          d'afficher un formulaire qui échouerait au premier code. */}
-      <EncaissementSection
-        partnerId={me?.id ?? null}
-        defaultAmountCents={me?.amountCents ?? 0}
-        onEncaisse={() => setEncaissements((count) => count + 1)}
-      />
+      {barrer(
+        <EncaissementSection
+          partnerId={me?.id ?? null}
+          defaultAmountCents={me?.amountCents ?? 0}
+          onEncaisse={() => setEncaissements((count) => count + 1)}
+        />,
+        "l\u2019encaissement",
+      )}
 
       <PartnerCatalogue />
-      <ReceiptsSection refreshKey={encaissements} />
+
+      {/* `access` coupe la requête et vide la liste : sans lui, l'écran barré
+          affichait de vraies recettes sous les hachures, ce qui contredisait
+          la raison affichée par-dessus — et lançait l'appel quand même. */}
+      {barrer(
+        <ReceiptsSection
+          refreshKey={encaissements}
+          access={!loaded ? "pending" : gate === null ? "open" : "locked"}
+        />,
+        "le tableau de vos recettes",
+      )}
 
       <SectionNav sections={SECTIONS} />
     </>
