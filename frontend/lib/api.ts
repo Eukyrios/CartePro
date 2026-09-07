@@ -97,6 +97,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 export function userProfile(user: ApiUser): Profile {
   return {
     id: user.id,
+    role: user.role,
     balanceCents: user.balanceCents,
     ...user.profile,
     /* Les neuf champs partenaire, complétés à la chaîne vide.

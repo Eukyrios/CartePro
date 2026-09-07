@@ -51,6 +51,8 @@ export const DEFAULT_CARD_STYLE: CardStyle = {
  */
 export type Profile = {
   id?: number;
+  /** "admin", "partenaire" ou "user" — vient du JWT, jamais déduit côté client. */
+  role: string;
   balanceCents: number;
   audience: AuthAudience;
   username: string;
@@ -64,8 +66,15 @@ type Account = {
   profile: Profile | null;
   /** False during the first paint, while the stored session is still unknown. */
   ready: boolean;
-  /** Lève l'erreur du serveur telle quelle : c'est à l'écran de l'afficher. */
-  signIn: (payload: AuthSubmitPayload) => Promise<void>;
+  /**
+   * Lève l'erreur du serveur telle quelle : c'est à l'écran de l'afficher.
+   * Une inscription partenaire ne connecte personne : elle reste en attente
+   * de validation par un admin, d'où le retour `{ pending, message }` plutôt
+   * qu'une session ouverte.
+   */
+  signIn: (
+    payload: AuthSubmitPayload,
+  ) => Promise<{ pending: boolean; message?: string } | void>;
   signOut: () => void;
   updateProfile: (profile: Profile) => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -163,8 +172,9 @@ export default function AccountProvider({
     async (payload: AuthSubmitPayload) => {
       const { audience, mode, username, email, password, partner } = payload;
       const data = await api<{
-        access_token: string;
-        user: Parameters<typeof userProfile>[0];
+        message?: string;
+        access_token?: string;
+        user?: Parameters<typeof userProfile>[0];
       }>(`/api/auth/${mode === "login" ? "login" : "register"}`, {
         method: "POST",
         body: JSON.stringify({
@@ -175,6 +185,13 @@ export default function AccountProvider({
             : {}),
         }),
       });
+
+      // Une demande partenaire en attente répond 201 sans jeton ni profil :
+      // il n'y a pas de session à ouvrir, seulement un message à montrer.
+      if (!data.access_token || !data.user) {
+        return { pending: true, message: data.message };
+      }
+
       window.localStorage.setItem("access_token", data.access_token);
       const next = userProfile(data.user);
       persist({
