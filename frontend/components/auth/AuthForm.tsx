@@ -18,6 +18,8 @@ type Props = {
   form: AuthFormApi;
   /** Ce que le serveur a refusé, dans ses mots. */
   error?: string | null;
+  /** Une confirmation neutre — la demande partenaire transmise, en attente. */
+  notice?: string | null;
   busy?: boolean;
   onModeChange: (mode: AuthMode) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -51,6 +53,7 @@ export default function AuthForm({
   mode,
   form,
   error,
+  notice,
   busy,
   onModeChange,
   onSubmit,
@@ -129,6 +132,11 @@ export default function AuthForm({
       {/* Le refus du serveur, juste au-dessus du bouton qui l'a provoqué —
           c'est là qu'on regarde après avoir cliqué, et `role="alert"` le fait
           annoncer sans déplacer le focus hors du formulaire. */}
+      {notice && (
+        <Note tone="positive" role="status" className="mb-4">
+          {notice}
+        </Note>
+      )}
       {error && (
         <Note tone="danger" role="alert" className="mb-4">
           {error}

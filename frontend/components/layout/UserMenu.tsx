@@ -18,8 +18,9 @@ type Props = {
 /**
  * Navigation entries listed above the sign-out action, in display order.
  *
- * Pas d'entrée « Mon espace » : connecté, l'accueil *est* l'espace (voir
- * HomeSwitch), et le logotype de la barre y ramène déjà. Un menu qui propose
+ * Pas d'entrée « Mon espace », ni « Administration » pour un admin : connecté,
+ * l'accueil *est* l'espace — le panneau d'administration pour un admin (voir
+ * HomeSwitch) —, et le logotype de la barre y ramène déjà. Un menu qui propose
  * l'endroit où l'on se trouve déjà n'aide personne.
  */
 const MENU_LINKS = [{ label: "Paramètres", href: "/parametres" }];

@@ -108,6 +108,8 @@ type Props = {
   onSubmit: (payload: AuthSubmitPayload) => void;
   /** Le refus du serveur, affiché dans le formulaire lui-même. */
   error?: string | null;
+  /** Une confirmation neutre — la demande partenaire transmise, en attente. */
+  notice?: string | null;
   /** Vrai pendant l'appel : le bouton le dit plutôt que de rester inerte. */
   busy?: boolean;
   /**
@@ -140,6 +142,7 @@ export default function AuthModal({
   onClose,
   onSubmit,
   error,
+  notice,
   busy,
   onDismissError,
 }: Props) {
@@ -241,6 +244,7 @@ export default function AuthModal({
                   mode={mode}
                   form={form}
                   error={error}
+                  notice={notice}
                   busy={busy}
                   onModeChange={(next) => {
                     onDismissError?.();

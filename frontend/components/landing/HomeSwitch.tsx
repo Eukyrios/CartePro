@@ -1,6 +1,7 @@
 "use client";
 
 import AccountSpace from "@/components/account/AccountSpace";
+import AdminSpace from "@/components/admin/AdminSpace";
 import PageMain from "@/components/ui/PageMain";
 import { useAccount } from "@/components/account/AccountProvider";
 import LandingPage from "./LandingPage";
@@ -19,11 +20,24 @@ import LandingPage from "./LandingPage";
  *
  * Les deux audiences ont désormais leur espace, et c'est `AccountSpace` qui
  * choisit : un partenaire connecté est chez lui ici autant qu'un salarié.
+ *
+ * Un admin n'a ni carte ni réseau à consulter : son accueil est le panneau
+ * d'administration lui-même, pas la vitrine ni un espace salarié qui ne le
+ * concerne pas. `role` tranche avant `audience`, qui ne distingue que
+ * salarié et partenaire.
  */
 export default function HomeSwitch() {
   const { profile, ready } = useAccount();
 
   if (!ready || !profile) return <LandingPage />;
+
+  if (profile.role === "admin") {
+    return (
+      <PageMain pad="y">
+        <AdminSpace />
+      </PageMain>
+    );
+  }
 
   return (
     <PageMain snap>

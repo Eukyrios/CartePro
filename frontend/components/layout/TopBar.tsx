@@ -27,6 +27,8 @@ export default function TopBar({ onLogin, onLogout }: Props) {
   const [mode, setMode] = useState<AuthMode>("login");
   /** Le refus du serveur, affiché dans le dialogue et effacé à sa fermeture. */
   const [authError, setAuthError] = useState<string | null>(null);
+  /** La confirmation d'une demande partenaire transmise, jusqu'à fermeture. */
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
 
   function openModal(m: AuthMode) {
@@ -42,6 +44,7 @@ export default function TopBar({ onLogin, onLogout }: Props) {
   function closeModal() {
     setModalOpen(false);
     setAuthError(null);
+    setAuthNotice(null);
   }
 
   /**
@@ -51,9 +54,18 @@ export default function TopBar({ onLogin, onLogout }: Props) {
    */
   async function handleSubmit(payload: AuthSubmitPayload) {
     setAuthError(null);
+    setAuthNotice(null);
     setAuthBusy(true);
     try {
-      await signIn(payload);
+      const result = await signIn(payload);
+      if (result?.pending) {
+        // Demande transmise, pas de session à ouvrir : le dialogue reste
+        // ouvert pour que la confirmation se lise avant de le fermer soi-même.
+        setAuthNotice(
+          result.message ?? "Votre demande a bien été transmise.",
+        );
+        return;
+      }
       if (onLogin) onLogin();
       closeModal();
     } catch (error) {
@@ -121,8 +133,12 @@ export default function TopBar({ onLogin, onLogout }: Props) {
 
       <AuthModal
         error={authError}
+        notice={authNotice}
         busy={authBusy}
-        onDismissError={() => setAuthError(null)}
+        onDismissError={() => {
+          setAuthError(null);
+          setAuthNotice(null);
+        }}
         open={modalOpen}
         mode={mode}
         onModeChange={setMode}
