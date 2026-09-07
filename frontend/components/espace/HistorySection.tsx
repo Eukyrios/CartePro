@@ -17,16 +17,13 @@ import SelectField from "@/components/ui/SelectField";
 import SimulationNotice from "@/components/ui/SimulationNotice";
 import TextField from "@/components/ui/TextField";
 import Note from "@/components/ui/Note";
-import { MICRO } from "@/components/ui/surfaces";
+import { LIST_PER_PAGE, LIST_WINDOW, MICRO } from "@/components/ui/surfaces";
 
 const DATE = new Intl.DateTimeFormat("fr-FR", {
   day: "2-digit",
   month: "short",
   year: "numeric",
 });
-
-/** Rows per page. The list also scrolls, so a short window is not a cage. */
-const PER_PAGE = 8;
 
 const KINDS = [
   { value: "credit", label: "Crédits" },
@@ -146,17 +143,30 @@ export default function HistorySection() {
       .map((category) => ({ value: category.id, label: category.label }));
   }, [entries, referentiel]);
 
-  const pages = Math.max(1, Math.ceil(matches.length / PER_PAGE));
+  const pages = Math.max(1, Math.ceil(matches.length / LIST_PER_PAGE));
   const current = Math.min(page, pages);
-  const rows = matches.slice((current - 1) * PER_PAGE, current * PER_PAGE);
+  const rows = matches.slice(
+    (current - 1) * LIST_PER_PAGE,
+    current * LIST_PER_PAGE,
+  );
 
   return (
     /* Dernier écran de l'espace : il laisse la place du pied de page, pour
        que les deux ensemble fassent un écran. Et pas de filet bas — le pied
        de page est déjà une frontière. */
-    <Screen id="historique" height="screen-minus-footer" rule={false}>
-      <Display level={2} accent="." br={false} className="mb-4">
-        Historique
+    /* `long`, `align="start"` et `density="offset"` : même raison que les
+       recettes — la liste peut monter à deux écrans, donc la section ne peut
+       ni se centrer ni s'accrocher de force. */
+    <Screen
+      id="historique"
+      height="screen-minus-footer"
+      rule={false}
+      align="start"
+      density="offset"
+      long
+    >
+      <Display level={2} accent="dépenses." className="mb-4">
+        Historique des
       </Display>
       {/* Plus de « Réinitialiser la démonstration » : ce bouton effaçait un
           registre tenu dans le navigateur, qui n'existe plus. Le solde et les
@@ -234,8 +244,10 @@ export default function HistorySection() {
             : "Aucune opération ne correspond à ces filtres. Élargissez la période ou effacez les filtres."}
         </EmptyState>
       ) : (
-        /* Scrolls inside the screen rather than stretching it. */
-        <div className="mt-3 max-h-[46vh] overflow-y-auto">
+        /* Deux écrans au plus, puis la liste défile — voir `LIST_WINDOW`. En
+           dessous du plafond elle prend la hauteur de son contenu, donc une
+           liste courte n'a pas de barre intérieure. */
+        <div className={`mt-3 ${LIST_WINDOW}`}>
           <table className="border-t-cp-fg w-full border-t-2 text-left">
             <caption className="sr-only">
               Opérations du compte, de la plus récente à la plus ancienne
