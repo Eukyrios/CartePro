@@ -47,6 +47,86 @@ REFERENCE_DATE = datetime(2026, 6, 1, 8, 0, 0, tzinfo=timezone.utc)
 DEMO_PASSWORD = "TicketTout2026"
 
 # Le réseau, miroir de frontend/components/data/partners.ts.
+# La presentation que quelques partenaires ont deja ecrite, par slug.
+#
+# C'est du contenu d'auteur, pas une donnee du reseau : un partenaire la saisit
+# dans ses parametres, et la plupart n'en ont pas. La semer pour trois d'entre
+# eux suffit a montrer la section remplie, la section absente, et le rendu de
+# chaque marque du Markdown accepte.
+PRESENTATIONS = {
+    "poney-dream-78": {
+        "presentationTitre": "Ce que nous faisons",
+        "presentationTexte": (
+            "Un manege **couvert**, ouvert *toute l'annee*, a vingt minutes de la gare "
+            "de Rambouillet.\n"
+            "\n"
+            "- baptemes a poney des trois ans\n"
+            "- balades encadrees en foret, groupes de six\n"
+            "- goutez d'anniversaire sur reservation\n"
+            "\n"
+            "> Ouvert aussi le lundi pendant les vacances scolaires.\n"
+            "\n"
+            "# Venir nous voir\n"
+            "\n"
+            "Le `312` s'arrete devant le portail. Reservations par telephone ou sur "
+            "[notre site](https://poney-dream-78.fr)."
+        ),
+        "siteWeb": "poney-dream-78.fr",
+        "horaires": {
+            "lundi": "",
+            "mardi": "09:00 - 18:00",
+            "mercredi": "09:00 - 18:00",
+            "jeudi": "09:00 - 18:00",
+            "vendredi": "09:00 - 18:00",
+            "samedi": "09:00 - 19:00",
+            "dimanche": "10:00 - 17:00",
+        },
+    },
+    "glaces-correze": {
+        "presentationTitre": "Trente-deux parfums, tous d'ici",
+        "presentationTexte": (
+            "Le lait vient de la ferme d'a cote et les fruits du marche du samedi. "
+            "Rien de surgele, rien d'aromatise.\n"
+            "\n"
+            "Les parfums tournent avec les saisons : chataigne a l'automne, "
+            "__myrtille en juillet__.\n"
+            "\n"
+            "1. choisissez votre cornet\n"
+            "2. deux boules maximum, c'est plus sage\n"
+            "3. mangez vite"
+        ),
+        "siteWeb": "https://glaces-correze.fr",
+        "horaires": {
+            "lundi": "14:00 - 19:00",
+            "mardi": "14:00 - 19:00",
+            "mercredi": "10:00 - 12:30 / 14:00 - 19:00",
+            "jeudi": "14:00 - 19:00",
+            "vendredi": "14:00 - 19:00",
+            "samedi": "10:00 - 19:30",
+            "dimanche": "10:00 - 13:00",
+        },
+    },
+    "librairie-bellevue": {
+        "presentationTitre": "",
+        "presentationTexte": (
+            "Fonds general, beaux-arts et jeunesse. Nous commandons tout titre "
+            "disponible sous quarante-huit heures.\n"
+            "\n"
+            "~~Fermeture annuelle en aout.~~ Nous restons ouverts cette annee."
+        ),
+        "siteWeb": "librairie-bellevue.fr",
+        "horaires": {
+            "lundi": "",
+            "mardi": "10:00 - 19:00",
+            "mercredi": "10:00 - 19:00",
+            "jeudi": "10:00 - 19:00",
+            "vendredi": "10:00 - 19:00",
+            "samedi": "10:00 - 19:00",
+            "dimanche": "",
+        },
+    },
+}
+
 NETWORK = [
     {
         "slug": "poney-dream-78",
@@ -280,6 +360,13 @@ def make_partner(entry):
             "amountCents": entry["amountCents"],
             "official": entry["official"],
             "featured": entry["featured"],
+            # Vide pour la plupart : la section de presentation ne parait pas
+            # sur une fiche qui n'en a pas, et c'est le cas courant.
+            "presentationTitre": "",
+            "presentationTexte": "",
+            "siteWeb": "",
+            "horaires": {},
+            **PRESENTATIONS.get(entry["slug"], {}),
         },
         card_style={},
     )

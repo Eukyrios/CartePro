@@ -133,7 +133,10 @@ export default function HistorySection() {
   const rows = matches.slice((current - 1) * PER_PAGE, current * PER_PAGE);
 
   return (
-    <Screen id="historique">
+    /* Dernier écran de l'espace : il laisse la place du pied de page, pour
+       que les deux ensemble fassent un écran. Et pas de filet bas — le pied
+       de page est déjà une frontière. */
+    <Screen id="historique" height="screen-minus-footer" rule={false}>
       <Display level={2} accent="." br={false} className="mb-4">
         Historique
       </Display>

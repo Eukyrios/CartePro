@@ -133,7 +133,11 @@ export default function EncaissementSection({
   }
 
   return (
-    <Screen id="encaissement" gap={9}>
+    /* `below-bar` et pas de point d'accroche : la barre haute appartient à
+       ce premier écran, elle ne s'empile pas au-dessus et on ne peut pas la
+       faire sortir de l'écran en s'accrochant au bord de la section. Voir
+       BalanceSection, même raison. */
+    <Screen id="encaissement" height="below-bar" snap={false} gap={9}>
       <div>
         <Display level={1} accent="un paiement.">
           Encaisser

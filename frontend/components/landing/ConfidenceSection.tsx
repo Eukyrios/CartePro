@@ -34,7 +34,7 @@ export default function ConfidenceSection() {
       className="bg-primary-700 dark:bg-primary-600 text-white"
     >
       {/* QR on the left, wording on the right. The spacing is deliberately
-          tight: the section is capped at calc(100vh - 230px) so that it and the
+          tight: the section is capped at calc(100dvh - 115px) so that it and the
           footer make one screen, and the QR is most of that budget. */}
       <div className="grid items-center gap-10 lg:grid-cols-[auto_1fr] lg:gap-16">
         <div className="flex flex-col gap-5">

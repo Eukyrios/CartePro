@@ -98,10 +98,20 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
   }
 
   return (
-    /* Un seul écran, et calibré pour le rester. `density="tight"` parce que
-       sous la barre de 76px, 4rem de marge verticale sortent la carte de
-       l'écran. */
-    <Screen height="below-bar" snap={false} rule={false} density="tight">
+    /* Un écran, et calibré pour le rester. `density="tight"` parce que sous la
+       barre de 76px, 4rem de marge verticale sortent la carte de l'écran.
+
+       `id` pour le rail, mais pas de point d'accroche : quand le partenaire
+       a écrit une présentation, la fiche compte deux écrans et `PartnerFiche` y
+       met le rail. S'accrocher au bord de cette section ferait sortir la barre
+       haute de l'écran, alors qu'elle appartient à ce premier écran. */
+    <Screen
+      id="paiement"
+      height="below-bar"
+      snap={false}
+      rule={false}
+      density="tight"
+    >
       <div className="mb-5 flex items-center gap-4">
         {/* Back to wherever you came from — the catalogue, or the Minister's
             selection. A fresh tab has no history to go back through, so that

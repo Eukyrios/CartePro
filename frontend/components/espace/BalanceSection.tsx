@@ -37,7 +37,17 @@ export default function BalanceSection({
   const balance = useBalance();
 
   return (
-    <Screen id="solde" gap={10}>
+    /* `below-bar` : la barre haute appartient à ce premier écran. En
+       `min-h-dvh`, elle s'ajoutait par-dessus — 76px de barre plus un écran
+       plein font 976px dans une fenêtre de 900, et le bas de la section était
+       coupé avant qu'on ait touché à la molette.
+
+       `snap={false}` : le premier écran n'a pas de point d'accroche à
+       lui. Il en avait un, à son propre bord — et s'y accrocher faisait sortir
+       la barre haute de l'écran, alors qu'elle appartient à ce premier écran.
+       Le seul repos possible en haut du document est donc 0, celui que porte
+       la barre elle-même. */
+    <Screen id="solde" height="below-bar" snap={false} gap={10}>
       <div>
         <Display level={1} accent={`${name}.`} br={false}>
           Bonjour{" "}

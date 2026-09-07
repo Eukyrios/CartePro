@@ -1,6 +1,6 @@
 import type { CardStyle, Profile } from "@/components/account/AccountProvider";
-import { EMPTY_PARTNER } from "@/components/forms/partnerFields";
-import type { PartnerFields } from "@/components/forms/partnerFields";
+import { EMPTY_PARTNER, toHoraires } from "@/components/forms/partnerFields";
+import type { Horaires, PartnerFields } from "@/components/forms/partnerFields";
 
 export type ApiUser = {
   id: number;
@@ -34,6 +34,19 @@ export type ApiPartner = {
    *  conventionnement : un partenaire peut être l'un, l'autre, les deux ou
    *  aucun. */
   featured: boolean;
+  /**
+   * La présentation écrite par le partenaire, et son site.
+   *
+   * Elles vivent dans son profil — il les saisit dans ses paramètres — mais
+   * sortent par le catalogue parce que sa fiche est publique : la lire ne
+   * demande pas d'être connecté. Chaînes vides quand rien n'a été saisi.
+   */
+  siteWeb: string;
+  presentationTitre: string;
+  /** Markdown, dans le sous-ensemble de `ui/Markdown`. */
+  presentationTexte: string;
+  /** Les sept jours, toujours complets — voir `toHoraires`. */
+  horaires: Horaires;
 };
 
 const TOKEN_KEY = "access_token";
@@ -108,7 +121,15 @@ export function userProfile(user: ApiUser): Profile {
      * qui reçoit `undefined` puis une frappe fait basculer React de non
      * contrôlé à contrôlé. Le formulaire ne peut pas se défendre seul de ça :
      * la forme se répare ici, à la frontière. */
-    partner: { ...EMPTY_PARTNER, ...(user.profile?.partner ?? {}) },
+    partner: {
+      ...EMPTY_PARTNER,
+      ...(user.profile?.partner ?? {}),
+      /* `horaires` est le seul champ imbriqué, et l'étalement ci-dessus ne
+         fusionne qu'un niveau : une base ne portant que le lundi aurait rendu
+         les six autres jours `undefined`, avec le même basculement contrôlé /
+         non contrôlé que le reste de ce correctif évite. */
+      horaires: toHoraires(user.profile?.partner?.horaires),
+    },
     email: user.email,
     username: user.username,
   };

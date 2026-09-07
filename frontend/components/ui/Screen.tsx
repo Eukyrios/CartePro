@@ -20,8 +20,13 @@ const HEIGHTS = {
   screen: "min-h-dvh",
   /** Under the 76px top bar, for a page that is one screen and not a rail. */
   "below-bar": "min-h-[calc(100dvh-76px)]",
-  /** Leaves the 230px footer visible at the end of the landing page. */
-  "screen-minus-footer": "min-h-dvh lg:min-h-[calc(100dvh-230px)]",
+  /**
+   * Laisse la place du pied de page : les deux ensemble font un écran.
+   *
+   * Pour le dernier écran de chaque page qui défile par écrans. La valeur suit
+   * la hauteur du pied — voir layout/Footer, où elle est écrite une fois.
+   */
+  "screen-minus-footer": "min-h-dvh lg:min-h-[calc(100dvh-115px)]",
 } as const;
 
 const GAPS = { 0: "", 6: "gap-6", 9: "gap-9", 10: "gap-10" } as const;

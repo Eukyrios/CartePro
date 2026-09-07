@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { allPartners, partnerById } from "@/components/data/partners";
-import PartnerPayment from "@/components/espace/PartnerPayment";
+import PartnerFiche from "@/components/espace/PartnerFiche";
 import type { Metadata } from "next";
-import PageMain from "@/components/ui/PageMain";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -28,8 +27,9 @@ export default async function PartnerPaymentPage({ params }: Props) {
   if (!partner) notFound();
 
   return (
-    <PageMain>
-      <PartnerPayment partner={partner} />
-    </PageMain>
+    /* `PartnerFiche` tient les écrans, le rail et l'accrochage au défilement :
+       ils dépendent tous de la même question — ce partenaire a-t-il écrit une
+       présentation ? — et elle ne se pose qu'une fois, côté client. */
+    <PartnerFiche partner={partner} />
   );
 }

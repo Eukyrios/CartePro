@@ -48,6 +48,14 @@ export default function Atelier() {
   const [text, setText] = useState("Crêperie");
   const [choice, setChoice] = useState("");
   const [open, setOpen] = useState(false);
+  const [markdown, setMarkdown] = useState(
+    "# Ce que nous faisons\n\n" +
+      "Un manège **couvert**, ouvert *toute l'année*, à vingt minutes de la gare.\n\n" +
+      "- baptêmes à poney pour les plus jeunes\n" +
+      "- balades encadrées en forêt\n\n" +
+      "> Fermé le lundi.\n\n" +
+      "Réservations sur [notre site](https://poney-dream-78.fr) ou au `01 34 xx xx xx`.",
+  );
   const partner = allPartners()[0];
 
   const GROUPS: { title: string; specimens: Specimen[] }[] = [
@@ -255,6 +263,45 @@ export default function Atelier() {
                 error="SIREN invalide : 9 chiffres."
               />
             </UI.FieldGrid>
+          ),
+        },
+        {
+          name: "TextArea",
+          note: "Les classes de TextField, une hauteur à soi. `aria-describedby` porte l'indication et l'erreur.",
+          render: () => (
+            <div className="grid gap-6">
+              <UI.TextArea
+                id="atelier-presentation"
+                label="Votre présentation"
+                value={markdown}
+                onChange={setMarkdown}
+                rows={7}
+                hint="Mise en forme Markdown, comme dans un salon de discussion."
+              />
+              <UI.TextArea
+                id="atelier-presentation-erreur"
+                label="Texte refusé"
+                value="…"
+                onChange={() => {}}
+                rows={2}
+                error="Texte trop long : 1200 caractères au maximum."
+              />
+            </div>
+          ),
+        },
+        {
+          name: "Markdown",
+          note: "Le sous-ensemble de Discord, rendu en éléments React — jamais en HTML fabriqué depuis la chaîne. Éditez le champ ci-dessus pour voir le rendu suivre.",
+          render: () => (
+            <div className="grid gap-6 lg:grid-cols-2">
+              <UI.Markdown>{markdown}</UI.Markdown>
+              {/* Ce que le rendu refuse : un protocole exécutable reste du
+                  texte, il ne devient pas un lien. */}
+              <UI.Markdown>
+                {"Un lien piégé — [cliquez](javascript:alert(1)) — reste du texte.\n\n" +
+                  "```\nun bloc de code\n  garde ses espaces\n```"}
+              </UI.Markdown>
+            </div>
           ),
         },
         {

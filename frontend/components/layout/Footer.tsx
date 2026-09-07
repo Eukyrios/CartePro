@@ -31,7 +31,12 @@ export default function Footer() {
   return (
     <FlowbiteFooter
       container={false}
-      className="bg-cp-ink dark:bg-cp-ink mt-auto min-h-[230px] items-end rounded-none px-6 py-10 text-white shadow-none lg:h-[230px] lg:px-[7vw] lg:py-[42px]"
+      /* 115px, la moitié de la hauteur d'origine. Le pied appartient au
+         dernier écran — voir Screen, `height="screen-minus-footer"` — donc
+         chaque pixel qu'il prend est un pixel de moins pour le contenu, et
+         230px en prenaient le quart d'une fenêtre de 900. La marge verticale
+         suit : à 42px elle aurait dépassé à elle seule la place restante. */
+      className="bg-cp-ink dark:bg-cp-ink mt-auto min-h-[115px] items-end rounded-none px-6 py-7 text-white shadow-none lg:h-[115px] lg:px-[7vw] lg:py-5"
     >
       <div className="grid w-full gap-8 lg:grid-cols-3 lg:items-end lg:gap-0">
         <Link href="/" className="inline-flex">

@@ -32,7 +32,18 @@ def catalogue():
             # un statut administratif — distinct de `featured`, qui est le coup
             # de cœur éditorial du Ministre.
             "officiel": bool(data_json.get("official", False)),
-            "featured": data_json.get("featured", False)
+            "featured": data_json.get("featured", False),
+            # La presentation que le partenaire ecrit lui-meme, depuis ses
+            # parametres. Elle sort ici parce que sa fiche est publique : le
+            # profil complet, lui, demande le jeton de son proprietaire.
+            # Chaines vides quand rien n'a ete saisi, jamais None : le front
+            # teste la longueur, pas la nullite.
+            "siteWeb": data_json.get("siteWeb", "") or "",
+            "presentationTitre": data_json.get("presentationTitre", "") or "",
+            "presentationTexte": data_json.get("presentationTexte", "") or "",
+            # Les horaires, un texte libre par jour. Le front complete les
+            # jours absents : ici on passe ce qu'il y a, sans le reconstruire.
+            "horaires": data_json.get("horaires") or {}
         })
         
     return jsonify(catalogue), 200

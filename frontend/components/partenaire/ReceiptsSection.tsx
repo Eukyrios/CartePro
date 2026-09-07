@@ -139,7 +139,14 @@ export default function ReceiptsSection({
   const rows = matches.slice((current - 1) * PER_PAGE, current * PER_PAGE);
 
   return (
-    <Screen id="recettes">
+    /* Dernier écran de l'espace partenaire : il laisse la place du pied de
+       page. Voir HistorySection, même raison. */
+    <Screen
+      id="recettes"
+      height="screen-minus-footer"
+      rule={false}
+      density="tight"
+    >
       <Display level={2} accent="." br={false} className="mb-4">
         Mes recettes
       </Display>
@@ -228,8 +235,10 @@ export default function ReceiptsSection({
               : "Aucun encaissement ne correspond à ces filtres. Élargissez la période ou effacez-les."}
         </EmptyState>
       ) : (
-        /* Défile dans l'écran plutôt que de l'étirer. */
-        <div className="mt-3 max-h-[46vh] overflow-y-auto">
+        /* Défile dans l'écran plutôt que de l'étirer — et la fenêtre est
+           calée sur ce que laisse le pied de page : cet écran est le dernier,
+           les deux ensemble doivent faire un écran. */
+        <div className="mt-3 max-h-[38vh] overflow-y-auto">
           <table className="border-t-cp-fg w-full border-t-2 text-left">
             <caption className="sr-only">
               Encaissements reçus, du plus récent au plus ancien

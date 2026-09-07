@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import CardStyleForm from "./CardStyleForm";
 import DeleteAccountCard from "./DeleteAccountCard";
+import PresentationForm from "./PresentationForm";
 import ProfileForm from "./ProfileForm";
 import {
   displayNameOf,
@@ -65,7 +66,7 @@ const PaletteIcon: FC<ComponentProps<"svg">> = (props) => (
  * Sections listed in the side rail, in display order. Labels are kept short
  * enough to fit it: the panel beside it carries the full heading.
  */
-type SectionId = "profil" | "style" | "securite" | "danger";
+type SectionId = "profil" | "presentation" | "style" | "securite" | "danger";
 
 /**
  * Ce que la pastille d'identité affiche, selon le compte.
@@ -82,25 +83,37 @@ const STATUT_LABEL = {
   officiel: "Partenaire Officiel du Ministère",
 } as const;
 
+const PenIcon: FC<ComponentProps<"svg">> = (props) => (
+  <svg {...props} fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.379-8.379-2.828-2.828z" />
+  </svg>
+);
+
+/**
+ * Les sections, dans l'ordre d'affichage. Le numéro n'est pas écrit ici : il
+ * est calculé **après** le filtrage par audience, sinon un partenaire voyait
+ * « 01, 03, 04 » — le 02 réservé au style de carte laissant un trou dans une
+ * liste dont il ne connaît pas les absents.
+ */
 const SECTIONS: ReadonlyArray<{
   id: SectionId;
   label: string;
-  /** Two digits, as every numbered list in the design is numbered. */
-  index: string;
   icon: FC<ComponentProps<"svg">>;
   /** Employé only — a partenaire has no card to style. */
   employeeOnly?: boolean;
+  /** Partenaire only — un salarié n'a pas de fiche à présenter. */
+  partnerOnly?: boolean;
 }> = [
-  { id: "profil", label: "Profil", index: "01", icon: UserIcon },
+  { id: "profil", label: "Profil", icon: UserIcon },
   {
-    id: "style",
-    label: "Style",
-    index: "02",
-    icon: PaletteIcon,
-    employeeOnly: true,
+    id: "presentation",
+    label: "Présentation",
+    icon: PenIcon,
+    partnerOnly: true,
   },
-  { id: "securite", label: "Sécurité", index: "03", icon: LockIcon },
-  { id: "danger", label: "Zone de danger", index: "04", icon: TrashIcon },
+  { id: "style", label: "Style", icon: PaletteIcon, employeeOnly: true },
+  { id: "securite", label: "Sécurité", icon: LockIcon },
+  { id: "danger", label: "Zone de danger", icon: TrashIcon },
 ];
 
 /**
@@ -144,8 +157,12 @@ export default function AccountSettings() {
     ? "Informations de l'entreprise"
     : "Mon profil";
   const sections = SECTIONS.filter(
-    (entry) => !entry.employeeOnly || !isPartner,
-  );
+    (entry) =>
+      (!entry.employeeOnly || !isPartner) && (!entry.partnerOnly || isPartner),
+  ).map((entry, position) => ({
+    ...entry,
+    index: String(position + 1).padStart(2, "0"),
+  }));
   // Guards the case where the audience changes while the panel is open.
   const shown = sections.some((entry) => entry.id === section)
     ? section
@@ -246,6 +263,20 @@ export default function AccountSettings() {
                 {profileTitle}
               </Display>
               <ProfileForm profile={profile} onSave={updateProfile} />
+            </Panel>
+          )}
+
+          {shown === "presentation" && (
+            <Panel as="section">
+              <Display level={2} scale="panel">
+                Votre présentation
+              </Display>
+              <Panel.Lead>
+                Le texte qui paraît sur votre fiche, sous votre photographie.
+                Vous l&apos;écrivez, vous le mettez en forme, et vous y mettez
+                l&apos;adresse de votre site.
+              </Panel.Lead>
+              <PresentationForm profile={profile} onSave={updateProfile} />
             </Panel>
           )}
 
