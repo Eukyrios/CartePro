@@ -28,24 +28,84 @@ export const JOURS = [
 export type Jour = (typeof JOURS)[number];
 
 /**
- * Les horaires d'ouverture, un texte libre par jour.
+ * Une plage d'ouverture : deux heures, au format « HH:MM ».
  *
- * Une chaîne vide veut dire fermé, et c'est le seul encodage : deux champs par
- * jour — ouverture et fermeture — auraient interdit « 9h–12h / 14h–19h », qui
- * est l'horaire de la moitié des commerces français. Le texte reste court, et
- * la fiche affiche « Fermé » là où il n'y a rien.
+ * Format fixe et non texte libre. Le champ libre laissait chacun écrire son
+ * horaire à sa façon — « 9h », « 09:00 », « 9 h 00 », « de 9 à 18 » — si bien
+ * que deux fiches côte à côte ne se comparaient pas, et qu'aucun code ne
+ * pouvait répondre à « est-ce ouvert maintenant ? ». Ici la saisie passe par
+ * deux `<input type="time">` : c'est le navigateur qui impose la forme, avec le
+ * clavier et le sélecteur de sa locale.
+ *
+ * Les deux vides veulent dire fermé, et c'est le seul encodage.
  */
-export type Horaires = Record<Jour, string>;
+export type Plage = { ouvre: string; ferme: string };
+
+export type Horaires = Record<Jour, Plage>;
+
+export const PLAGE_VIDE: Plage = { ouvre: "", ferme: "" };
 
 export const EMPTY_HORAIRES: Horaires = {
-  lundi: "",
-  mardi: "",
-  mercredi: "",
-  jeudi: "",
-  vendredi: "",
-  samedi: "",
-  dimanche: "",
+  lundi: { ...PLAGE_VIDE },
+  mardi: { ...PLAGE_VIDE },
+  mercredi: { ...PLAGE_VIDE },
+  jeudi: { ...PLAGE_VIDE },
+  vendredi: { ...PLAGE_VIDE },
+  samedi: { ...PLAGE_VIDE },
+  dimanche: { ...PLAGE_VIDE },
 };
+
+/** « HH:MM », et rien d'autre. */
+const HEURE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export function isValidHeure(valeur: string): boolean {
+  return HEURE.test(valeur);
+}
+
+/**
+ * Une plage lue depuis n'importe quoi : un objet, ou l'ancien texte libre.
+ *
+ * Les fiches déjà enregistrées portent des chaînes du genre « 09:00 - 18:00 »,
+ * et parfois « 10:00 - 12:30 / 14:00 - 19:00 ». On en extrait la première et la
+ * dernière heure — c'est l'amplitude de la journée, la meilleure lecture
+ * possible d'une donnée qui n'avait pas de forme. Rien d'illisible n'est
+ * inventé : ce qui ne donne pas deux heures donne une journée fermée.
+ */
+export function toPlage(raw: unknown): Plage {
+  if (raw && typeof raw === "object") {
+    const source = raw as Partial<Plage>;
+    const ouvre = typeof source.ouvre === "string" ? source.ouvre : "";
+    const ferme = typeof source.ferme === "string" ? source.ferme : "";
+    return isValidHeure(ouvre) && isValidHeure(ferme)
+      ? { ouvre, ferme }
+      : { ...PLAGE_VIDE };
+  }
+  if (typeof raw === "string") {
+    const heures = raw.match(/([01]?\d|2[0-3])[:hH]([0-5]\d)?/g) ?? [];
+    const normalise = (brut: string) => {
+      const morceaux = brut.split(/[:hH]/);
+      const h = morceaux[0] ?? "0";
+      const m = morceaux[1] || "00";
+      return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+    };
+    const premiere = heures[0];
+    const derniere = heures[heures.length - 1];
+    if (premiere && derniere && heures.length >= 2) {
+      return { ouvre: normalise(premiere), ferme: normalise(derniere) };
+    }
+  }
+  return { ...PLAGE_VIDE };
+}
+
+/** Ouvert ce jour-là ? */
+export function estOuvert(plage: Plage): boolean {
+  return isValidHeure(plage.ouvre) && isValidHeure(plage.ferme);
+}
+
+/** Ce qui s'affiche : « 09:00 – 18:00 », ou « Fermé ». */
+export function formatPlage(plage: Plage): string {
+  return estOuvert(plage) ? `${plage.ouvre} – ${plage.ferme}` : "Fermé";
+}
 
 /** Fields collected only when a "partenaire" registers. */
 export type PartnerFields = {
@@ -123,27 +183,21 @@ export function isValidSiren(siren: string): boolean {
  * ce ne sont pas des limites techniques mais des limites de mise en page, et
  * c'est pourquoi elles vivent avec les champs plutôt que dans le formulaire.
  */
-export const PRESENTATION_LIMITS = {
-  titre: 70,
-  texte: 1200,
-  /** Un horaire, pas une phrase : « 9h–12h / 14h–19h » tient largement. */
-  horaire: 40,
-} as const;
+export const PRESENTATION_LIMITS = { titre: 70, texte: 1200 } as const;
 
 /** Les sept jours, complétés : ce qui manque en base est un jour fermé. */
 export function toHoraires(raw: unknown): Horaires {
   const source = (raw ?? {}) as Partial<Record<string, unknown>>;
   const out = { ...EMPTY_HORAIRES };
   for (const jour of JOURS) {
-    const valeur = source[jour];
-    if (typeof valeur === "string") out[jour] = valeur;
+    out[jour] = toPlage(source[jour]);
   }
   return out;
 }
 
 /** Ouvert au moins un jour ? Sinon la fiche n'affiche pas de semaine. */
 export function hasHoraires(horaires: Horaires): boolean {
-  return JOURS.some((jour) => horaires[jour].trim() !== "");
+  return JOURS.some((jour) => estOuvert(horaires[jour]));
 }
 
 /**
@@ -203,12 +257,17 @@ export function validatePartnerFields(fields: PartnerFields): PartnerErrors {
   if (fields.presentationTexte.length > PRESENTATION_LIMITS.texte) {
     errors.presentationTexte = `Texte trop long : ${PRESENTATION_LIMITS.texte} caractères au maximum.`;
   }
+  /* Une plage à moitié remplie n'est ni un horaire ni une fermeture : c'est
+     une saisie inachevée, et la refuser vaut mieux que d'afficher « Fermé »
+     à quelqu'un qui a tapé une heure d'ouverture. */
   if (
-    JOURS.some(
-      (jour) => fields.horaires[jour].length > PRESENTATION_LIMITS.horaire,
-    )
+    JOURS.some((jour) => {
+      const { ouvre, ferme } = fields.horaires[jour];
+      return Boolean(ouvre) !== Boolean(ferme);
+    })
   ) {
-    errors.horaires = `Horaire trop long : ${PRESENTATION_LIMITS.horaire} caractères au maximum par jour.`;
+    errors.horaires =
+      "Horaires incomplets : donnez l'ouverture et la fermeture, ou laissez le jour vide.";
   }
 
   return errors;

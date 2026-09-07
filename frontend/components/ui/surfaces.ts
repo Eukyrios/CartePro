@@ -80,6 +80,7 @@ export const NOTE_POSITIVE = `${NOTE} border-cp-positive text-cp-fg`;
 const CHIP = `border px-2.5 py-1.5 ${MICRO}`;
 export const CHIP_PLAIN = `${CHIP} border-cp-fg text-cp-fg`;
 export const CHIP_OFFICIAL = `${CHIP} border-cp-official text-cp-official`;
+export const CHIP_MUTED = `${CHIP} border-cp-border text-cp-muted`;
 
 /**
  * The simulation notice. Required wherever a monetary value is shown, and

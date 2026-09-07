@@ -1,6 +1,13 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
-from models import CoupDeCoeur, CoupDeCoeurStatut, Partenaire, PartnerStatus, db
+from models import (
+    Categorie,
+    CoupDeCoeur,
+    CoupDeCoeurStatut,
+    Partenaire,
+    PartnerStatus,
+    db,
+)
 
 partenaires_bp = Blueprint('partenaires', __name__)
 
@@ -35,6 +42,9 @@ def _entree(partenaire):
         # administratif, distinct du coup de coeur, qui est un gout.
         "officiel": partenaire.statut == PartnerStatus.valide,
         "featured": _est_coup_de_coeur(partenaire),
+        # Fiche redigee, ou fiche de remplissage : le lecteur a le droit de
+        # savoir ce qu'il regarde dans un demonstrateur.
+        "donneesReelles": partenaire.donnees_reelles,
         # La presentation que le partenaire ecrit lui-meme, depuis ses
         # parametres. Elle sort ici parce que sa fiche est publique : le profil
         # complet, lui, demande le jeton de son proprietaire.
@@ -50,6 +60,25 @@ def catalogue():
     return jsonify([_entree(p) for p in Partenaire.query.all()]), 200
 
 
+@partenaires_bp.route('/categories', methods=['GET'])
+def categories():
+    """Les categories du reseau, telles que la base les porte.
+
+    Le front en avait une liste ecrite en dur, avec ses libelles. Deux listes
+    pour un meme referentiel : une categorie ajoutee en base n'apparaissait pas
+    dans le formulaire d'inscription, et un partenaire pouvait etre range dans
+    une categorie que l'interface ne savait pas nommer.
+
+    `id` est ce qu'un profil stocke, `label` ce qu'un ecran affiche. Ils sont
+    derives du meme nom, donc renommer une categorie ne casse pas les fiches
+    qui la citent : elles pointent sur l'identifiant.
+    """
+    return jsonify([
+        {"id": c.nom, "label": c.nom[:1].upper() + c.nom[1:]}
+        for c in Categorie.query.order_by(Categorie.nom).all()
+    ]), 200
+
+
 @partenaires_bp.route('/coup-de-coeur', methods=['GET'])
 def get_coup_de_coeur():
     """Le coup de coeur actif le plus recent, avec le mot du Ministre."""
@@ -60,16 +89,11 @@ def get_coup_de_coeur():
     )
     retour = None
     if choix and choix.partenaire:
-        retour = {
-            "id": choix.partenaire.slug,
-            "nom": choix.partenaire.raison_sociale,
-            "secteur": (
-                choix.partenaire.categorie.nom
-                if choix.partenaire.categorie
-                else "Non defini"
-            ),
-            "mot": choix.mot_du_ministre,
-        }
+        # L'entree complete, plus les mots : la section d'accueil affiche une
+        # tuile de partenaire — photographie, adresse, categorie — et la phrase
+        # du Ministre. Deux requetes pour une seule section n'apprendraient
+        # rien de plus.
+        retour = {**_entree(choix.partenaire), "mot": choix.mot_du_ministre}
     return jsonify({"status": "success", "coup_de_coeur": retour}), 200
 
 

@@ -1,5 +1,8 @@
-import { ministerPick } from "@/components/data/ministerPicks";
-import { partnerCategoryLabel } from "@/components/data/partnerCategories";
+"use client";
+
+import { fromApi } from "@/components/data/partners";
+import { categoryLabel, useCategories } from "@/components/data/useCategories";
+import { useMinisterPick } from "./useMinisterPick";
 import { Arrow } from "@/components/brand/Marks";
 import Chip from "@/components/ui/Chip";
 import Display from "@/components/ui/Display";
@@ -18,10 +21,10 @@ import Screen from "@/components/ui/Screen";
  * titres de la page, et le nom du partenaire devient une recommandation plutôt
  * qu'une vignette.
  *
- * Les autres entrées de `data/ministerPicks` ne sont pas perdues : la liste
- * reste la sélection, et c'est sa tête qui s'affiche. Changer de coup de cœur,
- * c'est remonter une ligne — le jour où l'espace d'administration existera, il
- * fera exactement cela.
+ * Le choix vient de la base — table `coups_de_coeur`, avec le mot du Ministre —
+ * et non plus d'une liste écrite dans le front. Le serveur rend le plus récent
+ * des coups de cœur actifs : changer de coup de cœur, c'est en enregistrer un
+ * nouveau, et l'espace d'administration fera exactement cela.
  *
  * Montrée aux deux publics : au visiteur avant le bloc « Confiance », et au
  * salarié dans son espace. D'où le seul réglage exposé — la vitrine porte ses
@@ -37,11 +40,13 @@ export default function MinisterPickSection({
   /** "page" sur la page d'accueil, dont les écrans vont de bord à bord. */
   gutter?: "container" | "page";
 }) {
-  const chosen = ministerPick();
+  const { pick, loaded } = useMinisterPick();
+  const { categories } = useCategories();
 
-  // Sélection vide : pas de titre au-dessus de rien.
-  if (!chosen) return null;
-  const { pick, partner } = chosen;
+  /* Rien avant la réponse, et rien s'il n'y a pas de coup de cœur actif : pas
+     de titre au-dessus de rien, et pas de section qui clignote au chargement. */
+  if (!loaded || !pick) return null;
+  const partner = fromApi(pick);
 
   return (
     <Screen id="coup-de-coeur" gutter={gutter} gap={9}>
@@ -61,7 +66,7 @@ export default function MinisterPickSection({
           {/* La phrase du Ministre, dans la serif de la marque et à la taille
               d'une citation : c'est le contenu de la section, pas sa légende. */}
           <blockquote className="text-cp-fg mt-12 font-serif text-[clamp(24px,2.6vw,36px)] leading-[1.25] italic">
-            «&nbsp;{pick.note}&nbsp;»
+            «&nbsp;{pick.mot}&nbsp;»
           </blockquote>
         </div>
 
@@ -76,7 +81,7 @@ export default function MinisterPickSection({
         >
           <div className="flex flex-1 flex-wrap items-baseline gap-x-4 gap-y-2 p-5">
             <Micro tone="accent">
-              {partnerCategoryLabel(partner.categoryId)}
+              {categoryLabel(partner.categoryId, categories)}
             </Micro>
             <Arrow className="text-cp-accent ms-auto" />
             <address className="text-cp-muted basis-full text-[13px] leading-[1.5] not-italic">

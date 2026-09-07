@@ -36,6 +36,13 @@ conventionnés), 50 salariés, 200 opérations planifiées — 161 écrites, 39
 refusées — et les cas limites exigés : trois soldes à zéro, plusieurs sous cinq
 euros.
 
+Les seize fiches ont une présentation, des horaires et un site. Trois sont
+écrites en français et font foi — dont celles que le Ministre distingue ; les
+treize autres sont remplies avec la légende de Romulus et Remus, en latin. C'est
+le lorem ipsum de ce démonstrateur : du faux texte qui s'assume, plutôt que des
+mots français qu'on pourrait prendre pour vrais. Le remplissage ne recouvre
+jamais une présentation rédigée à la main.
+
 Une opération refusée ne s'écrit pas : le schéma n'a pas de statut « refusée »,
 et c'est juste — un paiement refusé n'a pas eu lieu, il n'est pas une écriture
 comptable. Le refus reste démontrable en direct, quand un partenaire tente

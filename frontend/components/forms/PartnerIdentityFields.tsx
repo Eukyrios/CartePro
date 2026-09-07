@@ -1,6 +1,6 @@
 "use client";
 
-import { partnerCategories } from "@/components/data/partnerCategories";
+import { useCategories } from "@/components/data/useCategories";
 import FieldGrid from "@/components/ui/FieldGrid";
 import SelectField from "@/components/ui/SelectField";
 import TextField from "@/components/ui/TextField";
@@ -61,6 +61,10 @@ export default function PartnerIdentityFields({
   className,
 }: Props) {
   const id = (name: string) => `${idPrefix}${name}`;
+  /* Le référentiel des catégories vient du serveur. Une liste vide est une
+     réponse valable — c'est ce qu'on voit le temps de la requête — et
+     `SelectField` la rend proprement plutôt que d'afficher un menu vide. */
+  const { categories } = useCategories();
 
   return (
     <FieldGrid className={className}>
@@ -100,7 +104,7 @@ export default function PartnerIdentityFields({
         label="Catégorie"
         value={partner.categorie}
         onChange={(value) => onPartnerChange("categorie", value)}
-        options={partnerCategories().map((entry) => ({
+        options={categories.map((entry) => ({
           value: entry.id,
           label: entry.label,
         }))}

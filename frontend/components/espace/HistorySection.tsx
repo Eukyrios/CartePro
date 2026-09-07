@@ -1,12 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { formatEuros, history, resetLedger } from "@/components/data/ledger";
-import {
-  partnerCategories,
-  partnerCategoryLabel,
-} from "@/components/data/partnerCategories";
-import { partnerById } from "@/components/data/partners";
+import { useEffect, useMemo, useState } from "react";
+import { formatEuros } from "@/components/data/ledger";
+import { categoryLabel, useCategories } from "@/components/data/useCategories";
+import { getMovements, type Movement } from "./movements";
 import { fold } from "@/lib/text";
 import { useFilters } from "@/hooks/useFilters";
 import Display from "@/components/ui/Display";
@@ -19,8 +16,8 @@ import Screen from "@/components/ui/Screen";
 import SelectField from "@/components/ui/SelectField";
 import SimulationNotice from "@/components/ui/SimulationNotice";
 import TextField from "@/components/ui/TextField";
+import Note from "@/components/ui/Note";
 import { MICRO } from "@/components/ui/surfaces";
-import { useLedger } from "./useLedger";
 
 const DATE = new Intl.DateTimeFormat("fr-FR", {
   day: "2-digit",
@@ -66,16 +63,22 @@ const NO_FILTERS: Filters = {
 };
 
 /**
- * The category an operation belongs to: the partner's, resolved through the
- * data. A credit from the employer has no partner and so no category — which
- * is why picking one excludes credits rather than showing them uncategorised.
+ * La catégorie d'une opération : celle du partenaire, portée par la ligne
+ * elle-même.
+ *
+ * Elle était résolue dans une liste de partenaires écrite en dur ; le serveur
+ * la donne maintenant avec chaque mouvement. Un crédit de l'employeur n'a pas
+ * de partenaire, donc pas de catégorie — c'est pourquoi en choisir une exclut
+ * les crédits au lieu de les afficher sans étiquette.
  */
-function categoryOf(partnerId?: string) {
-  return partnerId ? partnerById(partnerId)?.categoryId : undefined;
+function categoryOf(entry: Movement) {
+  return entry.partnerCategorie || undefined;
 }
 
 export default function HistorySection() {
-  const ledger = useLedger();
+  const [entries, setEntries] = useState<readonly Movement[]>([]);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const { categories: referentiel } = useCategories();
   const [page, setPage] = useState(1);
   // Toute retouche de filtre ramène à la première page : rester en page 4 d'un
   // résultat qui n'en compte plus qu'une afficherait un vide.
@@ -85,7 +88,24 @@ export default function HistorySection() {
   );
   const { search, kind, categoryId, from, to } = filters;
 
-  const entries = history(ledger);
+  /* L'historique vient du serveur — crédits de l'employeur et paiements dans
+     la même liste. Il venait d'un registre tenu dans le navigateur, qui
+     racontait sa propre histoire à côté de la vraie : le solde affiché sur la
+     carte était celui du compte, et l'historique en dessous celui du
+     localStorage. Deux vérités pour un même argent. */
+  useEffect(() => {
+    let cancelled = false;
+    getMovements()
+      .then((rows) => {
+        if (cancelled) return;
+        setEntries(rows);
+        setState("ready");
+      })
+      .catch(() => !cancelled && setState("error"));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Oldest first for the running total, then keyed by id for lookup.
   const running = useMemo(() => {
@@ -108,7 +128,7 @@ export default function HistorySection() {
       if (from && day < from) return false;
       if (to && day > to) return false;
       if (kind && entry.kind !== kind) return false;
-      if (categoryId && categoryOf(entry.partnerId) !== categoryId) {
+      if (categoryId && categoryOf(entry) !== categoryId) {
         return false;
       }
       if (wanted && !fold(entry.label).includes(wanted)) return false;
@@ -120,13 +140,11 @@ export default function HistorySection() {
   // category data declares them: a filter that could only ever return nothing
   // is not worth offering.
   const categories = useMemo(() => {
-    const present = new Set(
-      entries.map((entry) => categoryOf(entry.partnerId)).filter(Boolean),
-    );
-    return partnerCategories()
+    const present = new Set(entries.map(categoryOf).filter(Boolean));
+    return referentiel
       .filter((category) => present.has(category.id))
       .map((category) => ({ value: category.id, label: category.label }));
-  }, [entries]);
+  }, [entries, referentiel]);
 
   const pages = Math.max(1, Math.ceil(matches.length / PER_PAGE));
   const current = Math.min(page, pages);
@@ -140,21 +158,12 @@ export default function HistorySection() {
       <Display level={2} accent="." br={false} className="mb-4">
         Historique
       </Display>
-      <div className="mb-8 flex flex-wrap items-center gap-4">
+      {/* Plus de « Réinitialiser la démonstration » : ce bouton effaçait un
+          registre tenu dans le navigateur, qui n'existe plus. Le solde et les
+          opérations sont ceux du serveur, et les remettre à zéro est un
+          `make seed` — pas un clic dans l'interface d'un salarié. */}
+      <div className="mb-8">
         <SimulationNotice>Simulation — montants fictifs</SimulationNotice>
-        {/* The demonstration is spendable, so it has to be rewindable: without
-            this, a drained balance persists in the browser and every partner
-            refuses for ever. */}
-        <button
-          type="button"
-          onClick={() => {
-            resetLedger();
-            setPage(1);
-          }}
-          className={`text-cp-accent cursor-pointer underline underline-offset-4 ${MICRO}`}
-        >
-          Réinitialiser la démonstration
-        </button>
       </div>
 
       <FilterGrid>
@@ -211,10 +220,18 @@ export default function HistorySection() {
         onReset={dirty ? reset : undefined}
       />
 
-      {matches.length === 0 ? (
+      {state === "loading" ? (
+        <EmptyState>Chargement de vos opérations…</EmptyState>
+      ) : state === "error" ? (
+        <Note tone="danger" role="alert" className="mt-3">
+          Vos opérations n&apos;ont pas pu être chargées. Rechargez la page ; si
+          cela persiste, le serveur ne répond pas.
+        </Note>
+      ) : matches.length === 0 ? (
         <EmptyState>
-          Aucune opération ne correspond à ces filtres. Élargissez la période ou
-          effacez les filtres.
+          {entries.length === 0
+            ? "Aucune opération pour l'instant. Votre premier crédit et vos paiements apparaîtront ici."
+            : "Aucune opération ne correspond à ces filtres. Élargissez la période ou effacez les filtres."}
         </EmptyState>
       ) : (
         /* Scrolls inside the screen rather than stretching it. */
@@ -255,8 +272,8 @@ export default function HistorySection() {
                     <Micro tone="muted" className="mt-1 block">
                       {entry.kind === "credit"
                         ? "Crédit"
-                        : categoryOf(entry.partnerId)
-                          ? `Paiement · ${partnerCategoryLabel(categoryOf(entry.partnerId)!)}`
+                        : categoryOf(entry)
+                          ? `Paiement · ${categoryLabel(categoryOf(entry)!, referentiel)}`
                           : "Paiement"}
                     </Micro>
                   </td>

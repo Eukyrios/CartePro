@@ -3,7 +3,10 @@
 import React, { useState } from "react";
 import {
   JOURS,
+  PLAGE_VIDE,
   PRESENTATION_LIMITS,
+  estOuvert,
+  formatPlage,
   hasHoraires,
   isValidSiteWeb,
   siteWebLabel,
@@ -17,7 +20,7 @@ import Slash from "@/components/ui/Slash";
 import TextArea from "@/components/ui/TextArea";
 import TextField from "@/components/ui/TextField";
 import type { Profile } from "@/components/account/AccountProvider";
-import type { Jour } from "@/components/forms/partnerFields";
+import type { Jour, Plage } from "@/components/forms/partnerFields";
 
 /** Les jours en capitale d'attaque, pour les libellés de champs. */
 const LABEL: Record<Jour, string> = {
@@ -81,29 +84,43 @@ export default function PresentationForm({
     if (field === "siteWeb") setSiteError(undefined);
   }
 
-  function setHoraire(jour: Jour, value: string) {
-    set((current) => ({
-      ...current,
-      partner: {
-        ...current.partner,
-        horaires: { ...current.partner.horaires, [jour]: value },
-      },
-    }));
-  }
-
-  /** Le lundi recopié du mardi au vendredi : cinq champs identiques, une fois. */
-  function appliquerEnSemaine() {
-    const lundi = horaires.lundi;
+  function setHoraire(jour: Jour, champ: keyof Plage, value: string) {
     set((current) => ({
       ...current,
       partner: {
         ...current.partner,
         horaires: {
           ...current.partner.horaires,
-          mardi: lundi,
-          mercredi: lundi,
-          jeudi: lundi,
-          vendredi: lundi,
+          [jour]: { ...current.partner.horaires[jour], [champ]: value },
+        },
+      },
+    }));
+  }
+
+  /** Ferme le jour : les deux heures s'en vont ensemble, jamais l'une seule. */
+  function fermer(jour: Jour) {
+    set((current) => ({
+      ...current,
+      partner: {
+        ...current.partner,
+        horaires: { ...current.partner.horaires, [jour]: { ...PLAGE_VIDE } },
+      },
+    }));
+  }
+
+  /** Le lundi recopié du mardi au vendredi : cinq paires identiques, une fois. */
+  function appliquerEnSemaine() {
+    const lundi = { ...horaires.lundi };
+    set((current) => ({
+      ...current,
+      partner: {
+        ...current.partner,
+        horaires: {
+          ...current.partner.horaires,
+          mardi: { ...lundi },
+          mercredi: { ...lundi },
+          jeudi: { ...lundi },
+          vendredi: { ...lundi },
         },
       },
     }));
@@ -117,6 +134,12 @@ export default function PresentationForm({
     }
     await submit();
   }
+
+  /* Les jours dont une seule heure est renseignée : ni ouverts ni fermés. */
+  const incomplets = JOURS.filter((jour) => {
+    const { ouvre, ferme } = horaires[jour];
+    return Boolean(ouvre) !== Boolean(ferme);
+  });
 
   const tropLong = {
     titre: presentationTitre.length > PRESENTATION_LIMITS.titre,
@@ -183,36 +206,69 @@ export default function PresentationForm({
         </Micro>
       </div>
 
-      {/* Les sept jours, un champ chacun. Une case vide veut dire fermé, et
-          c'est dit ici plutôt que deviné : sans cette phrase, un partenaire
-          fermé le dimanche ne sait pas s'il doit écrire « Fermé ». */}
+      {/* Les sept jours, deux heures chacun. `type="time"` : c'est le
+          navigateur qui impose « HH:MM », avec le clavier et le sélecteur de
+          sa locale — plus de « 9h », « 9 h 00 » ni « de 9 à 18 » selon
+          l'humeur. Un jour aux deux champs vides est fermé, et « Fermer ce
+          jour » les vide d'un coup : une plage à moitié remplie n'est pas un
+          horaire. */}
       <fieldset className="border-t-cp-fg mt-9 border-t-2 pt-6">
         <legend className="sr-only">Horaires d&apos;ouverture</legend>
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <Micro as="p" tone="accent">
             Horaires d&apos;ouverture
           </Micro>
-          <Micro tone="muted">un champ vide vaut « fermé »</Micro>
+          <Micro tone="muted">un jour sans heures est fermé</Micro>
         </div>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <div className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2">
           {JOURS.map((jour) => (
-            <TextField
-              key={jour}
-              id={`presentation-${jour}`}
-              label={LABEL[jour]}
-              value={horaires[jour]}
-              onChange={(value) => setHoraire(jour, value)}
-              placeholder="Fermé"
-              maxLength={PRESENTATION_LIMITS.horaire}
-            />
+            <div key={jour} className="border-cp-border border-t pt-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <Micro as="p">{LABEL[jour]}</Micro>
+                {estOuvert(horaires[jour]) ? (
+                  <button
+                    type="button"
+                    onClick={() => fermer(jour)}
+                    className="text-cp-muted hover:text-cp-fg cursor-pointer text-[11px] underline underline-offset-2"
+                  >
+                    Fermer ce jour
+                  </button>
+                ) : (
+                  <Micro tone="muted">Fermé</Micro>
+                )}
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <TextField
+                  id={`presentation-${jour}-ouvre`}
+                  label="Ouvre à"
+                  type="time"
+                  value={horaires[jour].ouvre}
+                  onChange={(value) => setHoraire(jour, "ouvre", value)}
+                />
+                <TextField
+                  id={`presentation-${jour}-ferme`}
+                  label="Ferme à"
+                  type="time"
+                  value={horaires[jour].ferme}
+                  onChange={(value) => setHoraire(jour, "ferme", value)}
+                />
+              </div>
+            </div>
           ))}
         </div>
+
+        {incomplets.length > 0 && (
+          <Note tone="danger" role="alert" className="mt-4">
+            Horaires incomplets — {incomplets.map((j) => LABEL[j]).join(", ")}.
+            Donnez l&apos;ouverture <em>et</em> la fermeture, ou fermez le jour.
+          </Note>
+        )}
 
         <div className="mt-4">
           <Button
             onClick={appliquerEnSemaine}
-            disabled={!horaires.lundi.trim()}
+            disabled={!estOuvert(horaires.lundi)}
           >
             Appliquer le lundi au reste de la semaine
           </Button>
@@ -258,7 +314,7 @@ export default function PresentationForm({
                   >
                     <dt className="text-cp-muted text-[13px]">{LABEL[jour]}</dt>
                     <dd className="text-cp-fg text-[13px] tabular-nums">
-                      {horaires[jour].trim() || "Fermé"}
+                      {formatPlage(horaires[jour])}
                     </dd>
                   </div>
                 ))}
@@ -294,7 +350,13 @@ export default function PresentationForm({
         <Button
           type="submit"
           variant="solid"
-          disabled={!dirty || saving || tropLong.titre || tropLong.texte}
+          disabled={
+            !dirty ||
+            saving ||
+            tropLong.titre ||
+            tropLong.texte ||
+            incomplets.length > 0
+          }
         >
           {saving ? "Enregistrement…" : "Enregistrer la présentation"}
         </Button>

@@ -87,14 +87,16 @@ PRESENTATIONS = {
             "[notre site](https://poney-dream-78.fr)."
         ),
         "siteWeb": "poney-dream-78.fr",
+        # Format fixe : deux heures par jour, « HH:MM ». Un jour sans
+        # heures est ferme.
         "horaires": {
-            "lundi": "",
-            "mardi": "09:00 - 18:00",
-            "mercredi": "09:00 - 18:00",
-            "jeudi": "09:00 - 18:00",
-            "vendredi": "09:00 - 18:00",
-            "samedi": "09:00 - 19:00",
-            "dimanche": "10:00 - 17:00",
+            "lundi": {"ouvre": "", "ferme": ""},
+            "mardi": {"ouvre": "09:00", "ferme": "18:00"},
+            "mercredi": {"ouvre": "09:00", "ferme": "18:00"},
+            "jeudi": {"ouvre": "09:00", "ferme": "18:00"},
+            "vendredi": {"ouvre": "09:00", "ferme": "18:00"},
+            "samedi": {"ouvre": "09:00", "ferme": "19:00"},
+            "dimanche": {"ouvre": "10:00", "ferme": "17:00"},
         },
     },
     "glaces-correze": {
@@ -111,33 +113,69 @@ PRESENTATIONS = {
             "3. mangez vite"
         ),
         "siteWeb": "https://glaces-correze.fr",
+        # Le mercredi portait « 10:00 - 12:30 / 14:00 - 19:00 » : la coupure
+        # de midi ne s'exprime plus, le format fixe ne retient qu'une plage par
+        # jour. C'est l'amplitude qui reste, et le texte de presentation est la
+        # ou une exception se raconte.
         "horaires": {
-            "lundi": "14:00 - 19:00",
-            "mardi": "14:00 - 19:00",
-            "mercredi": "10:00 - 12:30 / 14:00 - 19:00",
-            "jeudi": "14:00 - 19:00",
-            "vendredi": "14:00 - 19:00",
-            "samedi": "10:00 - 19:30",
-            "dimanche": "10:00 - 13:00",
+            "lundi": {"ouvre": "14:00", "ferme": "19:00"},
+            "mardi": {"ouvre": "14:00", "ferme": "19:00"},
+            "mercredi": {"ouvre": "10:00", "ferme": "19:00"},
+            "jeudi": {"ouvre": "14:00", "ferme": "19:00"},
+            "vendredi": {"ouvre": "14:00", "ferme": "19:00"},
+            "samedi": {"ouvre": "10:00", "ferme": "19:30"},
+            "dimanche": {"ouvre": "10:00", "ferme": "13:00"},
         },
     },
-    "librairie-bellevue": {
-        "presentationTitre": "",
+    "kostumparty": {
+        "presentationTitre": "Costumes et deguisements",
         "presentationTexte": (
-            "Fonds general, beaux-arts et jeunesse. Nous commandons tout titre "
-            "disponible sous quarante-huit heures.\n"
+            "Location **et** vente, du *XVIIIe siecle* au disco. Deux mille "
+            "pieces en rayon, tailles enfant comprises.\n"
             "\n"
-            "~~Fermeture annuelle en aout.~~ Nous restons ouverts cette annee."
+            "- essayage sur rendez-vous, comptez une heure\n"
+            "- retouches offertes sur les locations\n"
+            "- caution restituee au retour de la piece\n"
+            "\n"
+            "> Les costumes de scene ne sortent pas de l'atelier.\n"
+            "\n"
+            "# Nous trouver\n"
+            "\n"
+            "Metro `Voltaire`, sortie rue de la Roquette."
         ),
-        "siteWeb": "librairie-bellevue.fr",
+        "siteWeb": "kostumparty.fr",
         "horaires": {
-            "lundi": "",
-            "mardi": "10:00 - 19:00",
-            "mercredi": "10:00 - 19:00",
-            "jeudi": "10:00 - 19:00",
-            "vendredi": "10:00 - 19:00",
-            "samedi": "10:00 - 19:00",
-            "dimanche": "",
+            "lundi": {"ouvre": "", "ferme": ""},
+            "mardi": {"ouvre": "11:00", "ferme": "19:00"},
+            "mercredi": {"ouvre": "11:00", "ferme": "19:00"},
+            "jeudi": {"ouvre": "11:00", "ferme": "19:00"},
+            "vendredi": {"ouvre": "11:00", "ferme": "20:00"},
+            "samedi": {"ouvre": "10:00", "ferme": "20:00"},
+            "dimanche": {"ouvre": "", "ferme": ""},
+        },
+    },
+    "chapelier-fontaine": {
+        "presentationTitre": "Chapeaux faits main",
+        "presentationTexte": (
+            "Feutre, paille, casquettes de ville. Chaque piece est **mise en "
+            "forme sur bois**, a la main, dans l'atelier du fond.\n"
+            "\n"
+            "- prise de mesure et conformateur\n"
+            "- remise en forme des chapeaux anciens\n"
+            "\n"
+            "> Comptez trois semaines pour une commande sur mesure.\n"
+            "\n"
+            "*L'elegance n'a pas besoin d'etre voyante.*"
+        ),
+        "siteWeb": "chapelier-fontaine.fr",
+        "horaires": {
+            "lundi": {"ouvre": "", "ferme": ""},
+            "mardi": {"ouvre": "10:00", "ferme": "18:30"},
+            "mercredi": {"ouvre": "10:00", "ferme": "18:30"},
+            "jeudi": {"ouvre": "10:00", "ferme": "18:30"},
+            "vendredi": {"ouvre": "10:00", "ferme": "18:30"},
+            "samedi": {"ouvre": "10:00", "ferme": "19:00"},
+            "dimanche": {"ouvre": "", "ferme": ""},
         },
     },
 }
@@ -339,7 +377,19 @@ NETWORK = [
 # Le salarié de démonstration : un compte à part du panel statistique, dont le
 # solde reste ce qu'il est — les cinquante autres servent aux cas limites.
 DEMO_EMPLOYEE_EMAIL = "camille.durand@ministere.gouv.fr"
-DEMO_EMPLOYEE_BALANCE = 32.50
+
+# Le compte de demonstration : un credit, deux paiements, et le solde qui en
+# resulte. Ce sont de vraies lignes en base, et non plus une histoire simulee
+# dans le navigateur — l'historique de l'ecran est desormais celui du serveur,
+# donc il faut qu'il y ait quelque chose a lire.
+DEMO_EMPLOYEE_CREDIT = 50.00
+DEMO_EMPLOYEE_PAIEMENTS = [
+    {"slug": "creperie-armor", "montant": 5.00, "jour": 95},
+    {"slug": "chapelier-fontaine", "montant": 12.50, "jour": 89},
+]
+DEMO_EMPLOYEE_BALANCE = DEMO_EMPLOYEE_CREDIT - sum(
+    p["montant"] for p in DEMO_EMPLOYEE_PAIEMENTS
+)
 DEMO_ADMIN_EMAIL = "admin@ministere.gouv.fr"
 
 DEFAULT_CARD_STYLE = {
@@ -348,6 +398,126 @@ DEFAULT_CARD_STYLE = {
     "pattern": "waves",
     "metalness": 20,
 }
+
+
+# Le remplissage : la legende de Romulus et Remus, en latin.
+#
+# Du faux texte, et qui s'assume comme tel — c'est le lorem ipsum de ce
+# demonstrateur. Il sert a ce que les seize fiches du reseau aient une
+# presentation a montrer, sans qu'on prete aux commerces fictifs des mots
+# francais qu'on pourrait prendre pour vrais. Une phrase latine sur la louve du
+# Tibre ne trompe personne.
+LEGENDE = [
+    "Proca rex Albanorum duos filios, Numitorem et Amulium, habuit.",
+    "Amulius fratrem Numitorem regno expulit et filiam eius Rheam Silviam Vestae sacerdotem fecit.",
+    "Rhea Silvia geminos filios, Romulum et Remum, edidit, quorum patrem Martem fuisse ferunt.",
+    "Amulius infantes in Tiberim abici iussit, sed alveus aqua decrescente in sicco relictus est.",
+    "Lupa, quae ex montibus ad sitim explendam decurrerat, parvulis ubera admovit.",
+    "Faustulus pastor eos invenit et Accae Larentiae uxori educandos dedit.",
+    "Adulti Amulium interfecerunt et Numitori avo regnum restituerunt.",
+    "Deinde urbem condere statuerunt in eis locis ubi expositi educatique erant.",
+    "Certamen ortum est: Romulus in Palatino, Remus in Aventino auguria petivit.",
+    "Remo sex vultures, Romulo duodecim apparuerunt, et Romulus rex salutatus est.",
+    "Muros novae urbis Remus irridens transiluit; ira accensus Romulus eum interfecit.",
+    "Ita solus potitus imperio Romulus urbem conditam ex nomine suo Romam appellavit.",
+]
+
+# Les titres du remplissage, en latin eux aussi.
+TITRES_LATINS = [
+    "De origine nostra",
+    "Quid apud nos agitur",
+    "Ab urbe condita",
+    "Lupa et gemini",
+    "Auguria et muri",
+    "Palatinum et Aventinum",
+]
+
+# Quelques semaines plausibles, piochees par partenaire. Format fixe :
+# deux heures par jour, une paire vide vaut « ferme ».
+def _plage(ouvre, ferme):
+    return {"ouvre": ouvre, "ferme": ferme}
+
+
+FERME = _plage("", "")
+
+SEMAINES = [
+    # Ferme le lundi, ouvert le week-end.
+    [FERME, _plage("09:30", "18:30"), _plage("09:30", "18:30"),
+     _plage("09:30", "18:30"), _plage("09:30", "19:00"),
+     _plage("09:30", "19:00"), _plage("10:00", "17:00")],
+    # Semaine de bureau, week-end ferme.
+    [_plage("08:30", "17:30"), _plage("08:30", "17:30"), _plage("08:30", "17:30"),
+     _plage("08:30", "17:30"), _plage("08:30", "16:30"), FERME, FERME],
+    # Commerce de bouche : ouvert le dimanche matin, ferme le lundi.
+    [FERME, _plage("07:00", "13:00"), _plage("07:00", "13:00"),
+     _plage("07:00", "13:00"), _plage("07:00", "19:00"),
+     _plage("07:00", "19:00"), _plage("07:00", "12:30")],
+    # Etablissement de soiree.
+    [_plage("14:00", "22:00"), _plage("14:00", "22:00"), _plage("14:00", "22:00"),
+     _plage("14:00", "23:00"), _plage("14:00", "23:30"),
+     _plage("11:00", "23:30"), _plage("11:00", "20:00")],
+    # Sept jours sur sept.
+    [_plage("10:00", "19:00")] * 7,
+]
+
+
+def presentation_bidon(entry):
+    """Une presentation de remplissage pour un partenaire du reseau.
+
+    Deterministe et propre a chaque fiche : le tirage est amorce par le slug,
+    donc deux `make seed` donnent le meme texte et deux partenaires n'ont pas
+    le meme. Le tirage passe par un generateur local et non par `random`
+    global, pour ne pas decaler la suite des transactions.
+
+    Le Markdown est varie a dessein — gras, italique, liste, citation, titre —
+    afin que chaque fiche exerce le rendu plutot que de le supposer.
+    """
+    tirage = random.Random(entry["slug"])
+    phrases = tirage.sample(LEGENDE, 6)
+    semaine = tirage.choice(SEMAINES)
+    corps = (
+        f"{phrases[0]} **{entry['nom']}** {phrases[1]}\n"
+        "\n"
+        f"- *{phrases[2]}*\n"
+        f"- {phrases[3]}\n"
+        "\n"
+        f"> {phrases[4]}\n"
+        "\n"
+        "# Ab urbe condita\n"
+        "\n"
+        f"{phrases[5]} Signum nostrum `{entry['slug']}` in tabulis "
+        "Ministerii scriptum est."
+    )
+    return {
+        "presentationTitre": tirage.choice(TITRES_LATINS),
+        "presentationTexte": corps,
+        "siteWeb": f"{entry['slug']}.fr",
+        "horaires": {jour: dict(semaine[n]) for n, jour in enumerate(JOURS_CLES)},
+    }
+
+
+#: Les sept jours, dans l'ordre ou la semaine se lit. Memes cles que le front.
+JOURS_CLES = [
+    "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche",
+]
+
+
+def presentation_de(entry):
+    """La presentation d'un partenaire : la vraie si elle existe, sinon du faux.
+
+    `PRESENTATIONS` est ecrite a la main et fait foi. Elle contient exactement
+    les quatre partenaires que le Ministre distingue — la regle est simple et
+    sans exception : redige si et seulement si coup de coeur. Les douze autres
+    recoivent le remplissage latin, et leur fiche le dit.
+    """
+    if entry["slug"] in PRESENTATIONS:
+        return PRESENTATIONS[entry["slug"]]
+    return presentation_bidon(entry)
+
+
+def donnees_reelles(entry):
+    """Cette fiche est-elle redigee ? Vrai pour les seuls coups de coeur."""
+    return entry["slug"] in PRESENTATIONS
 
 
 # Les mots du Ministre sur ses coups de cœur, par slug.
@@ -387,7 +557,7 @@ def make_partner(entry, categories):
     partenaire officiel, `en_attente` pour les autres. C'est lui que l'espace
     partenaire lit pour ouvrir ou barrer l'encaissement.
     """
-    presentation = PRESENTATIONS.get(entry["slug"], {})
+    presentation = presentation_de(entry)
     partenaire = Partenaire(
         slug=entry["slug"],
         raison_sociale=entry["nom"],
@@ -408,6 +578,7 @@ def make_partner(entry, categories):
         presentation_titre=presentation.get("presentationTitre", ""),
         presentation_texte=presentation.get("presentationTexte", ""),
         horaires=presentation.get("horaires", {}),
+        donnees_reelles=donnees_reelles(entry),
     )
     partenaire.set_password(DEMO_PASSWORD)
     return partenaire
@@ -498,10 +669,26 @@ def run_seed():
         db.session.add(Abondement(
             employeur_id=employeur.id,
             salarie_id=demo_employee.id,
-            montant=DEMO_EMPLOYEE_BALANCE,
-            horodatage=REFERENCE_DATE,
+            montant=DEMO_EMPLOYEE_CREDIT,
+            horodatage=REFERENCE_DATE + timedelta(days=77),
             agent_admin_id=admin.id,
         ))
+        db.session.commit()
+
+        # Les deux paiements du compte de demonstration, nommes plutot que
+        # tires au hasard : c'est l'historique qu'on montre.
+        par_slug = {p.slug: p for p in partenaires}
+        for n, paiement in enumerate(DEMO_EMPLOYEE_PAIEMENTS):
+            db.session.add(Transaction(
+                salarie_id=demo_employee.id,
+                partenaire_id=par_slug[paiement["slug"]].id,
+                montant=paiement["montant"],
+                horodatage=REFERENCE_DATE + timedelta(days=paiement["jour"]),
+                statut=TransactionStatut.validee,
+                reference_qr=f"SEED-DEMO-{n}",
+                idempotency_key=f"SEED-DEMO-{n}",
+                sens_ecriture="debit",
+            ))
         db.session.commit()
 
         # 7. Planification des 200 operations.

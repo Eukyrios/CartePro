@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Arrow } from "@/components/brand/Marks";
-import { partnerCategoryLabel } from "@/components/data/partnerCategories";
+import { categoryLabel, useCategories } from "@/components/data/useCategories";
 import {
-  categoriesInUse,
+  citiesOf,
+  fromApi,
   matchingPartnerList,
-  partnerById,
   type Partner,
 } from "@/components/data/partners";
 import { api, type ApiPartner } from "@/lib/api";
@@ -64,56 +64,32 @@ const NO_FILTERS: Filters = {
 export default function PartnerCatalogue() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loaded, setLoaded] = useState(false);
+  /* Le référentiel des catégories, pour leurs libellés. Il vient du serveur
+     comme le reste : la liste écrite en dur ici pouvait ignorer une catégorie
+     ajoutée en base, et l'afficher telle quelle. */
+  const { categories: referentiel } = useCategories();
   const { filters, setFilter, reset, dirty } = useFilters<Filters>(NO_FILTERS);
 
   useEffect(() => {
+    /* Une seule traduction, dans `data/partners` : ce composant la faisait à
+       la main, avec un repli sur les données locales pour la photographie —
+       repli qui n'a plus lieu d'être puisque la base porte l'image. */
     api<ApiPartner[]>("/api/partenaires/catalogue")
-      .then((items) =>
-        setPartners(
-          items.map((item) => ({
-            id: item.id,
-            name: item.nom,
-            categoryId: item.secteur,
-            address: item.adresse || "Adresse non renseignée",
-            city: item.ville || "",
-            postcode: item.codePostal || "",
-            /* La photographie du partenaire si la base en donne une, sinon
-               celle que les données locales portent pour ce slug : un compte
-               partenaire créé depuis l'interface n'a pas encore d'image. */
-            photo:
-              item.photo ||
-              partnerById(item.id)?.photo ||
-              "/partenaires/glaces-correze.svg",
-            amountCents: item.amountCents,
-            /* Le conventionnement vient de la base, et de nulle part ailleurs :
-               `featured` est le coup de cœur du Ministre, une sélection de
-               goût, et l'employer ici apposerait un tampon administratif
-               dessus. Un badge absent se corrige, un badge faux se croit. */
-            official: item.officiel,
-          })),
-        ),
-      )
+      .then((items) => setPartners(items.map(fromApi)))
       .finally(() => setLoaded(true));
   }, []);
 
   const categories = useMemo(
     () =>
-      (partners.length
-        ? [...new Set(partners.map((partner) => partner.categoryId))]
-        : categoriesInUse().map((category) => category.id)
-      ).map((categoryId) => ({
-        value: categoryId,
-        label: partnerCategoryLabel(categoryId),
-      })),
-    [partners],
+      [...new Set(partners.map((partner) => partner.categoryId))].map(
+        (categoryId) => ({
+          value: categoryId,
+          label: categoryLabel(categoryId, referentiel),
+        }),
+      ),
+    [partners, referentiel],
   );
-  const cities = useMemo(
-    () =>
-      [...new Set(partners.map((partner) => partner.city))]
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b, "fr")),
-    [partners],
-  );
+  const cities = useMemo(() => citiesOf(partners).filter(Boolean), [partners]);
 
   // Every match, not a page of them: the row shows the whole result, and the
   // predicate is the data module's — the same one a page would use.
@@ -231,7 +207,7 @@ export default function PartnerCatalogue() {
                     >
                       <div className="flex flex-1 flex-wrap items-baseline gap-x-4 gap-y-2 p-4">
                         <Micro tone="accent">
-                          {partnerCategoryLabel(partner.categoryId)}
+                          {categoryLabel(partner.categoryId, referentiel)}
                         </Micro>
                         <Arrow className="text-cp-accent ms-auto" />
                         {/* Address, city and postcode: the location, in full,

@@ -2,6 +2,8 @@
 
 import {
   JOURS,
+  estOuvert,
+  formatPlage,
   hasHoraires,
   siteWebHref,
   siteWebLabel,
@@ -114,7 +116,7 @@ export default function PartnerPresentation({ entry }: { entry: ApiPartner }) {
                   personne n'a besoin de lire. */}
               <dl className="mt-4">
                 {JOURS.map((jour) => {
-                  const valeur = horaires[jour].trim();
+                  const ouvert = estOuvert(horaires[jour]);
                   const courant = jour === aujourdhui;
                   return (
                     <div
@@ -137,14 +139,14 @@ export default function PartnerPresentation({ entry }: { entry: ApiPartner }) {
                       </dt>
                       <dd
                         className={`text-[14px] tabular-nums ${
-                          valeur
+                          ouvert
                             ? courant
                               ? "text-cp-fg font-black"
                               : "text-cp-fg"
                             : "text-cp-muted"
                         }`}
                       >
-                        {valeur || "Fermé"}
+                        {formatPlage(horaires[jour])}
                       </dd>
                     </div>
                   );

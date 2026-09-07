@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import * as UI from "@/components/ui";
-import { allPartners } from "@/components/data/partners";
+import type { Partner } from "@/components/data/partners";
 import { DISPLAY, MICRO } from "@/components/ui/surfaces";
 import { Avatar, NameEmail } from "@/components/ui/IdentityStrip";
 import PartnerPhoto from "@/components/ui/PartnerPhoto";
@@ -56,7 +56,22 @@ export default function Atelier() {
       "> Fermé le lundi.\n\n" +
       "Réservations sur [notre site](https://poney-dream-78.fr) ou au `01 34 xx xx xx`.",
   );
-  const partner = allPartners()[0];
+  /* Un spécimen écrit ici, et non pris dans le réseau : l'atelier montre des
+     composants, pas des données. Il ne doit rien demander au serveur pour
+     s'afficher, et un partenaire inventé fait aussi bien l'affaire qu'un
+     vrai — c'est même plus honnête, puisque c'est un mannequin. */
+  const partner: Partner = {
+    id: "atelier-specimen",
+    name: "Crêperie d'Armor",
+    categoryId: "restauration",
+    address: "3 quai des Sables",
+    city: "Vannes",
+    postcode: "56000",
+    photo: "/partenaires/creperie-armor.svg",
+    amountCents: 1200,
+    official: true,
+    real: false,
+  };
 
   const GROUPS: { title: string; specimens: Specimen[] }[] = [
     {
@@ -146,13 +161,14 @@ export default function Atelier() {
         },
         {
           name: "Chip",
-          note: "Une seule taille : le même mot à trois tailles, c'était trois prétentions différentes à l'officialité.",
+          note: "Une seule taille : le même mot à trois tailles, c'était trois prétentions différentes à l'officialité. Trois teintes : garanti, neutre, en retrait.",
           render: () => (
             <div className="flex flex-wrap gap-3">
               <UI.Chip>Employé</UI.Chip>
               <UI.Chip tone="official">
                 Partenaire Officiel du Ministère
               </UI.Chip>
+              <UI.Chip tone="muted">Fiche de démonstration</UI.Chip>
             </div>
           ),
         },

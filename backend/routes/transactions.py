@@ -5,7 +5,14 @@ from decimal import Decimal, InvalidOperation
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from accounts import compte_depuis_identite, nom_affiche
-from models import Partenaire, Salaries, Transaction, TransactionStatut, db
+from models import (
+    Abondement,
+    Partenaire,
+    Salaries,
+    Transaction,
+    TransactionStatut,
+    db,
+)
 
 transactions_bp = Blueprint('transactions', __name__)
 SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-en-dev")
@@ -132,10 +139,19 @@ def mes_transactions():
     """Les mouvements du compte connecté, du plus récent au plus ancien.
 
     La même route répond aux deux audiences, parce que c'est la même question
-    posée par deux côtés du comptoir : un salarié voit ce qu'il a dépensé
-    (`debit`), un partenaire ce qu'il a encaissé (`credit`). Le `label` suit :
-    chez qui pour l'un, de qui pour l'autre — le nom du salarié, jamais son
-    email.
+    posée par deux côtés du comptoir : un salarié voit ses mouvements, un
+    partenaire ce qu'il a encaissé. Le `label` suit : chez qui pour l'un, de qui
+    pour l'autre — le nom du salarié, jamais son email.
+
+    Pour un salarié, les **abondements** sont du lot. Sans eux l'historique
+    n'aurait que des débits, et la ligne « d'où vient cet argent » manquerait :
+    le solde se lirait comme une donnée tombée du ciel. C'est aussi ce qui
+    permet à l'écran de recalculer le solde après chaque opération sans le
+    demander au serveur ligne par ligne.
+
+    `partnerCategorie` accompagne chaque paiement : l'historique se filtre par
+    catégorie, et la lui faire chercher dans le catalogue demanderait une
+    seconde requête pour une information que celle-ci connaît déjà.
     """
     compte = compte_depuis_identite(get_jwt_identity())
     if not compte:
@@ -146,23 +162,42 @@ def mes_transactions():
     query = query.filter_by(
         partenaire_id=compte.id
     ) if est_partenaire else query.filter_by(salarie_id=compte.id)
-    transactions = query.order_by(Transaction.horodatage.desc()).all()
 
-    return jsonify({"transactions": [
+    lignes = [
         {
-            "id": str(transaction.id),
-            "at": transaction.horodatage.isoformat(),
+            "id": str(t.id),
+            "at": t.horodatage.isoformat(),
             "kind": "credit" if est_partenaire else "debit",
-            "amountCents": round(transaction.montant * 100),
+            "amountCents": round(t.montant * 100),
             "label": (
-                _libelle_salarie(transaction.salarie)
+                _libelle_salarie(t.salarie)
                 if est_partenaire
-                else transaction.partenaire.raison_sociale
+                else t.partenaire.raison_sociale
             ),
-            "partnerId": transaction.partenaire.slug,
+            "partnerId": t.partenaire.slug,
+            "partnerCategorie": (
+                t.partenaire.categorie.nom if t.partenaire.categorie else ""
+            ),
         }
-        for transaction in transactions
-    ]}), 200
+        for t in query.all()
+    ]
+
+    if not est_partenaire:
+        lignes += [
+            {
+                "id": f"abondement-{a.id}",
+                "at": a.horodatage.isoformat(),
+                "kind": "credit",
+                "amountCents": round(a.montant * 100),
+                "label": f"Crédit employeur — {a.employeur.raison_sociale}",
+                "partnerId": None,
+                "partnerCategorie": "",
+            }
+            for a in Abondement.query.filter_by(salarie_id=compte.id).all()
+        ]
+
+    lignes.sort(key=lambda ligne: ligne["at"], reverse=True)
+    return jsonify({"transactions": lignes}), 200
 
 
 def _libelle_salarie(salarie):

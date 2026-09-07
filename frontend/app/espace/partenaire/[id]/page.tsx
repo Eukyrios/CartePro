@@ -1,35 +1,35 @@
-import { notFound } from "next/navigation";
-import { allPartners, partnerById } from "@/components/data/partners";
 import PartnerFiche from "@/components/espace/PartnerFiche";
 import type { Metadata } from "next";
 
 type Props = { params: Promise<{ id: string }> };
 
-/** Every partner is a known page at build time, so all of them prerender. */
-export function generateStaticParams() {
-  return allPartners().map((partner) => ({ id: partner.id }));
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const partner = partnerById(id);
-  if (!partner) return { title: "Partenaire introuvable | Ticket Tout" };
-  return {
-    title: `Payer chez ${partner.name} | Ticket Tout`,
-    description: `Générer un QR de paiement de démonstration pour ${partner.name}, ${partner.postcode} ${partner.city}.`,
-  };
-}
+/**
+ * La fiche d'un partenaire, résolue par son slug.
+ *
+ * Plus de `generateStaticParams` : la liste des seize partenaires vivait dans
+ * le front, et c'est elle qui permettait de pré-rendre les seize pages à la
+ * compilation. Elle n'existe plus — le réseau est en base — donc la route est
+ * rendue à la demande. Deux conséquences, assumées : la page a besoin du
+ * serveur d'API au moment où on l'ouvre, et le build du front n'a plus besoin
+ * de connaître le réseau. Un partenaire créé depuis l'interface a désormais sa
+ * fiche immédiatement, sans recompilation — ce que le pré-rendu interdisait.
+ *
+ * Le titre de l'onglet ne peut plus nommer le partenaire pour la même raison :
+ * le nom viendrait d'une requête que cette fonction ne fait pas. Il nomme donc
+ * ce qu'on regarde, et le `h1` de la page porte le nom.
+ */
+export const metadata: Metadata = {
+  title: "Fiche partenaire | Ticket Tout",
+  description:
+    "La fiche d'un partenaire du réseau Ticket Tout : ce qu'il propose, ses horaires, et le paiement simulé.",
+};
 
 export default async function PartnerPaymentPage({ params }: Props) {
   const { id } = await params;
-  const partner = partnerById(id);
-  // An unknown id is a 404, not an empty payment screen.
-  if (!partner) notFound();
 
   return (
     /* `PartnerFiche` tient les écrans, le rail et l'accrochage au défilement :
-       ils dépendent tous de la même question — ce partenaire a-t-il écrit une
-       présentation ? — et elle ne se pose qu'une fois, côté client. */
-    <PartnerFiche partner={partner} />
+       ils dépendent tous de la même requête — la fiche de ce partenaire. */
+    <PartnerFiche slug={id} />
   );
 }

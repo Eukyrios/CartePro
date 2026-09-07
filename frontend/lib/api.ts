@@ -35,6 +35,12 @@ export type ApiPartner = {
    *  aucun. */
   featured: boolean;
   /**
+   * Fiche renseignée pour de vrai, ou fiche de remplissage. Le démonstrateur
+   * mêle les deux, et l'écran le dit. Distinct du coup de cœur : l'un est un
+   * goût du Ministre, l'autre un constat sur la donnée.
+   */
+  donneesReelles: boolean;
+  /**
    * La présentation écrite par le partenaire, et son site.
    *
    * Elles vivent dans son profil — il les saisit dans ses paramètres — mais

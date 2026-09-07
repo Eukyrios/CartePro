@@ -1,5 +1,5 @@
 import { cx } from "./cx";
-import { CHIP_OFFICIAL, CHIP_PLAIN } from "./surfaces";
+import { CHIP_MUTED, CHIP_OFFICIAL, CHIP_PLAIN } from "./surfaces";
 import type { ElementType, ReactNode } from "react";
 
 /**
@@ -11,7 +11,19 @@ import type { ElementType, ReactNode } from "react";
  * about how official something is. A caller who needs the chip to sit at the
  * top of a stretched column passes `self-start`, not a bigger badge.
  */
-const TONES = { plain: CHIP_PLAIN, official: CHIP_OFFICIAL } as const;
+/**
+ * Trois teintes, et pas une quatrième.
+ *
+ * `official` — l'ochre — marque ce dont le Ministère se porte garant. `plain`
+ * est le fait neutre. `muted` est pour ce qui n'est ni l'un ni l'autre : un
+ * constat en retrait, qu'on lit si on le cherche — « fiche de démonstration »
+ * ne réclame pas la même attention qu'un conventionnement.
+ */
+const TONES = {
+  plain: CHIP_PLAIN,
+  official: CHIP_OFFICIAL,
+  muted: CHIP_MUTED,
+} as const;
 
 type Props = {
   children: ReactNode;

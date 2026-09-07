@@ -123,6 +123,15 @@ class Partenaire(db.Model):
     # non sur la transaction.
     tarif = db.Column(db.Float, nullable=False, default=0.0)
 
+    # Cette fiche est-elle renseignee pour de vrai ?
+    #
+    # Le demonstrateur melange deux choses : quelques partenaires dont les
+    # donnees ont ete redigees, et un reseau de remplissage dont les textes
+    # sont du latin genere. Une colonne le dit, plutot que de laisser le
+    # lecteur deviner — et plutot que de le deduire du coup de coeur, qui est un
+    # gout du Ministre et non un constat sur la qualite des donnees.
+    donnees_reelles = db.Column(db.Boolean, nullable=False, default=False)
+
     # La presentation que le partenaire ecrit lui-meme, depuis ses parametres,
     # et que sa fiche publique affiche. Facultative de bout en bout : une fiche
     # sans presentation n'affiche pas la section.

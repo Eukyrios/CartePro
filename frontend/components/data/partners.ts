@@ -1,10 +1,16 @@
 import { fold } from "@/lib/text";
-import { partnerCategories } from "./partnerCategories";
+import type { ApiPartner } from "@/lib/api";
 
 /**
- * The partner network, as data — same contract as partnerCategories: the
- * interface never holds the list, and swapping this module's two functions for
- * fetches is the whole of the work when the backend arrives.
+ * Un partenaire, tel qu'un écran l'affiche — et la logique de recherche qui va
+ * avec. **Aucune donnée ici.**
+ *
+ * Ce module portait les seize partenaires du réseau en dur, avec leur adresse,
+ * leur photographie et leur conventionnement. Deux sources pour un même fait :
+ * la base en avait sa copie, et rien ne garantissait qu'elles disent la même
+ * chose. Le réseau vient désormais de `/api/partenaires/catalogue`, et il ne
+ * reste ici que le type, la traduction depuis l'API, et des fonctions pures qui
+ * prennent la liste en argument.
  *
  * Location is address, city and postcode. No coordinates: the space shows and
  * filters on those three fields and deliberately has no map.
@@ -38,190 +44,42 @@ export type Partner = {
    *
    * Statut administratif, décidé par le Ministère et porté par les données :
    * il n'a rien à voir avec le « Coup de cœur du Ministre », qui est une
-   * sélection éditoriale et changeante (voir data/ministerPicks). Un partenaire
+   * sélection éditoriale et changeante, servie par le catalogue. Un partenaire
    * peut être l'un, l'autre, les deux ou aucun.
    */
   official: boolean;
+  /**
+   * Fiche renseignée pour de vrai, ou fiche de remplissage.
+   *
+   * Le démonstrateur mêle quelques partenaires dont les données ont été
+   * rédigées et un réseau dont les textes sont générés. L'écran le dit plutôt
+   * que de laisser le lecteur deviner. Distinct du coup de cœur : l'un est un
+   * goût du Ministre, l'autre un constat sur la donnée.
+   */
+  real: boolean;
 };
 
-const PARTNERS: Partner[] = [
-  {
-    id: "poney-dream-78",
-    name: "Poney Dream 78",
-    categoryId: "loisirs",
-    address: "12 chemin des Écuries",
-    city: "Rambouillet",
-    postcode: "78120",
-    photo: "/partenaires/poney-dream-78.svg",
-    official: true,
-    amountCents: 2500,
-  },
-  {
-    id: "kostumparty",
-    name: "KostumParty",
-    categoryId: "culture",
-    address: "23 rue de la Roquette",
-    city: "Paris",
-    postcode: "75011",
-    photo: "/partenaires/kostumparty.svg",
-    official: false,
-    amountCents: 1800,
-  },
-  {
-    id: "glaces-correze",
-    name: "Glaces Artisanales Corrèze",
-    categoryId: "restauration",
-    address: "3 place de la Halle",
-    city: "Brive-la-Gaillarde",
-    postcode: "19100",
-    photo: "/partenaires/glaces-correze.svg",
-    official: false,
-    amountCents: 450,
-  },
-  {
-    id: "chapelier-fontaine",
-    name: "Chapelier Fontaine",
-    categoryId: "culture",
-    address: "9 rue des Filatiers",
-    city: "Toulouse",
-    postcode: "31000",
-    photo: "/partenaires/chapelier-fontaine.svg",
-    official: true,
-    amountCents: 2900,
-  },
-  {
-    id: "table-des-quais",
-    name: "La Table des Quais",
-    categoryId: "restauration",
-    address: "7 quai de la Fosse",
-    city: "Nantes",
-    postcode: "44000",
-    photo: "/partenaires/table-des-quais.svg",
-    official: false,
-    amountCents: 1900,
-  },
-  {
-    id: "librairie-bellevue",
-    name: "Librairie Bellevue",
-    categoryId: "culture",
-    address: "22 cours Berriat",
-    city: "Grenoble",
-    postcode: "38000",
-    photo: "/partenaires/librairie-bellevue.svg",
-    official: true,
-    amountCents: 1650,
-  },
-  {
-    id: "atelier-savon-marseille",
-    name: "Atelier du Savon de Marseille",
-    categoryId: "commerce",
-    address: "9 rue Sainte",
-    city: "Marseille",
-    postcode: "13001",
-    photo: "/partenaires/atelier-savon-marseille.svg",
-    official: false,
-    amountCents: 900,
-  },
-  {
-    id: "thermes-chaudes-aigues",
-    name: "Thermes de Chaudes-Aigues",
-    categoryId: "bien-etre",
-    address: "1 avenue Georges-Pompidou",
-    city: "Chaudes-Aigues",
-    postcode: "15110",
-    photo: "/partenaires/thermes-chaudes-aigues.svg",
-    official: true,
-    amountCents: 3200,
-  },
-  {
-    id: "gite-monts-dore",
-    name: "Gîte des Monts Dore",
-    categoryId: "hebergement",
-    address: "5 route du Sancy",
-    city: "Le Mont-Dore",
-    postcode: "63240",
-    photo: "/partenaires/gite-monts-dore.svg",
-    official: false,
-    amountCents: 8900,
-  },
-  {
-    id: "cinema-rex-lille",
-    name: "Cinéma Le Rex",
-    categoryId: "culture",
-    address: "31 rue de Béthune",
-    city: "Lille",
-    postcode: "59800",
-    photo: "/partenaires/cinema-rex-lille.svg",
-    official: true,
-    amountCents: 750,
-  },
-  {
-    id: "accrobranche-esterel",
-    name: "Accrobranche de l'Estérel",
-    categoryId: "loisirs",
-    address: "Route du Col Notre-Dame",
-    city: "Fréjus",
-    postcode: "83600",
-    photo: "/partenaires/accrobranche-esterel.svg",
-    official: false,
-    amountCents: 2200,
-  },
-  {
-    id: "primeur-victor-hugo",
-    name: "Primeur Victor-Hugo",
-    categoryId: "commerce",
-    address: "14 place Victor-Hugo",
-    city: "Toulouse",
-    postcode: "31000",
-    photo: "/partenaires/primeur-victor-hugo.svg",
-    official: false,
-    amountCents: 1200,
-  },
-  {
-    id: "creperie-armor",
-    name: "Crêperie d'Armor",
-    categoryId: "restauration",
-    address: "2 venelle du Port",
-    city: "Vannes",
-    postcode: "56000",
-    photo: "/partenaires/creperie-armor.svg",
-    official: false,
-    amountCents: 1450,
-  },
-  {
-    id: "spa-vosges",
-    name: "Spa des Vosges",
-    categoryId: "bien-etre",
-    address: "8 rue du Tilleul",
-    city: "Gérardmer",
-    postcode: "88400",
-    photo: "/partenaires/spa-vosges.svg",
-    official: false,
-    amountCents: 5500,
-  },
-  {
-    id: "musee-verre-biot",
-    name: "Musée du Verre de Biot",
-    categoryId: "culture",
-    address: "5 chemin des Combes",
-    city: "Biot",
-    postcode: "06410",
-    photo: "/partenaires/musee-verre-biot.svg",
-    official: true,
-    amountCents: 600,
-  },
-  {
-    id: "camping-etang-bleu",
-    name: "Camping de l'Étang Bleu",
-    categoryId: "hebergement",
-    address: "Lieu-dit Le Grand Étang",
-    city: "Vayrac",
-    postcode: "46110",
-    photo: "/partenaires/camping-etang-bleu.svg",
-    official: false,
-    amountCents: 4200,
-  },
-];
+/**
+ * Une entrée du catalogue traduite vers la forme qu'affichent les écrans.
+ *
+ * Un seul endroit fait cette conversion. `PartnerCatalogue` la refaisait à la
+ * main, avec ses replis sur les données locales pour la photographie — replis
+ * qui n'ont plus lieu d'être puisque la base porte l'image.
+ */
+export function fromApi(entry: ApiPartner): Partner {
+  return {
+    id: entry.id,
+    name: entry.nom,
+    categoryId: entry.secteur,
+    address: entry.adresse,
+    city: entry.ville,
+    postcode: entry.codePostal,
+    photo: entry.photo,
+    amountCents: entry.amountCents,
+    official: entry.officiel,
+    real: entry.donneesReelles,
+  };
+}
 
 /**
  * How many partners one page of the catalogue shows: three, side by side, with
@@ -282,11 +140,6 @@ export function matchingPartnerList(
   });
 }
 
-/** The local network's matches, unpaged. */
-export function matchingPartners(query: PartnerQuery = {}): readonly Partner[] {
-  return matchingPartnerList(PARTNERS, query);
-}
-
 /**
  * One page of the catalogue for a given query. Synchronous while the list is
  * local; the signature is already the shape a fetch would return, so the
@@ -310,36 +163,27 @@ export function searchPartnerList(
   };
 }
 
-export function searchPartners(query: PartnerQuery = {}): PartnerPage {
-  return searchPartnerList(PARTNERS, query);
-}
-
-/** Every partner, for the places that need the whole list rather than a page. */
-export function allPartners(): readonly Partner[] {
-  return PARTNERS;
-}
-
-/** One partner by id, for anything that stores a reference rather than a copy. */
-export function partnerById(id: string): Partner | undefined {
-  return PARTNERS.find((partner) => partner.id === id);
-}
-
 /**
- * The cities the network covers, for the city filter's suggestions. Derived
- * from the partners rather than listed a second time.
+ * Les villes couvertes par une liste, pour les suggestions du filtre. Dérivées
+ * des partenaires plutôt que listées une seconde fois.
  */
-export function partnerCities(): readonly string[] {
-  return [...new Set(PARTNERS.map((partner) => partner.city))].sort((a, b) =>
+export function citiesOf(partners: readonly Partner[]): readonly string[] {
+  return [...new Set(partners.map((partner) => partner.city))].sort((a, b) =>
     a.localeCompare(b, "fr"),
   );
 }
 
 /**
- * Categories that actually have partners behind them, in the order the category
- * data declares. An empty category is legitimate — it simply does not offer
- * itself as a filter that could only ever return nothing.
+ * Les catégories qui ont réellement des partenaires derrière elles.
+ *
+ * Une catégorie vide est légitime — elle ne s'offre simplement pas comme un
+ * filtre qui ne pourrait rien rendre. L'ordre suit le référentiel, pas l'ordre
+ * d'apparition dans la liste.
  */
-export function categoriesInUse() {
-  const used = new Set(PARTNERS.map((partner) => partner.categoryId));
-  return partnerCategories().filter((category) => used.has(category.id));
+export function categoriesOf(
+  partners: readonly Partner[],
+  categories: readonly { id: string; label: string }[],
+): readonly { id: string; label: string }[] {
+  const utilisees = new Set(partners.map((partner) => partner.categoryId));
+  return categories.filter((categorie) => utilisees.has(categorie.id));
 }

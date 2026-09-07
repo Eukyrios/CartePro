@@ -9,7 +9,7 @@ import { formatEuros } from "@/components/data/ledger";
 import { useAccount } from "@/components/account/AccountProvider";
 import SignInButton from "@/components/auth/SignInButton";
 import { useBalance } from "@/components/account/useBalance";
-import { partnerCategoryLabel } from "@/components/data/partnerCategories";
+import { categoryLabel, useCategories } from "@/components/data/useCategories";
 import PartnerPhoto from "@/components/ui/PartnerPhoto";
 import BlueprintFrame from "@/components/ui/BlueprintFrame";
 import Breadcrumb from "@/components/ui/Breadcrumb";
@@ -63,6 +63,7 @@ function mmss(msLeft: number) {
 export default function PartnerPayment({ partner }: { partner: Partner }) {
   const router = useRouter();
   const { profile, ready } = useAccount();
+  const { categories } = useCategories();
   const balance = useBalance();
 
   /* Qui regarde cette fiche, et ce qu'il a le droit d'en faire.
@@ -160,11 +161,20 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
         {/* Statut administratif porté par les données : affiché seulement pour
             les partenaires conventionnés, et en haut de colonne parce que c'est
             ce que le porteur doit voir avant de payer. */}
-        {partner.official && (
-          <Chip tone="official" as="p" className="mt-2 self-start">
-            Partenaire Officiel du Ministère
+        {/* Deux pastilles, deux faits distincts : le conventionnement est une
+            décision du Ministère, la provenance des données est un constat sur
+            le démonstrateur. Les confondre reviendrait à laisser croire qu'une
+            fiche de remplissage n'est pas conventionnée, ou l'inverse. */}
+        <div className="mt-2 flex flex-wrap items-start gap-2 self-start">
+          {partner.official && (
+            <Chip tone="official" as="p">
+              Partenaire Officiel du Ministère
+            </Chip>
+          )}
+          <Chip as="p" tone={partner.real ? "plain" : "muted"}>
+            {partner.real ? "Fiche renseignée" : "Fiche de démonstration"}
           </Chip>
-        )}
+        </div>
       </div>
 
       <div className="mt-5 grid items-stretch gap-8 lg:grid-cols-2 lg:gap-14">
@@ -177,7 +187,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
           />
 
           <Micro tone="accent" as="p" className="mt-5">
-            {partnerCategoryLabel(partner.categoryId)}
+            {categoryLabel(partner.categoryId, categories)}
           </Micro>
           <address className="text-cp-fg mt-3 text-[19px] leading-[1.55] not-italic">
             {partner.address}
