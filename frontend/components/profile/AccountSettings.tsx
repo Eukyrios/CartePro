@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import CardStyleForm from "./CardStyleForm";
+import ThemeForm from "./ThemeForm";
 import DeleteAccountCard from "./DeleteAccountCard";
 import PresentationForm from "./PresentationForm";
 import ProfileForm from "./ProfileForm";
@@ -77,6 +78,7 @@ type SectionId = "profil" | "presentation" | "style" | "securite" | "danger";
  * pour qu'une même distinction ne s'écrive pas de deux façons.
  */
 const STATUT_LABEL = {
+  administration: "Administration",
   employe: "Employé",
   partenaire: "Partenaire",
   attente: "Partenaire en attente de confirmation",
@@ -99,7 +101,13 @@ const SECTIONS: ReadonlyArray<{
   id: SectionId;
   label: string;
   icon: FC<ComponentProps<"svg">>;
-  /** Employé only — a partenaire has no card to style. */
+  /**
+   * Employé only — a partenaire has no card to style.
+   *
+   * L'administration n'est pas un partenaire, donc elle voit « Style » : le
+   * panneau y montre le thème du site et non une carte, puisqu'elle n'en a pas.
+   * Voir le branchement sur `isAdmin` plus bas.
+   */
   employeeOnly?: boolean;
   /** Partenaire only — un salarié n'a pas de fiche à présenter. */
   partnerOnly?: boolean;
@@ -153,6 +161,10 @@ export default function AccountSettings() {
   }
 
   const isPartner = profile.audience === "partner";
+  /* L'administration édite l'identité visuelle du site là où un salarié édite
+     celle de sa carte : c'est le même onglet, parce que c'est la même
+     question — « à quoi cela ressemble » — posée à la hauteur de chacun. */
+  const isAdmin = profile.role === "admin";
   const profileTitle = isPartner
     ? "Informations de l'entreprise"
     : "Mon profil";
@@ -172,15 +184,21 @@ export default function AccountSettings() {
      conventionnement n'est pas une réponse : la requête en cours, et un
      établissement absent du réseau — dans les deux cas, affirmer « en attente
      de confirmation » serait une déduction, pas une information. */
-  const statut: keyof typeof STATUT_LABEL = !isPartner
-    ? "employe"
-    : !partnerLoaded
-      ? "partenaire"
-      : partnerEntry === null
+  /* Le rôle avant l'audience, comme `AccountSpace` : le profil d'un
+     administrateur porte `audience: "employee"` — ce champ ne dit que « pas
+     partenaire » — si bien que l'agent de l'administration se voyait remettre
+     une pastille « Employé » au-dessus de ses propres paramètres. */
+  const statut: keyof typeof STATUT_LABEL = isAdmin
+    ? "administration"
+    : !isPartner
+      ? "employe"
+      : !partnerLoaded
         ? "partenaire"
-        : partnerEntry.officiel
-          ? "officiel"
-          : "attente";
+        : partnerEntry === null
+          ? "partenaire"
+          : partnerEntry.officiel
+            ? "officiel"
+            : "attente";
 
   return (
     <>
@@ -280,18 +298,33 @@ export default function AccountSettings() {
             </Panel>
           )}
 
-          {shown === "style" && (
-            <Panel as="section">
-              <Display level={2} scale="panel">
-                Style de la carte
-              </Display>
-              <Panel.Lead>
-                Personnalise la carte affichée sur ton espace : couleur, motif,
-                texte et effet métallisé.
-              </Panel.Lead>
-              <CardStyleForm profile={profile} onSave={updateProfile} />
-            </Panel>
-          )}
+          {shown === "style" &&
+            (isAdmin ? (
+              <Panel as="section">
+                <Display level={2} scale="panel">
+                  Style du site
+                </Display>
+                <Panel.Lead>
+                  L&apos;identité visuelle de CartePro : le nom de la marque,
+                  les deux polices, et les couleurs des thèmes clair et sombre.
+                  Ce qui est enregistré ici est écrit dans{" "}
+                  <code>backend/theme.json</code> et s&apos;applique à tous les
+                  écrans, sans recompiler.
+                </Panel.Lead>
+                <ThemeForm />
+              </Panel>
+            ) : (
+              <Panel as="section">
+                <Display level={2} scale="panel">
+                  Style de la carte
+                </Display>
+                <Panel.Lead>
+                  Personnalise la carte affichée sur ton espace : couleur,
+                  motif, texte et effet métallisé.
+                </Panel.Lead>
+                <CardStyleForm profile={profile} onSave={updateProfile} />
+              </Panel>
+            ))}
 
           {shown === "securite" && (
             <Panel as="section">

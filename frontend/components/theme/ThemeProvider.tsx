@@ -6,6 +6,19 @@ import type { ReactNode } from "react";
 
 const Contexte = createContext<Theme>(THEME_VIDE);
 
+/**
+ * De quoi remplacer le thème appliqué, sans recharger la page.
+ *
+ * Dans un contexte à part et non dans `Contexte` : `useTheme()` rend un `Theme`
+ * et une quinzaine d'appels le déstructurent (`const { brand } = useTheme()`).
+ * Y glisser une fonction aurait demandé de tous les réécrire pour le seul écran
+ * qui enregistre.
+ *
+ * Le défaut ne fait rien : hors du fournisseur, il n'y a pas de feuille à
+ * refaire.
+ */
+const Remplacer = createContext<(theme: Theme) => void>(() => undefined);
+
 /** L'identifiant de la feuille posée par ce composant, pour la retrouver. */
 const ID = "theme-du-serveur";
 
@@ -60,10 +73,27 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     feuille.textContent = css;
   }, [theme]);
 
-  return <Contexte.Provider value={theme}>{children}</Contexte.Provider>;
+  return (
+    <Contexte.Provider value={theme}>
+      <Remplacer.Provider value={setTheme}>{children}</Remplacer.Provider>
+    </Contexte.Provider>
+  );
 }
 
 /** L'identité visuelle courante — le nom de marque et les chemins de logotype. */
 export function useTheme(): Theme {
   return useContext(Contexte);
+}
+
+/**
+ * Applique un thème que l'on vient d'enregistrer.
+ *
+ * L'écran de style s'en sert pour que la page prenne les nouvelles couleurs à
+ * l'instant où le serveur les accepte : la feuille est réécrite par l'effet
+ * ci-dessus, donc le site change sous les yeux de celui qui vient de le
+ * changer. Sans cela il fallait recharger pour voir son propre enregistrement,
+ * et l'écran ne valait pas mieux que l'éditeur de texte qu'il remplace.
+ */
+export function useApplyTheme(): (theme: Theme) => void {
+  return useContext(Remplacer);
 }

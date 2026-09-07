@@ -63,6 +63,12 @@ fichier, on change une valeur, on recharge la page : rien à recompiler, rien à
 redémarrer. Le front lit `GET /api/theme` et pose une feuille de style qui
 surcharge celle qu'il embarque.
 
+Deux façons d'éditer, le même fichier au bout des deux : l'éditeur de texte, ou
+**`/parametres` → Style** avec un compte d'administration, qui écrit par
+`PUT /api/theme` et applique le thème sans même recharger. L'écran couvre le nom
+de marque, les deux polices et les dix couleurs de chaque thème ; il ne touche
+pas aux chemins de logotype, qui désignent des fichiers de `frontend/public`.
+
 ```json
 "colors": { "light": { "accent": "#4a1b6b" }, "dark": { "accent": "#c186e8" } },
 "fonts":  { "sans": "\"Archivo\", Arial, sans-serif" },
@@ -118,16 +124,17 @@ lui.
 Toutes ces routes portent `@admin_required` (`backend/decorators.py`) : sans
 jeton c'est 401, avec un jeton de salarié ou de partenaire c'est 403.
 
-| Route                                          |                                                               |
-| ---------------------------------------------- | ------------------------------------------------------------- |
-| `GET /api/admin/partenaires/demandes`          | Les dossiers en attente, avec leur historique de décisions    |
-| `GET /api/admin/partenaires`                   | Les conventionnés                                             |
-| `POST /api/admin/partenaires/<slug>/approuver` | `{ motif }` — conventionne                                    |
-| `POST /api/admin/partenaires/<slug>/refuser`   | `{ motif }` — écarte, et c'est ce motif que le titulaire lira |
-| `POST /api/admin/partenaires/<slug>/suspendre` | `{ motif }` — suspend, et le compte ne peut plus se connecter |
+| Route                                          |                                                                |
+| ---------------------------------------------- | -------------------------------------------------------------- |
+| `GET /api/admin/partenaires/demandes`          | Les dossiers en attente, avec leur historique de décisions     |
+| `GET /api/admin/partenaires`                   | Les conventionnés                                              |
+| `POST /api/admin/partenaires/<slug>/approuver` | `{ motif }` — conventionne                                     |
+| `POST /api/admin/partenaires/<slug>/refuser`   | `{ motif }` — écarte, et c'est ce motif que le titulaire lira  |
+| `POST /api/admin/partenaires/<slug>/suspendre` | `{ motif }` — suspend, et le compte ne peut plus se connecter  |
+| `PUT /api/theme`                               | L'identité visuelle, enregistrée — écran Style de /parametres  |
 | `GET /api/admin/transactions`                  | Tous les paiements validés, en JSON — l'écran « Les recettes » |
-| `GET /api/admin/transactions.csv`              | Les mêmes, en CSV, pour l'emporter                            |
-| `POST /api/admin/transactions/<id>/annuler`    | **501** — pas encore écrite, et le dit                        |
+| `GET /api/admin/transactions.csv`              | Les mêmes, en CSV, pour l'emporter                             |
+| `POST /api/admin/transactions/<id>/annuler`    | **501** — pas encore écrite, et le dit                         |
 
 `backend/test_admin_api.py` vérifie les deux choses séparément : que chaque
 route refuse ce qu'elle doit refuser, et qu'une décision change le statut **et**

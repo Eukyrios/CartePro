@@ -81,3 +81,27 @@ export function themeToCss(theme: Theme): string {
   if (!clair && !sombre) return "";
   return `${clair ? `:root{${clair}}` : ""}${sombre ? `.dark{${sombre}}` : ""}`;
 }
+
+/**
+ * Enregistre l'identité visuelle. **Réservé à l'administration.**
+ *
+ * Rend le thème relu par le serveur, et non celui qu'on vient d'envoyer : le
+ * fichier est la source, et il nettoie — une clé qu'il ne connaît pas est
+ * ignorée. L'écran affiche donc ce que le site servira, pas ce qu'il espérait.
+ *
+ * Ce qui est refusé remonte tel quel : `api` lève avec le message du serveur,
+ * qui nomme la clé fautive — « colors.light.accent : un hexadécimal comme
+ * #4a1b6b est attendu ». Rien n'est écrit si une seule valeur est refusée,
+ * donc un thème à moitié appliqué n'existe pas.
+ */
+export async function saveTheme(theme: Theme): Promise<Theme> {
+  const data = await api<Theme>("/api/theme", {
+    method: "PUT",
+    body: JSON.stringify(theme),
+  });
+  return {
+    brand: data.brand ?? {},
+    fonts: data.fonts ?? {},
+    colors: { light: data.colors?.light ?? {}, dark: data.colors?.dark ?? {} },
+  };
+}
