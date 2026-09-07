@@ -85,13 +85,24 @@ def api_register():
     if User.query.filter_by(email=email).first() or User.query.filter_by(username=username).first():
         return jsonify({"error": "Cet email ou ce nom d'utilisateur est déjà utilisé."}), 409
 
+    is_partner = audience == "partner"
     user = User(
         email=email,
         username=username,
         audience=audience,
-        role="partenaire" if audience == "partner" else "user",
-        partner_data=partner if audience == "partner" else {},
+        role="partenaire" if is_partner else "user",
+        # La raison sociale, dupliquée sur la colonne dédiée : c'est elle que
+        # l'espace d'administration affiche (voir `routes/admin.py`), et
+        # `partner_data` seul y laissait le slug technique à sa place.
+        company_name=partner.get("raisonSociale") if is_partner else None,
+        partner_data=partner if is_partner else {},
         card_style=DEFAULT_CARD_STYLE.copy(),
+        # Une inscription partenaire est une demande, pas un compte : elle
+        # reste inactive tant qu'un admin ne l'a pas approuvée (voir la
+        # section « Demandes » du panneau d'administration). `is_active`
+        # bloque déjà la connexion ailleurs (`check_credentials`) — nul besoin
+        # d'un statut séparé.
+        is_active=not is_partner,
     )
     user.set_password(password)
     db.session.add(user)
@@ -100,6 +111,13 @@ def api_register():
     except IntegrityError:
         db.session.rollback()
         return jsonify({"error": "Cet email ou ce nom d'utilisateur est déjà utilisé."}), 409
+
+    if is_partner:
+        # Pas de jeton ici : un compte en attente ne doit pouvoir appeler
+        # aucune route protégée avant validation par un admin.
+        return jsonify({
+            "message": "Votre demande a bien été transmise. Un administrateur doit la valider avant que vous puissiez vous connecter.",
+        }), 201
     return _token_response(user, 201, "Compte créé.")
 
 
