@@ -8,6 +8,9 @@ import SimulationNotice from "@/components/ui/SimulationNotice";
 import { useBalance } from "@/components/account/useBalance";
 import type { ReactNode } from "react";
 
+import { useBalancePoll } from "@/components/account/useBalancePoll";
+import PaymentCodePanel from "./PaymentCodePanel";
+
 /**
  * Le premier écran d'un espace : le bonjour, la carte, et ce qu'on peut en
  * faire — dans cet ordre.
@@ -36,17 +39,10 @@ export default function BalanceSection({
 }) {
   const balance = useBalance();
 
-  return (
-    /* `below-bar` : la barre haute appartient à ce premier écran. En
-       `min-h-dvh`, elle s'ajoutait par-dessus — 76px de barre plus un écran
-       plein font 976px dans une fenêtre de 900, et le bas de la section était
-       coupé avant qu'on ait touché à la molette.
+  // Mise à jour du solde en temps réel — le partenaire encaisse de son côté.
+  useBalancePoll(true);
 
-       `snap={false}` : le premier écran n'a pas de point d'accroche à
-       lui. Il en avait un, à son propre bord — et s'y accrocher faisait sortir
-       la barre haute de l'écran, alors qu'elle appartient à ce premier écran.
-       Le seul repos possible en haut du document est donc 0, celui que porte
-       la barre elle-même. */
+  return (
     <Screen id="solde" height="below-bar" snap={false} gap={10}>
       <div>
         <Display level={1} accent={`${name}.`} br={false}>
@@ -54,22 +50,30 @@ export default function BalanceSection({
         </Display>
       </div>
 
-      <div className="w-full max-w-[520px]">
-        <CreditCard3D balanceCents={balance} />
-      </div>
+      <div className="grid w-full items-start gap-8 lg:grid-cols-[1fr_minmax(0,420px)] lg:gap-12 xl:gap-16">
+        {/* ── Gauche : carte + solde ── */}
+        <div className="flex flex-col gap-5">
+          <div className="w-full max-w-[520px]">
+            <CreditCard3D balanceCents={balance} />
+          </div>
 
-      <div>
-        <SimulationNotice>{notice}</SimulationNotice>
-        {children && (
-          <p
-            aria-live="polite"
-            /* Le seul clamp() hors de DISPLAY, et assumé : c'est une phrase, pas
-               un titre — elle se lit à taille d'affichage sans en être un. */
-            className="text-cp-fg mt-3 max-w-[560px] text-[clamp(19px,2.2vw,26px)] leading-[1.35] font-black tracking-[-0.03em]"
-          >
-            {children}
-          </p>
-        )}
+          <div className="border-cp-border border-t pt-4">
+            <SimulationNotice>{notice}</SimulationNotice>
+            {children && (
+              <p
+                aria-live="polite"
+                className="text-cp-fg mt-3 max-w-[560px] text-[clamp(19px,2.2vw,26px)] leading-[1.35] font-black tracking-[-0.03em]"
+              >
+                {children}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ── Droite : panneau de code de paiement ── */}
+        <div className="flex flex-col">
+          <PaymentCodePanel />
+        </div>
       </div>
     </Screen>
   );
