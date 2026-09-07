@@ -1,13 +1,14 @@
 from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required, get_jwt
-from models import db, User
+from models import db, FeaturedPick, User
+from decorators import admin_required
 
 partenaires_bp = Blueprint('partenaires', __name__)
 
 @partenaires_bp.route('/catalogue', methods=['GET'])
 def catalogue():
-    # 1. On va chercher tous les utilisateurs ayant le rôle partenaire
-    partenaires_db = User.query.filter_by(role='partenaire').all()
+    # 1. On va chercher tous les partenaires actifs — une demande en attente
+    #    de validation (voir la section admin) n'a pas encore sa place ici.
+    partenaires_db = User.query.filter_by(role='partenaire', is_active=True).all()
     
     # 2. On formate le JSON pour le frontend
     catalogue = []
@@ -39,20 +40,18 @@ def catalogue():
 
 @partenaires_bp.route('/coup-de-coeur', methods=['GET'])
 def get_coup_de_coeur():
-    # On récupère tous les partenaires
-    partenaires_db = User.query.filter_by(role='partenaire').all()
-    
-    # On cherche le premier qui possède "featured: true" dans son dictionnaire JSON
-    featured = next(
-        (p for p in partenaires_db if isinstance(p.partner_data, dict) and p.partner_data.get("featured") is True), 
-        None
-    )
-    
-    if featured:
+    # Le choix actif, dans l'historique tenu par l'admin (voir
+    # routes/admin.py) — plus le drapeau `featured` posé à la main dans
+    # `partner_data`, qui ne gardait aucun historique et ne pouvait pas
+    # revenir à un choix précédent.
+    pick = FeaturedPick.query.filter_by(active=True).first()
+
+    if pick and pick.partner:
         retour = {
-            "id": featured.id,
-            "nom": featured.company_name or featured.username,
-            "secteur": featured.partner_data.get("secteur", "Non défini")
+            "id": pick.partner.id,
+            "nom": pick.partner.company_name or pick.partner.username,
+            "secteur": (pick.partner.partner_data or {}).get("secteur", "Non défini"),
+            "commentaire": pick.comment,
         }
     else:
         retour = None
@@ -62,15 +61,24 @@ def get_coup_de_coeur():
         "coup_de_coeur": retour
     }), 200
 
+
+@partenaires_bp.route('/coup-de-coeur/clic', methods=['POST'])
+def signaler_clic_coup_de_coeur():
+    """Compte un passage de la section coup de cœur vers la fiche du
+    partenaire — c'est ce que l'admin voit ensuite dans l'historique.
+    """
+    pick = FeaturedPick.query.filter_by(active=True).first()
+    if not pick:
+        return jsonify({"error": "Aucun coup de cœur actif."}), 404
+
+    pick.click_count += 1
+    db.session.commit()
+    return jsonify({"clics": pick.click_count}), 200
+
 # J'ai ajouté l'ID dans l'URL pour que ce soit RESTful (ex: /admin/supprimer/3)
 @partenaires_bp.route('/admin/supprimer/<int:partenaire_id>', methods=['DELETE'])
-@jwt_required()
+@admin_required
 def supprimer_partenaire(partenaire_id):
-    claims = get_jwt()
-    
-    if claims.get("role") != "admin":
-        return jsonify({"error": "Accès refusé. Réservé aux administrateurs."}), 403
-        
     partenaire = User.query.get(partenaire_id)
     if not partenaire or partenaire.role != 'partenaire':
         return jsonify({"error": "Partenaire introuvable dans la base de données."}), 404

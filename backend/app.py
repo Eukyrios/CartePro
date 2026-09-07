@@ -115,6 +115,7 @@ def _upgrade_existing_database():
             # ALTER TABLE ADD COLUMN. L'index unique créé juste après porte la
             # garantie, qui est ce qui rend l'encaissement idempotent.
             "idempotency_key": "VARCHAR(512)",
+            "reverses_transaction_id": "INTEGER",
         },
     }
     for table, columns in additions.items():
