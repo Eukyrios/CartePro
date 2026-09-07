@@ -8,6 +8,7 @@ from accounts import compte_depuis_identite, nom_affiche
 from models import (
     Abondement,
     Partenaire,
+    PartnerStatus,
     Salaries,
     Transaction,
     TransactionStatut,
@@ -82,6 +83,18 @@ def valider_transaction():
         appelant = compte_depuis_identite(get_jwt_identity())
         if not isinstance(appelant, Partenaire) or appelant.id != partenaire_ref.id:
             return jsonify({"status": "error", "message": "Vous n'êtes pas autorisé à encaisser pour ce partenaire."}), 403
+
+        # Et il est conventionné. L'interface barre déjà l'encaissement aux
+        # établissements en attente ou écartés — mais une barrière d'interface
+        # n'est pas un contrôle d'accès : sans cette vérification, un appel
+        # direct à la route encaissait quand même. Le statut est la décision du
+        # Ministère, donc c'est ici qu'elle s'applique.
+        if partenaire_ref.statut != PartnerStatus.valide:
+            return jsonify({
+                "status": "error",
+                "message": "Cet établissement n'est pas conventionné : "
+                           "l'encaissement n'est pas ouvert.",
+            }), 403
 
         # 🔒 CONCURRENCE : SELECT ... FOR UPDATE sur la ligne du salarié. C'est
         # son solde qui est en jeu ; le partenaire, lui, n'en a plus — dans le

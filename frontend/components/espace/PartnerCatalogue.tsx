@@ -17,6 +17,7 @@ import Display from "@/components/ui/Display";
 import EmptyState from "@/components/ui/EmptyState";
 import FilterGrid from "@/components/ui/FilterGrid";
 import Micro from "@/components/ui/Micro";
+import Note from "@/components/ui/Note";
 import Pager from "@/components/ui/Pager";
 import PartnerTile from "@/components/ui/PartnerTile";
 import ResultCount from "@/components/ui/ResultCount";
@@ -63,7 +64,11 @@ const NO_FILTERS: Filters = {
  */
 export default function PartnerCatalogue() {
   const [partners, setPartners] = useState<Partner[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  /* Trois états et non deux : « en cours », « chargé », « en panne ». Avec un
+     seul booléen, un serveur qui ne répond pas donnait exactement la même
+     image qu'un réseau vide — un écran qui dit « aucun partenaire » alors que
+     la question n'a jamais reçu de réponse. */
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   /* Le référentiel des catégories, pour leurs libellés. Il vient du serveur
      comme le reste : la liste écrite en dur ici pouvait ignorer une catégorie
      ajoutée en base, et l'afficher telle quelle. */
@@ -75,8 +80,17 @@ export default function PartnerCatalogue() {
        la main, avec un repli sur les données locales pour la photographie —
        repli qui n'a plus lieu d'être puisque la base porte l'image. */
     api<ApiPartner[]>("/api/partenaires/catalogue")
-      .then((items) => setPartners(items.map(fromApi)))
-      .finally(() => setLoaded(true));
+      .then((items) => {
+        /* Les établissements écartés ne sont pas dans le réseau qu'on parcourt
+           pour dépenser : leur candidature a été refusée, et les afficher ici
+           inviterait à s'y rendre. Leur fiche reste accessible par son adresse,
+           et elle ouvre sur la décision qui les écarte. */
+        setPartners(
+          items.filter((item) => item.statut !== "refusé").map(fromApi),
+        );
+        setState("ready");
+      })
+      .catch(() => setState("error"));
   }, []);
 
   const categories = useMemo(
@@ -162,8 +176,17 @@ export default function PartnerCatalogue() {
         onReset={dirty ? reset : undefined}
       />
 
-      {!loaded ? (
+      {state === "loading" ? (
         <EmptyState>Chargement du réseau…</EmptyState>
+      ) : state === "error" ? (
+        <Note tone="danger" role="alert" className="mt-3">
+          <strong className="font-black">
+            Le réseau n&apos;a pas pu être chargé.
+          </strong>{" "}
+          Le serveur ne répond pas. Rechargez la page ; si cela persiste,
+          vérifiez que le backend tourne —{" "}
+          <code className="font-mono">make dev</code> lance les deux.
+        </Note>
       ) : matches.length === 0 ? (
         <EmptyState>
           Aucun partenaire ne correspond à cette recherche. Essayez un autre

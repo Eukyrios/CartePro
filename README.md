@@ -28,11 +28,14 @@ Mot de passe commun : `TicketTout2026`.
 |---|---|
 | salarié | `camille.durand@ministere.gouv.fr` — 32,50 € |
 | partenaire | `contact@poney-dream-78.fr` — conventionné |
-| partenaire non conventionné | `contact@kostumparty.fr` — encaissement et recettes barrés |
+| partenaire en attente | `contact@kostumparty.fr` — encaissement et recettes barrés |
+| partenaire refusé | `contact@spa-vosges.fr` — **la connexion est refusée** ; sa fiche s'ouvre sur la décision |
 | admin | `admin@ministere.gouv.fr` |
 
-Le panel du cabinet est semé avec : 16 partenaires renseignés (dont 6
-conventionnés), 50 salariés, 200 opérations planifiées — 161 écrites, 39
+Le panel du cabinet est semé avec 16 partenaires, dans les trois statuts que le
+dispositif connaît : **11 conventionnés**, 3 en attente d'examen, 2 refusés — et
+un refus porte son motif écrit, que la fiche de l'établissement affiche en
+premier écran. Puis 50 salariés, 200 opérations planifiées — 161 écrites, 39
 refusées — et les cas limites exigés : trois soldes à zéro, plusieurs sous cinq
 euros.
 

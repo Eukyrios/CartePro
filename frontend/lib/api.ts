@@ -41,6 +41,21 @@ export type ApiPartner = {
    */
   donneesReelles: boolean;
   /**
+   * Le statut administratif en clair : « validé », « en_attente », « refusé »,
+   * « suspendu ». `officiel` n'en dit que le premier cas — et « en attente »
+   * n'est pas « refusé », donc un écran qui les confond ne peut pas expliquer
+   * l'un des deux.
+   */
+  statut: string;
+  /**
+   * Le motif du refus, pour un établissement écarté. `null` sinon.
+   *
+   * Un refus se motive par écrit : c'est ce que la table des décisions exige,
+   * et c'est la seule façon honnête d'écarter quelqu'un. La fiche l'affiche en
+   * première position, avant tout le reste.
+   */
+  refus: { motif: string; at: string } | null;
+  /**
    * La présentation écrite par le partenaire, et son site.
    *
    * Elles vivent dans son profil — il les saisit dans ses paramètres — mais

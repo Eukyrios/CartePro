@@ -4,6 +4,8 @@ from models import (
     Categorie,
     CoupDeCoeur,
     CoupDeCoeurStatut,
+    Decision,
+    DecisionSens,
     Partenaire,
     PartnerStatus,
     db,
@@ -25,6 +27,27 @@ def _est_coup_de_coeur(partenaire):
     )
 
 
+def _refus(partenaire):
+    """Le motif du refus, s'il y en a un. Sinon None.
+
+    La derniere decision defavorable fait foi : un partenaire peut avoir ete
+    refuse, puis reexamine. La table `decisions` garde tout, l'API rend
+    l'actuelle.
+    """
+    if partenaire.statut != PartnerStatus.refuse:
+        return None
+    decision = (
+        Decision.query.filter_by(
+            partenaire_id=partenaire.id, sens=DecisionSens.refuse
+        )
+        .order_by(Decision.horodatage.desc())
+        .first()
+    )
+    if not decision:
+        return None
+    return {"motif": decision.motif_ecrit, "at": decision.horodatage.isoformat()}
+
+
 def _entree(partenaire):
     return {
         # Le slug, pas la cle primaire : c'est lui qui tient dans une URL et
@@ -41,6 +64,12 @@ def _entree(partenaire):
         # Le conventionnement « Partenaire Officiel du Ministere » : un statut
         # administratif, distinct du coup de coeur, qui est un gout.
         "officiel": partenaire.statut == PartnerStatus.valide,
+        # Le statut administratif en clair, et non plus seulement le booleen du
+        # conventionnement : « en attente » et « refuse » ne sont pas la meme
+        # chose, et un ecran qui les confond ne peut pas expliquer l'un.
+        "statut": partenaire.statut.value,
+        # Le motif, pour un partenaire ecarte. `None` sinon.
+        "refus": _refus(partenaire),
         "featured": _est_coup_de_coeur(partenaire),
         # Fiche redigee, ou fiche de remplissage : le lecteur a le droit de
         # savoir ce qu'il regarde dans un demonstrateur.

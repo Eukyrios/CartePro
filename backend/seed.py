@@ -38,6 +38,8 @@ from models import (
     Categorie,
     CoupDeCoeur,
     CoupDeCoeurStatut,
+    Decision,
+    DecisionSens,
     Employeur,
     MotifCarte,
     Partenaire,
@@ -520,6 +522,42 @@ def donnees_reelles(entry):
     return entry["slug"] in PRESENTATIONS
 
 
+# Le statut administratif de chaque partenaire, et le motif d'un refus.
+#
+# Le dispositif n'est pas un annuaire ou tout le monde entre : un partenaire est
+# conventionne, en attente d'examen, ou ecarte. Les trois cas existent donc dans
+# les donnees, et le troisieme porte sa raison — c'est ce que la table
+# `decisions` exige, et c'est aussi la seule facon honnete de refuser
+# quelqu'un : par ecrit, avec un motif.
+#
+# Ce que le reste du reseau n'enumere pas est conventionne : la majorite.
+EN_ATTENTE = {
+    "kostumparty": None,
+    "gite-monts-dore": None,
+    "primeur-victor-hugo": None,
+}
+
+REFUSES = {
+    "camping-etang-bleu": (
+        "Etablissement saisonnier ferme plus de six mois par an : le "
+        "conventionnement suppose une ouverture continue sur l'annee civile."
+    ),
+    "spa-vosges": (
+        "Prestations relevant du soin a la personne sans agrement sanitaire "
+        "produit au dossier. Reexamen possible sur presentation de l'agrement."
+    ),
+}
+
+
+def statut_de(entry):
+    """Le statut administratif d'un partenaire du reseau."""
+    if entry["slug"] in REFUSES:
+        return PartnerStatus.refuse
+    if entry["slug"] in EN_ATTENTE:
+        return PartnerStatus.en_attente
+    return PartnerStatus.valide
+
+
 # Les mots du Ministre sur ses coups de cœur, par slug.
 #
 # Le schéma leur donne une colonne — `CoupDeCoeur.mot_du_ministre` — donc ils
@@ -571,7 +609,7 @@ def make_partner(entry, categories):
         code_postal=entry["codePostal"],
         email_contact=f"contact@{entry['slug']}.fr",
         nom_representant=entry["nom"],
-        statut=PartnerStatus.valide if entry["official"] else PartnerStatus.en_attente,
+        statut=statut_de(entry),
         image_partenaire=entry["photo"],
         tarif=entry["amountCents"] / 100,
         site_web=presentation.get("siteWeb", ""),
@@ -617,7 +655,21 @@ def run_seed():
             db.session.add(partenaire)
         db.session.flush()
 
-        # 3. Le coup de coeur du Ministre : une entree datee, avec ses mots.
+        # 3. Les decisions ecrites : un refus se motive, et la trace reste.
+        # C'est ce que la table `decisions` porte, et ce que la fiche d'un
+        # partenaire ecarte affiche en premiere position.
+        for entry, partenaire in zip(NETWORK, partenaires):
+            motif = REFUSES.get(entry["slug"])
+            if motif:
+                db.session.add(Decision(
+                    partenaire_id=partenaire.id,
+                    agent_id=1,
+                    sens=DecisionSens.refuse,
+                    motif_ecrit=motif,
+                    horodatage=REFERENCE_DATE + timedelta(days=12),
+                ))
+
+        # 4. Le coup de coeur du Ministre : une entree datee, avec ses mots.
         # C'est une table a part et non un booleen, parce qu'une decision
         # editoriale se date et se retire.
         for entry, partenaire in zip(NETWORK, partenaires):
@@ -751,9 +803,12 @@ def run_seed():
 
         vides = sum(1 for v in restant.values() if v == 0)
         maigres = sum(1 for v in restant.values() if 0 < v < 5)
-        conventionnes = sum(1 for e in NETWORK if e["official"])
+        conventionnes = sum(1 for e in NETWORK if statut_de(e) == PartnerStatus.valide)
+        attente = len(EN_ATTENTE)
+        refuses = len(REFUSES)
 
-        print(f"OK {len(NETWORK)} partenaires renseignes, dont {conventionnes} conventionnes.")
+        print(f"OK {len(NETWORK)} partenaires : {conventionnes} conventionnes, "
+              f"{attente} en attente, {refuses} refuses (avec motif ecrit).")
         print(f"OK 50 salaries + 1 salarie de demonstration, {ecrites} transactions ecrites ({refus} operations refusees, non ecrites).")
         print(f"OK Cas limites : {vides} soldes a zero, {maigres} sous les 5 EUR.")
         print("OK Export local 'transactions.csv' genere a la racine.")
