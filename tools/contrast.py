@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mesure les contrastes réellement utilisés par l'interface Ticket Tout.
+"""Mesure les contrastes réellement utilisés par l'interface CartePro.
 
 Les couleurs ne sont pas recopiées : elles sont lues dans
 frontend/app/globals.css, le fichier unique où la palette est déclarée. Le
@@ -38,7 +38,7 @@ def read_palette():
     dark = re.search(r"\n\.dark\s*\{(.*?)\n\}", css, re.S).group(1)
     theme = re.search(r"@theme\s*\{(.*?)\n\}", css, re.S).group(1)
     # Le blanc et le noir sont des valeurs Tailwind, pas des tokens déclarés :
-    # sans elles, les couples « blanc sur bleu institutionnel » — la carte, le
+    # sans elles, les couples « blanc sur violet de marque » — la carte, le
     # bloc Confiance, le pied de page — sortiraient du tableau.
     base = {"--color-white": "#ffffff", "--color-black": "#000000"} | tokens(theme)
     light = base | tokens(root)
@@ -61,14 +61,14 @@ PAIRS = [
     ("Texte courant sur la page", "--cp-fg", "--cp-page", "corps de page", "AA"),
     ("Texte secondaire sur la page", "--cp-muted", "--cp-page", "adresses, aides de saisie", "AA"),
     ("Texte courant sur panneau", "--cp-fg", "--cp-surface", "panneau de la carte", "AA"),
-    ("Accent bleu sur la page", "--cp-accent", "--cp-page", "libellés, liens, chiffres", "AA"),
-    ("Accent bleu sur panneau", "--cp-accent", "--cp-surface", "étiquette « une carte »", "AA"),
+    ("Accent de marque sur la page", "--cp-accent", "--cp-page", "libellés, liens, chiffres", "AA"),
+    ("Accent de marque sur panneau", "--cp-accent", "--cp-surface", "étiquette « une carte »", "AA"),
     ("Ochre officiel sur la page", "--cp-official", "--cp-page", "mention de simulation", "AA"),
     ("Teal confirmé sur la page", "--cp-positive", "--cp-page", "crédits de l'historique", "AA"),
     ("Alerte prune sur la page", "--cp-alert", "--cp-page", "refus de paiement", "AA"),
     ("Alerte prune sur panneau", "--cp-alert", "--cp-surface", "refus dans un encart", "AA"),
-    ("Blanc sur bleu institutionnel", "--color-white", "--color-primary-700", "bloc « Confiance », carte", "AA"),
-    ("Blanc sur bleu foncé", "--color-white", "--color-primary-600", "bloc « Confiance » en thème sombre", "AA"),
+    ("Blanc sur violet de marque", "--color-white", "--color-primary-700", "bloc « Confiance », carte", "AA"),
+    ("Blanc sur violet foncé", "--color-white", "--color-primary-600", "bloc « Confiance » en thème sombre", "AA"),
     ("Bordure d'interface sur la page", "--cp-border", "--cp-page", "règles et cadres", "3:1"),
     ("Texte sur pied de page", "--color-white", "--cp-ink", "pied de page", "AA"),
 ]

@@ -7,9 +7,9 @@ import type { ReactNode } from "react";
 /**
  * A partner, as something you can click to go and pay them.
  *
- * The link wrapper was byte-identical in the catalogue and in the Minister's
+ * The link wrapper was byte-identical in the catalogue and in the administration's
  * selection; only what sits under the photograph differed — the category and
- * the full address in one, the Minister's own words in the other — so that
+ * the full address in one, the administration's own words in the other — so that
  * stays with the caller as `children`.
  *
  * A real link, so it opens in a new tab, is shareable, and the keyboard reaches

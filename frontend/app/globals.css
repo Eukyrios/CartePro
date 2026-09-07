@@ -5,51 +5,119 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Marianne — the French State's typeface, for headings and interface chrome —
- * and Spectral for body text.
+ * Archivo pour les titres et le châssis de l'interface, Spectral pour le texte
+ * courant.
  *
- * Both are served from public/fonts, from files committed to the repository:
- * the application has to start from a clone with no account anywhere, so
- * nothing here may reach a font service at runtime or at build time. That rules
- * out next/font (which fetches at build), a <link> to Google Fonts, and the
- * @gouvfr CDN these rules used to point at.
+ * Archivo remplace Marianne, la typographie de l'État français. Le dessin est
+ * proche — une néo-grotesque un peu resserrée, aux terminaisons droites — mais
+ * la licence ne l'est pas : Marianne est réservée à l'État et à ses
+ * délégataires, Archivo est sous licence ouverte (OFL). Un démonstrateur qui
+ * n'est pas commandé par l'État ne peut pas emprunter sa lettre, et une
+ * ressemblance ne vaut pas une autorisation.
  *
- * The DSFR package ships no ExtraBold, so the Bold face claims the 700-900
- * range: the design asks for font-black in many places, and pointing those at
- * the real Bold beats letting the browser smear a synthetic one.
+ * Les deux familles sont servies depuis public/fonts, depuis des fichiers
+ * versionnés : l'application doit démarrer depuis un clone sans compte
+ * nulle part, donc rien ici ne joint un service de polices, ni à l'exécution ni
+ * à la compilation. Cela écarte next/font (qui télécharge au build), un <link>
+ * vers Google Fonts, et le CDN @gouvfr que ces règles visaient autrefois.
  *
- * Spectral comes in two subsets per face. latin-ext carries the characters
- * French needs beyond latin — œ, and the accented capitals of a ministerial
- * text — so both are declared with their unicode ranges rather than shipping
- * one heavier file.
+ * Archivo ne fournit pas d'ExtraBold ici : la Bold couvre la plage 700-900,
+ * parce que le design demande `font-black` en beaucoup d'endroits et qu'y
+ * pointer la vraie Bold vaut mieux que de laisser le navigateur en étirer une
+ * fausse.
+ *
+ * Deux sous-ensembles par face. latin-ext porte les caractères dont le français
+ * a besoin au-delà de latin — œ, et les capitales accentuées d'un texte
+ * administratif — d'où deux déclarations avec leurs plages plutôt qu'un fichier
+ * plus lourd.
  */
 @font-face {
-  font-family: "Marianne";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("/fonts/Marianne-Regular.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Marianne";
+  font-family: "Archivo";
   font-style: italic;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/Marianne-Regular_Italic.woff2") format("woff2");
+  src: url("/fonts/Archivo-400-italic-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: "Marianne";
+  font-family: "Archivo";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Archivo-400-italic-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Archivo-400-normal-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/Archivo-400-normal-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Archivo";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("/fonts/Marianne-Medium.woff2") format("woff2");
+  src: url("/fonts/Archivo-500-normal-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: "Marianne";
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/Archivo-500-normal-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Archivo";
   font-style: normal;
   font-weight: 700 900;
   font-display: swap;
-  src: url("/fonts/Marianne-Bold.woff2") format("woff2");
+  src: url("/fonts/Archivo-700-normal-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+  src: url("/fonts/Archivo-700-normal-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 @font-face {
@@ -120,7 +188,7 @@
 }
 
 /*
- * Ticket Tout brand ramp, built around the maquette's #1B3A6B and deliberately
+ * CartePro brand ramp, built around #4A1B6B — le violet sombre — and deliberately
  * overriding Flowbite's own `primary`: its Button, Navbar and link themes all
  * resolve to primary-700/800, so redefining the ramp here brands every
  * Flowbite component at once instead of overriding className by className.
@@ -129,17 +197,17 @@
  * accents — the two typefaces the design alternates between.
  */
 @theme {
-  --color-primary-50: #f2f5f9;
-  --color-primary-100: #dde5ef;
-  --color-primary-200: #bfcde1;
-  --color-primary-300: #93aecd;
-  --color-primary-400: #6186b3;
-  --color-primary-500: #3f6897;
-  --color-primary-600: #2c527c;
-  --color-primary-700: #1b3a6b;
-  --color-primary-800: #16305a;
-  --color-primary-900: #142a4c;
-  --color-primary-950: #0d1b32;
+  --color-primary-50: #f6f2f9;
+  --color-primary-100: #e8ddef;
+  --color-primary-200: #d3bfe1;
+  --color-primary-300: #b593cd;
+  --color-primary-400: #9161b3;
+  --color-primary-500: #723f97;
+  --color-primary-600: #5b2c7c;
+  --color-primary-700: #4a1b6b;
+  --color-primary-800: #3e165a;
+  --color-primary-900: #35144c;
+  --color-primary-950: #230d32;
 
   /*
    * Flowbite's components hard-code `gray-*` (bg-white dark:bg-gray-800, and
@@ -147,30 +215,30 @@
    * does not conflict with them in tailwind-merge, so the component always won
    * in dark mode. Retinting the ramp itself is what actually reaches them:
    * every Flowbite surface, border and muted text then sits on the brand hue
-   * (~220deg) instead of neutral grey, and the dark steps line up with the
+   * (~275deg) instead of neutral grey, and the dark steps line up with the
    * cp-* tokens below.
    */
-  --color-gray-50: #f5f7fa;
-  --color-gray-100: #eaeef5;
-  --color-gray-200: #d7dee9;
-  --color-gray-300: #b9c4d6;
-  --color-gray-400: #8d9ab3;
+  --color-gray-50: #f8f5fa;
+  --color-gray-100: #f0eaf5;
+  --color-gray-200: #e2d7e9;
+  --color-gray-300: #cab9d6;
+  --color-gray-400: #a38db3;
   /* Darkened from a first pass at #6b7890, which measured 4.45:1 on white —
      just under AA for body text. This clears it on the page and on the
      tinted panels. */
-  --color-gray-500: #636e85;
-  --color-gray-600: #4a5670;
-  --color-gray-700: #2b3a58;
-  --color-gray-800: #131c2e;
-  --color-gray-900: #0a0f1b;
-  --color-gray-950: #060a13;
+  --color-gray-500: #776385;
+  --color-gray-600: #604a70;
+  --color-gray-700: #452b58;
+  --color-gray-800: #23132e;
+  --color-gray-900: #140a1b;
+  --color-gray-950: #0e0613;
 
   /*
-   * Marianne for headings and interface chrome, Spectral for body copy. The
+   * Archivo for headings and interface chrome, Spectral for body copy. The
    * two semantic aliases below are what components should reach for; the
    * sans/serif pair stays so Flowbite's own classes land on the same faces.
    */
-  --font-sans: "Marianne", Arial, Helvetica, sans-serif;
+  --font-sans: "Archivo", Arial, Helvetica, sans-serif;
   --font-serif: "Spectral", Georgia, "Times New Roman", serif;
   --font-heading: var(--font-sans);
   --font-body: var(--font-serif);
@@ -236,13 +304,21 @@
   --cp-fg: #0a0a0b;
   --cp-muted: #555555;
   --cp-ink: #0a0a0b;
-  --cp-accent: #1b3a6b;
+  --cp-accent: #4a1b6b;
   /*
-   * The two accents, both #1B3A6B rotated on the colour wheel at its own
-   * saturation, so the palette stays derived from the institutional blue:
-   * official//featured in warm ochre (hue +180) and available/confirmed in
-   * teal (hue -40). Each needs its own value per theme, exactly like the
-   * tokens above: no single lightness clears AA on white and on near-black.
+   * Les deux accents de signal, ocre chaud et sarcelle.
+   *
+   * Ils étaient dérivés de la couleur de marque par rotation de teinte, quand
+   * celle-ci était le bleu institutionnel. Cette règle ne tient plus et je ne
+   * l'ai pas rejouée : tournée depuis le violet (275°), la même arithmétique
+   * donnait un vert olive pour l'officialité. Ce sont des **signaux**, et un
+   * signal doit rester reconnaissable quand la marque change de teinte — c'est
+   * même la raison d'être d'un signal. Ocre et sarcelle se lisent aussi bien
+   * contre le violet que contre le bleu, alors qu'un accent dérivé aurait
+   * suivi la marque et perdu sa fonction.
+   *
+   * Chacun garde une valeur par thème, comme les tokens ci-dessus : aucune
+   * clarté unique ne passe AA sur du blanc et sur du presque noir.
    */
   --cp-official: #7a571f;
   --cp-positive: #1b6b67;
@@ -260,7 +336,7 @@
 
 /*
  * Dark theme, tinted toward the brand hue rather than neutral grey — the same
- * idea as a themed Discord: everything sits on one hue (~220deg) and separates
+ * idea as a themed Discord: everything sits on one hue (~275deg) and separates
  * by elevation instead of by colour.
  *
  * Three levels, darkest to lightest: page (the ground), surface (cards and the
@@ -269,15 +345,15 @@
  */
 .dark {
   /* Flowbite-facing tokens, so its Card/TextInput/Table/Navbar follow suit. */
-  --surface-primary-soft: #131c2e;
-  --surface-primary-medium: #172035;
-  --surface-secondary-medium: #1b2740;
-  --surface-tertiary-medium: #22314f;
-  --border-default: #1f2b44;
-  --border-default-medium: #2b3a58;
-  --text-heading: #eaf0fb;
-  --text-body: #97a6c2;
-  --text-body-subtle: #7b8aa8;
+  --surface-primary-soft: #23132e;
+  --surface-primary-medium: #281735;
+  --surface-secondary-medium: #311b40;
+  --surface-tertiary-medium: #3c224f;
+  --border-default: #351f44;
+  --border-default-medium: #452b58;
+  --text-heading: #f4eafb;
+  --text-body: #b097c2;
+  --text-body-subtle: #957ba8;
   --brand-fg: var(--color-primary-400);
   --danger-fg: var(--cp-alert);
   --brand-base: var(--color-primary-600);
@@ -285,23 +361,23 @@
   --brand-medium: var(--color-primary-800);
   --brand-soft: var(--color-primary-800);
   /* Maquette surfaces. */
-  --cp-page: #0a0f1b;
-  --cp-surface: #131c2e;
-  --cp-border: #22304c;
-  --cp-fg: #eaf0fb;
-  --cp-muted: #97a6c2;
+  --cp-page: #140a1b;
+  --cp-surface: #23132e;
+  --cp-border: #3a224c;
+  --cp-fg: #f4eafb;
+  --cp-muted: #b097c2;
   /* The footer stays the deepest step, below the page itself. */
-  --cp-ink: #060a13;
-  --cp-accent: #86aae8;
+  --cp-ink: #0e0613;
+  --cp-accent: #bf86e8;
   --cp-official: #d8ab64;
   --cp-positive: #64d8d2;
   --cp-alert: #f0a8cd;
 }
 
 /*
- * Headings in Marianne, body copy in Spectral, applied once here rather than
+ * Headings in Archivo, body copy in Spectral, applied once here rather than
  * class by class: every heading in the app is an h1-h4, and everything else
- * inherits body copy from <body>. Interface chrome that must stay in Marianne
+ * inherits body copy from <body>. Interface chrome that must stay in Archivo
  * — buttons, micro-labels, field labels — says `font-sans` explicitly (see
  * components/ui/surfaces.ts).
  */
@@ -343,7 +419,7 @@
  * than a whole panel — the QR's waiting place.
  *
  * It replaces an inline pair of hardcoded rgba() gradients that had been
- * written out in a component: those froze the light theme's #1B3A6B and the
+ * written out in a component: those froze the light theme's accent and the
  * dark theme's #EAF0FB into the markup, so the frame stopped following the
  * palette the moment either token moved.
  */
@@ -371,10 +447,12 @@
  *   cp-page    on cp-fg         19.79:1   (solid buttons, both themes)
  *   white      on red-600        4.83:1   (destructive buttons)
  *
- * The wordmark is the one pair below AA — primary-300 on white is 2.29:1 — and
- * it is deliberate: RGAA 1.4.3 exempts logotypes, and the two-tone lockup is
- * the brand's. It carries an sr-only "Ticket Tout", so nothing depends on
- * reading it.
+ * Every pair is above AA, the logotype included — it used to be the one
+ * exception. The previous lockup set its wordmark two-tone, and the pale step
+ * it leaned on came out at 2.29:1 on white; it stood because RGAA 1.4.3 exempts
+ * logotypes. The CartePro lockup articulates `Carte` / `Pro` by weight instead,
+ * in a single ink, so it reads at whatever the surrounding text colour measures
+ * — cp-accent on cp-page, 11.27:1 — and the exemption is no longer needed.
  */
 
 /*

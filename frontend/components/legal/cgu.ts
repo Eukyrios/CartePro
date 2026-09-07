@@ -16,7 +16,7 @@
 
 /** Ce que le document dit de lui-même. Repris mot pour mot, en tête de page. */
 export const CGU_STATUS =
-  "Le présent document constitue un projet de CGU spécifique au fonctionnement décrit pour le démonstrateur Ticket Tout. Il est transmis pour avis préalable au service juridique de l'administration et ne doit pas être publié en l’état.";
+  "Le présent document constitue un projet de CGU spécifique au fonctionnement décrit pour le démonstrateur CartePro. Il est transmis pour avis préalable au service juridique de l'administration et ne doit pas être publié en l’état.";
 
 export type Article = {
   /** « Article 1 », tel qu'il est numéroté dans le document. */
@@ -31,7 +31,7 @@ export const CGU_ARTICLES: readonly Article[] = [
     number: "Article 1",
     title: "Objet du service",
     body: [
-      "Ticket Tout est un démonstrateur de dispositif d’avantages salariés dématérialisés. Il permet à des salariés de disposer d’un crédit fictif utilisable auprès de partenaires référencés par l'Administration. Les montants affichés dans l’application sont exclusivement destinés à la simulation : aucun paiement, transfert ou encaissement de valeur monétaire réelle n’est réalisé par le démonstrateur.",
+      "CartePro est un démonstrateur de dispositif d’avantages salariés dématérialisés. Il permet à des salariés de disposer d’un crédit fictif utilisable auprès de partenaires référencés par l'Administration. Les montants affichés dans l’application sont exclusivement destinés à la simulation : aucun paiement, transfert ou encaissement de valeur monétaire réelle n’est réalisé par le démonstrateur.",
     ],
   },
   {
@@ -89,7 +89,7 @@ export const CGU_ARTICLES: readonly Article[] = [
     number: "Article 9",
     title: "Simulation et absence de paiement réel",
     body: [
-      "Les montants affichés dans Ticket Tout sont fictifs. Une mention de simulation est affichée à proximité des montants dans les écrans concernés. Toute présentation ou capture du démonstrateur doit conserver cette information visible.",
+      "Les montants affichés dans CartePro sont fictifs. Une mention de simulation est affichée à proximité des montants dans les écrans concernés. Toute présentation ou capture du démonstrateur doit conserver cette information visible.",
     ],
   },
   {

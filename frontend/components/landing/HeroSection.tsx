@@ -24,7 +24,7 @@ export default function HeroSection() {
       align="stretch"
       density="tight"
       /* Deux colonnes, plus trois : la bande de 48 px portait le texte de
-         tranche « Ticket Tout / 2026 — France », et une colonne vide à la
+         tranche « CartePro / 2026 — France », et une colonne vide à la
          place de celui-ci décalerait l'accroche sans rien y mettre. */
       className="lg:grid-cols-[1fr_47%]"
     >
@@ -46,7 +46,7 @@ export default function HeroSection() {
 
           <p className="mt-8 mb-0 max-w-[420px] text-sm leading-[1.55]">
             Un crédit mis à disposition par votre employeur, à utiliser chez les
-            partenaires Ticket Tout.
+            partenaires CartePro.
           </p>
 
           {/* Une porte vers le réseau, avant qu'on ait à faire défiler pour le

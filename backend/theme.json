@@ -1,0 +1,76 @@
+{
+  "_lisez_moi": [
+    "L'identité visuelle du site, en un seul endroit. Modifiez ce fichier,",
+    "rechargez la page : les couleurs, les polices et le logotype suivent.",
+    "Aucune recompilation, aucun redémarrage — le front lit GET /api/theme.",
+    "",
+    "Les valeurs absentes ou vides retombent sur celles compilées dans",
+    "frontend/app/globals.css, qui sont la référence : ce fichier surcharge,",
+    "il ne remplace pas. Une clé qu'on ne comprend pas est ignorée.",
+    "",
+    "Les couleurs sont des variables CSS. Un thème clair et un thème sombre,",
+    "parce qu'aucune clarté unique ne tient sur du blanc et sur du presque",
+    "noir : ce qui se lit sur l'un s'efface sur l'autre.",
+    "",
+    "Contrôlez vos contrastes avant de livrer : python3 tools/contrast.py"
+  ],
+
+  "brand": {
+    "name": "CartePro",
+    "logo": "",
+    "logoWhite": "",
+    "_note": [
+      "logo : chemin d'une image servie par le front, par exemple",
+      "/logo/mark-purple.svg. Vide = le logotype vectorisé du composant, qui",
+      "prend la couleur d'accent et suit donc le thème.",
+      "logoWhite : la version posée sur le pied de page, presque noir."
+    ]
+  },
+
+  "fonts": {
+    "sans": "\"Archivo\", Arial, Helvetica, sans-serif",
+    "serif": "\"Spectral\", Georgia, \"Times New Roman\", serif",
+    "_note": [
+      "Une famille déjà déclarée en @font-face dans globals.css, ou une",
+      "police installée sur la machine du lecteur. Pour en ajouter une, posez",
+      "le .woff2 dans frontend/public/fonts et déclarez-la là-bas : rien ici",
+      "ne peut télécharger une police."
+    ]
+  },
+
+  "colors": {
+    "light": {
+      "page": "#ffffff",
+      "surface": "#f4f4f2",
+      "border": "#d7d7d9",
+      "fg": "#0a0a0b",
+      "muted": "#555555",
+      "ink": "#0a0a0b",
+      "accent": "#4a1b6b",
+      "official": "#7a571f",
+      "positive": "#1b6b67",
+      "alert": "#7c1d54"
+    },
+    "dark": {
+      "page": "#12091b",
+      "surface": "#1e132e",
+      "border": "#33224c",
+      "fg": "#f2eafb",
+      "muted": "#b097c2",
+      "ink": "#0b0613",
+      "accent": "#c186e8",
+      "official": "#d8ab64",
+      "positive": "#64d8d2",
+      "alert": "#f0a8cd"
+    },
+    "_note": [
+      "accent : la couleur d'identité. Elle porte le logotype, les liens, la",
+      "grille technique et le bloc de clôture de l'accueil.",
+      "official : ce dont l'administration se porte garant. Jamais l'accent,",
+      "pour qu'un badge officiel ne se confonde pas avec la marque.",
+      "positive : ce qui a abouti. alert : ce qui a échoué.",
+      "Ces trois-là ne se déduisent pas de l'accent : ce sont des signaux, et",
+      "un signal doit rester reconnaissable quand la marque change de teinte."
+    ]
+  }
+}

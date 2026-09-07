@@ -1,4 +1,4 @@
-# Ticket Tout — frontend
+# CartePro — frontend
 
 Plateforme de billetterie pour les partenaires et les employés. Application
 [Next.js](https://nextjs.org) (App Router) avec [Flowbite

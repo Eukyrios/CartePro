@@ -454,7 +454,7 @@ export default function Atelier() {
             <div className="grid gap-6">
               <UI.IdentityStrip
                 name="Camille Durand"
-                email="camille.durand@administration.gouv.fr"
+                email="camille.durand@administration.example"
               >
                 <UI.Chip className="ms-auto">Employé</UI.Chip>
               </UI.IdentityStrip>
@@ -463,7 +463,7 @@ export default function Atelier() {
                   <Avatar name="Camille Durand" size="sm" />
                   <NameEmail
                     name="Camille Durand"
-                    email="camille@administration.gouv.fr"
+                    email="camille@administration.example"
                     size="sm"
                   />
                 </div>

@@ -53,8 +53,11 @@ export default function PaymentCodePanel() {
   return (
     <div className={cx(PANEL, "flex flex-col")}>
       <div>
-        <h3 className="text-cp-fg text-[24px] font-black leading-[0.95] tracking-[-0.05em]">
-          Votre QR <span className="text-cp-accent font-serif font-normal">de paiement.</span>
+        <h3 className="text-cp-fg text-[24px] leading-[0.95] font-black tracking-[-0.05em]">
+          Votre QR{" "}
+          <span className="text-cp-accent font-serif font-normal">
+            de paiement.
+          </span>
         </h3>
         <Micro as="p" tone="muted" className="mt-2">
           Générez un code <Slash /> À présenter au partenaire
@@ -62,14 +65,13 @@ export default function PaymentCodePanel() {
       </div>
 
       {/* Centré et contraint en largeur pour ne pas exploser la hauteur de la colonne */}
-      <BlueprintFrame pitch="fine" className="mx-auto mt-6 w-full max-w-[220px]">
+      <BlueprintFrame
+        pitch="fine"
+        className="mx-auto mt-6 w-full max-w-[220px]"
+      >
         {token ? (
           <div className="grid aspect-square h-full w-full place-items-center p-[7%]">
-            <QrCode
-              seed={token.id}
-              motion="materialise"
-              dimmed={!isActive}
-            />
+            <QrCode seed={token.id} motion="materialise" dimmed={!isActive} />
           </div>
         ) : (
           <Micro tone="muted" className="px-8 text-center">
@@ -84,17 +86,13 @@ export default function PaymentCodePanel() {
             Code à présenter au partenaire
           </Micro>
           <div className="mt-2 flex flex-wrap items-start gap-3">
-            <code 
+            <code
               id="qr-code-raw"
               className="text-cp-fg bg-cp-surface min-w-0 flex-1 px-3 py-2 font-mono text-[11px] leading-[1.5] break-all select-all"
             >
               {token.raw}
             </code>
-            <Button
-              onClick={copier}
-              className="shrink-0"
-              aria-live="polite"
-            >
+            <Button onClick={copier} className="shrink-0" aria-live="polite">
               {copied ? "Copié ✓" : "Copier"}
             </Button>
           </div>

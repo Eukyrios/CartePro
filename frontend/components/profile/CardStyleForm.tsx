@@ -33,7 +33,7 @@ const PATTERNS: { value: CardPattern; label: string }[] = [
 ];
 
 const CARD_PRESETS = [
-  "#1b3a6b",
+  "#4a1b6b",
   "#0a0a0b",
   "#14532d",
   "#7c2d12",

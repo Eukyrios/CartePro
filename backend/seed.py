@@ -61,7 +61,7 @@ REFERENCE_DATE = datetime(2026, 6, 1, 8, 0, 0, tzinfo=timezone.utc)
 # Un seul mot de passe pour tous les comptes semés : ce sont des comptes de
 # démonstration, et un identifiant qu'il faut aller chercher dans le code n'est
 # pas « déjà renseigné ». Il est imprimé à la fin du script.
-DEMO_PASSWORD = "TicketTout2026"
+DEMO_PASSWORD = "CartePro2026"
 
 # Le réseau, miroir de frontend/components/data/partners.ts.
 # La presentation que quelques partenaires ont deja ecrite, par slug.
@@ -378,7 +378,7 @@ NETWORK = [
 
 # Le salarié de démonstration : un compte à part du panel statistique, dont le
 # solde reste ce qu'il est — les cinquante autres servent aux cas limites.
-DEMO_EMPLOYEE_EMAIL = "camille.durand@administration.gouv.fr"
+DEMO_EMPLOYEE_EMAIL = "camille.durand@administration.example"
 
 # Le compte de demonstration : un credit, deux paiements, et le solde qui en
 # resulte. Ce sont de vraies lignes en base, et non plus une histoire simulee
@@ -392,10 +392,10 @@ DEMO_EMPLOYEE_PAIEMENTS = [
 DEMO_EMPLOYEE_BALANCE = DEMO_EMPLOYEE_CREDIT - sum(
     p["montant"] for p in DEMO_EMPLOYEE_PAIEMENTS
 )
-DEMO_ADMIN_EMAIL = "admin@administration.gouv.fr"
+DEMO_ADMIN_EMAIL = "admin@administration.example"
 
 DEFAULT_CARD_STYLE = {
-    "color": "#1b3a6b",
+    "color": "#4a1b6b",
     "text": "#ffffff",
     "pattern": "waves",
     "metalness": 20,
@@ -487,8 +487,11 @@ def presentation_bidon(entry):
         "\n"
         "# Ab urbe condita\n"
         "\n"
+        # « in tabulis nostris » et non « Ministerii » : le faux texte latin
+        # nommait un ministere, et il s'affiche sur la fiche publique du
+        # partenaire. Du remplissage n'a pas a porter une mention d'Etat.
         f"{phrases[5]} Signum nostrum `{entry['slug']}` in tabulis "
-        "Ministerii scriptum est."
+        "nostris scriptum est."
     )
     return {
         "presentationTitre": tirage.choice(TITRES_LATINS),
@@ -562,7 +565,8 @@ def statut_de(entry):
 #
 # Le schéma leur donne une colonne — `CoupDeCoeur.mot_administrateur` — donc ils
 # vivent en base et non plus seulement dans le front. Les quatre phrases sont
-# celles de `frontend/components/data/ministerPicks.ts` : la même sélection,
+# celles que portait l'ancien `frontend/components/data/ministerPicks.ts`,
+# supprime depuis : la même sélection,
 # les mêmes mots, jusqu'à ce que l'espace d'administration prenne la main.
 MOTS_ADMINISTRATEUR = {
     "poney-dream-78": "Parfait pour ressouder une équipe et renouer avec la nature.",
@@ -691,7 +695,7 @@ def run_seed():
         for i in range(50):
             dotation = dotations_ciblees[i] if i < 5 else round(random.uniform(60, 200), 2)
             salarie = make_salarie(
-                f"salarie{i}@administration.gouv.fr", fake.first_name(), f"Salarie{i}", employeur
+                f"salarie{i}@administration.example", fake.first_name(), f"Salarie{i}", employeur
             )
             db.session.add(salarie)
             salaries.append(salarie)
@@ -819,7 +823,7 @@ def run_seed():
         non_conv = next(e for e in NETWORK if not e["official"])
         print(f"  partenaire  contact@{non_conv['slug']}.fr  ({non_conv['nom']}, en attente)")
         print(f"  admin       {DEMO_ADMIN_EMAIL}")
-        print("  (les 50 salaries du panel : salarie0@administration.gouv.fr ... salarie49@, meme mot de passe)")
+        print("  (les 50 salaries du panel : salarie0@administration.example ... salarie49@, meme mot de passe)")
 
 
 if __name__ == "__main__":

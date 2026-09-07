@@ -58,7 +58,8 @@ const BTN =
 
 /**
  * The one committing action of a panel — filled with the foreground ink, never
- * with the institutional blue. #1B3A6B is the identity colour of the ministry
+ * with the brand colour. #4A1B6B, the dark purple, is the identity colour of
+ * the administration
  * and the charter reserves it for identity and text, so no button may be a
  * field of it; the blue still carries every heading accent, link and marker.
  */
@@ -76,7 +77,7 @@ export const NOTE_DANGER = `${NOTE} border-fg-danger text-cp-fg`;
 /** Something went right, or something is available: the teal accent. */
 export const NOTE_POSITIVE = `${NOTE} border-cp-positive text-cp-fg`;
 
-/** Outlined chip. The ochre accent marks anything the ministry vouches for. */
+/** Outlined chip. The ochre accent marks what the administration vouches for. */
 const CHIP = `border px-2.5 py-1.5 ${MICRO}`;
 export const CHIP_PLAIN = `${CHIP} border-cp-fg text-cp-fg`;
 export const CHIP_OFFICIAL = `${CHIP} border-cp-official text-cp-official`;

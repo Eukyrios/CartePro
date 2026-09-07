@@ -94,7 +94,7 @@ export default function TopBar({ onLogin, onLogout }: Props) {
         className="bg-cp-page border-cp-border relative z-40 snap-start border-b px-[3.2vw] py-0 lg:h-[76px]"
       >
         <NavbarBrand as={Link} href="/" className="text-cp-fg">
-          <BrandLogo className="h-[38px] w-auto" />
+          <BrandLogo className="text-[25px]" />
         </NavbarBrand>
 
         <div className="flex items-center gap-4 lg:order-3 lg:gap-[22px]">

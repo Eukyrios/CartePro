@@ -38,7 +38,7 @@ export type CardStyle = {
 };
 
 export const DEFAULT_CARD_STYLE: CardStyle = {
-  color: "#1b3a6b",
+  color: "#4a1b6b",
   text: "#ffffff",
   pattern: "waves",
   metalness: 20,
@@ -88,7 +88,7 @@ const AccountContext = createContext<Account | null>(null);
  * session the backend will own, so that /parametres survives a reload and a
  * direct visit. Only profile fields are stored, never the password.
  */
-const STORAGE_KEY = "ticket-tout.profile";
+const STORAGE_KEY = "cartepro.profile";
 
 function writeStored(profile: Profile | null) {
   try {

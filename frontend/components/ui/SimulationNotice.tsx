@@ -2,7 +2,7 @@ import Micro from "./Micro";
 import type { ReactNode } from "react";
 
 /**
- * The notice that says what is real and what is not, in the ochre the ministry
+ * The notice that says what is real and what is not, in the ochre the administration
  * uses for its own claims.
  *
  * Required wherever a monetary value is shown, and required to stay visible

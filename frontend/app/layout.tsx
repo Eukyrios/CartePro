@@ -5,11 +5,35 @@ import "./globals.css";
 import Footer from "@/components/layout/Footer";
 import TopBar from "@/components/layout/TopBar";
 import AccountProvider from "@/components/account/AccountProvider";
+import ThemeProvider from "@/components/theme/ThemeProvider";
+import { MENTION_DEMONSTRATEUR } from "@/components/legal/mention";
 
 export const metadata: Metadata = {
-  title: "Ticket Tout",
-  description:
-    "Ticket Tout — le crédit salarié à utiliser chez vos partenaires",
+  title: "CartePro",
+  /*
+   * La mention de démonstrateur est dans la description, et non seulement dans
+   * le pied de page : c'est cette phrase qu'un moteur de recherche et une
+   * messagerie affichent sous le lien, donc le seul endroit qui informe
+   * quelqu'un qui n'a pas encore ouvert la page.
+   */
+  description: `CartePro — le crédit salarié à utiliser chez vos partenaires. ${MENTION_DEMONSTRATEUR}`,
+  /*
+   * Les balises de partage. Elles n'existaient pas : un lien collé dans une
+   * messagerie n'affichait que l'URL, et rien n'y disait qu'il s'agit d'un
+   * démonstrateur. C'est l'aperçu qui circule le plus loin sans la page.
+   */
+  openGraph: {
+    title: "CartePro",
+    description: `Le crédit salarié à utiliser chez vos partenaires. ${MENTION_DEMONSTRATEUR}`,
+    siteName: "CartePro",
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "CartePro",
+    description: `Le crédit salarié à utiliser chez vos partenaires. ${MENTION_DEMONSTRATEUR}`,
+  },
   /*
    * No `icons` here on purpose: app/icon.svg and app/favicon.ico are picked up
    * by the file convention, which also fingerprints them for cache-busting. An
@@ -26,8 +50,9 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        {/* Both faces are declared in globals.css: Marianne from the State's
-            @gouvfr/dsfr package, Spectral from Google Fonts. */}
+        {/* Les deux familles sont déclarées dans globals.css et servies
+            depuis public/fonts : Archivo et Spectral, toutes deux sous licence
+            ouverte. */}
         <ThemeModeScript />
       </head>
       {/* The column layout keeps the bottom bar at the foot of short pages,
@@ -35,14 +60,19 @@ export default function RootLayout({
           browser's default canvas it can disagree with the theme the tokens
           are using, which leaves white dark-mode headings sitting on white.
           Typography comes from --font-heading / --font-body in globals.css:
-          Marianne for headings and chrome, Spectral for body copy. */}
+          Archivo for headings and chrome, Spectral for body copy. */}
       <body className="bg-cp-page text-cp-fg flex min-h-screen flex-col antialiased">
         <ThemeInit />
-        <AccountProvider>
-          <TopBar />
-          {children}
-          <Footer />
-        </AccountProvider>
+        {/* L'identité visuelle vient du serveur — voir backend/theme.json —
+            et enveloppe tout, parce que le logotype de la barre haute et du
+            pied de page en dépend autant que les couleurs. */}
+        <ThemeProvider>
+          <AccountProvider>
+            <TopBar />
+            {children}
+            <Footer />
+          </AccountProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

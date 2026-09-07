@@ -3,7 +3,7 @@ import PageMain from "@/components/ui/PageMain";
 import AccountSettings from "@/components/profile/AccountSettings";
 
 export const metadata: Metadata = {
-  title: "Paramètres du compte | Ticket Tout",
+  title: "Paramètres du compte | CartePro",
   description:
     "Modifier les informations de son profil partenaire ou employé, et supprimer son compte",
 };

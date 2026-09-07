@@ -5,7 +5,7 @@ import TopBar from "@/components/layout/TopBar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Atelier — Ticket Tout",
+  title: "Atelier — CartePro",
   robots: { index: false, follow: false },
 };
 

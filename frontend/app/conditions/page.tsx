@@ -8,9 +8,9 @@ import Slash from "@/components/ui/Slash";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Conditions d’utilisation | Ticket Tout",
+  title: "Conditions d’utilisation | CartePro",
   description:
-    "Projet de conditions générales d’utilisation du démonstrateur Ticket Tout, soumis à l’avis préalable du service juridique de l'administration.",
+    "Projet de conditions générales d’utilisation du démonstrateur CartePro, soumis à l’avis préalable du service juridique de l'administration.",
   /* Un projet non validé n'a rien à faire dans un index de moteur de
      recherche : la page existe pour être lue depuis le pied de page, pas pour
      être trouvée avant que le service juridique se soit prononcé. */
@@ -34,7 +34,7 @@ export default function ConditionsPage() {
     <PageMain pad="y">
       <article className="mx-auto max-w-[760px]">
         <Micro as="p" tone="accent">
-          Ticket Tout
+          CartePro
           <Slash />
           Administration
         </Micro>
@@ -82,7 +82,7 @@ export default function ConditionsPage() {
           tone="muted"
           className="border-cp-border mt-10 border-t pt-6"
         >
-          Document de référence : docs/03_Projet_CGU_Ticket_Tout.docx
+          Document de référence : projet de CGU CartePro
           <Slash />
           <Link href="/" className="text-cp-fg underline underline-offset-4">
             Retour à l’accueil

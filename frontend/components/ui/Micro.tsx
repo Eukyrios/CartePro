@@ -7,7 +7,7 @@ import type { ComponentProps, ElementType } from "react";
  *
  * The design's smallest voice, and the one that had drifted furthest — it was
  * hand-written in seventeen places with five different tracking values, one of
- * them `font-extrabold` (a no-op: the single Marianne Bold file is mapped to
+ * them `font-extrabold` (a no-op: the single Archivo Bold file is mapped to
  * 700–900) and several missing `font-sans`, which silently fell back to the
  * serif in any element that inherits it.
  *

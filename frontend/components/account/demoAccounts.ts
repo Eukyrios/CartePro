@@ -23,14 +23,14 @@ export type DemoAccount = {
 };
 
 /** Le mot de passe commun, tel que `backend/seed.py` le pose. */
-export const DEMO_PASSWORD = "TicketTout2026";
+export const DEMO_PASSWORD = "CartePro2026";
 
 /** Dans l'ordre des onglets, pour que le dialogue puisse choisir par audience. */
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     audience: "employee",
     label: "Compte salarié de démonstration",
-    email: "camille.durand@administration.gouv.fr",
+    email: "camille.durand@administration.example",
     password: DEMO_PASSWORD,
   },
   {

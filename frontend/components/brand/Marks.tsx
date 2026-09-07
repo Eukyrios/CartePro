@@ -1,113 +1,80 @@
 /**
- * The recurring graphic marks of the Ticket Tout design: the skewed logo glyph
- * and the diagonal arrow that trails every call to action. Both are pure
- * decoration, so both are hidden from assistive technology.
+ * The type half of the CartePro identity, and the diagonal arrow that trails
+ * every call to action.
  *
- * Marks only. Two type helpers used to live here — `Eyebrow`, which was `MICRO`
- * minus `font-sans` and `uppercase`, and `SectionRail` — and they belonged to
- * the interface library, not to the marks: the first is now `<Micro
- * tone="accent">`, and the second went with the two landing sections that were
- * its only callers and were rendered nowhere.
+ * The drawn half — the card monogram — is `VectorMark`, and the two assembled
+ * are `Logotype`. What lives here is the wordmark: set in the brand face rather
+ * than vectorised, because real type stays crisp at every size, follows the
+ * theme's ink, and lets `backend/theme.json` rename the product without anyone
+ * redrawing a letter.
+ *
+ * Marks and type only. Two helpers used to live here — `Eyebrow`, which was
+ * `MICRO` minus `font-sans` and `uppercase`, and `SectionRail` — and they
+ * belonged to the interface library, not to the marks: the first is now
+ * `<Micro tone="accent">`, and the second went with the two landing sections
+ * that were its only callers and were rendered nowhere.
+ *
+ * `LogoMark` used to live here too: three skewed bars in a skewed square, the
+ * previous brand's monogram. It had no caller left when the card monogram
+ * replaced it, so it went rather than being redrawn; the artwork it was built
+ * from is in `public/logo/legacy`.
  */
 
-type LogoMarkProps = {
-  /** Wrapper classes: size and the two colours (block + bar). */
-  className?: string;
-  barClassName?: string;
-  /** For colours that are not known at build time, such as a picked hex. */
-  style?: React.CSSProperties;
-  barStyle?: React.CSSProperties;
-};
-
-/** Three skewed bars in a skewed square — the Ticket Tout monogram. */
-export function LogoMark({
-  className = "size-7 bg-primary-700",
-  barClassName = "bg-white",
-  style,
-  barStyle,
-}: LogoMarkProps) {
-  return (
-    <span
-      aria-hidden="true"
-      style={style}
-      className={`inline-flex shrink-0 -skew-x-[8deg] items-center justify-center gap-[2px] ${className}`}
-    >
-      {[0, 1, 2].map((bar) => (
-        <i
-          key={bar}
-          style={barStyle}
-          className={`block h-[15px] w-[3px] -skew-y-[25deg] ${barClassName}`}
-        />
-      ))}
-    </span>
-  );
+/**
+ * Coupe un nom de marque sur sa capitale intérieure : « CartePro » donne
+ * ["Carte", "Pro"], « Carte Pro » ou « cartepro » ne se coupent pas et
+ * reviennent d'un seul morceau.
+ *
+ * C'est ce qui permet au logotype de suivre `brand.name` : la graisse du
+ * logotype se pose sur la coupure, quel que soit le nom, sans qu'une seconde
+ * clé du thème ait à la déclarer.
+ */
+export function splitBrandName(name: string): [string, string] {
+  const i = name.slice(1).search(/[A-Z]/);
+  return i < 0 ? [name, ""] : [name.slice(0, i + 1), name.slice(i + 1)];
 }
 
 type WordMarkProps = {
-  /** Wrapper classes. The whole mark is sized in em, so set the type size here. */
+  /** Wrapper classes. Tout est en em : la taille se règle par `text-*`. */
   className?: string;
-  /** Colour of the shared T. Defaults to the brand accent. */
-  tClassName?: string;
-  /** Colour of "icket" and "out". Defaults to the pale step of the ramp. */
-  wordClassName?: string;
-  /** For colours that are not known at build time, such as the card's ink. */
+  /** Le nom à composer. Par défaut celui de la marque livrée. */
+  name?: string;
+  /** Pour une encre qui n'est pas connue à la compilation, comme celle de la carte. */
   style?: React.CSSProperties;
 };
 
 /**
- * The "Ticket Tout" wordmark: one oversized T, two lines tall, serving as the
- * initial of both words at once — "icket" on the upper line, "out" on the
- * lower.
+ * The "CartePro" wordmark: one word, one ink, two weights — `Carte` bold and
+ * `Pro` regular.
  *
- * "out" is set larger than "icket" — the word the brand leans on — and tucked
- * back towards the stem, which the upper line cannot do without running into
- * the crossbar.
+ * Two weights rather than two colours, which is what the previous wordmark
+ * used. A colour pairing needs a second value that holds on white and on
+ * near-black alike, and the pale step it landed on came out at 2.29:1; a weight
+ * pairing articulates the compound name with no contrast cost at all, and it
+ * survives being printed in a single ink — the footer's white, or whatever
+ * colour the salarié has chosen for their card.
  *
- * The sizes are in em so the mark scales from whatever font-size the wrapper
- * carries, and the two boxes are matched on purpose: the T is 2.68em tall with
- * 0.74 leading (1.98em of box) against 0.86em + 1.12em of stacked lines (1.98em
- * likewise), which is what keeps the letter spanning both lines exactly instead
- * of overhanging them.
+ * Both weights are real faces: `globals.css` serves Archivo 400 and Archivo 700
+ * (declared `700 900`, so `font-bold` and `font-black` both resolve to the same
+ * file), so nothing here is synthesised by the browser.
  *
- * Two tones: the T takes the deep brand blue and the two words a pale step of
- * the same ramp. Both flip with the theme — cp-accent is near-black blue on a
- * light ground and a light blue on a dark one — so the pairing keeps the same
- * relationship either way rather than inverting into two identical blues.
- *
- * Split across three elements, so the visual parts are hidden from assistive
- * technology and the name is exposed once, in full, instead of being read out
- * as "T icket out".
+ * The two spans sit in one inline flow, so assistive technology reads
+ * "CartePro" straight through — no `sr-only` copy is needed, unlike the
+ * previous lockup whose oversized shared T would have been read as three words.
  */
 export function WordMark({
   className = "",
-  tClassName = "text-cp-accent",
-  wordClassName = "text-primary-300 dark:text-primary-400",
+  name = "CartePro",
   style,
 }: WordMarkProps) {
+  const [tete, queue] = splitBrandName(name);
   return (
     <span
       style={style}
-      className={`inline-flex items-center gap-[0.06em] font-black ${className}`}
+      className={`font-sans leading-none font-bold tracking-[-0.02em] whitespace-nowrap ${className}`}
     >
-      <span
-        aria-hidden="true"
-        className={`text-[2.68em] leading-[0.74] tracking-[-0.06em] ${tClassName}`}
-      >
-        T
-      </span>
-      <span
-        aria-hidden="true"
-        className={`flex flex-col items-start tracking-[-0.05em] ${wordClassName}`}
-      >
-        <span className="text-[1em] leading-[0.86]">icket</span>
-        {/* Tucked back under the crossbar: nothing overhangs the lower line, so
-            "out" can sit against the stem where "icket" cannot. The offset is
-            in this span's own em — 1.44 of the wrapper's — so -0.35em here is
-            roughly half a wrapper em to the left, landing just clear of the
-            stem's right edge. */}
-        <span className="-ml-[0.35em] text-[1.44em] leading-[0.78]">out</span>
-      </span>
-      <span className="sr-only">Ticket Tout</span>
+      {tete}
+      {queue && <span className="font-normal">{queue}</span>}
     </span>
   );
 }

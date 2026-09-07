@@ -1,4 +1,4 @@
-# Ticket Tout
+# CartePro
 
 Démonstrateur du crédit salarié de l'« Administration » : un employeur
 crédite ses salariés, qui dépensent chez des partenaires conventionnés.
@@ -22,11 +22,11 @@ née avant lui n'a pas les mêmes tables, et `db.create_all()` ne migre rien.
 
 ### Comptes de démonstration
 
-Mot de passe commun pour tous : `TicketTout2026`.
+Mot de passe commun pour tous : `CartePro2026`.
 
 Un compte par situation à montrer — chacun ouvre sur un écran différent.
 
-**Salariés** — `…@administration.gouv.fr`
+**Salariés** — `…@administration.example`
 
 | Identifiant | Solde | Ce qu'il montre |
 |---|---|---|
@@ -50,6 +50,38 @@ Un compte par situation à montrer — chacun ouvre sur un écran différent.
 Sans être connecté : la vitrine, le coup de cœur de l'administrateur, et la
 fiche publique d'un partenaire — où la carte est barrée et invite à se
 connecter. Les cinquante salariés du panel vont de `salarie0` à `salarie49`.
+
+### Changer l'identité visuelle
+
+Couleurs, polices et logotype vivent dans **`backend/theme.json`**. On ouvre le
+fichier, on change une valeur, on recharge la page : rien à recompiler, rien à
+redémarrer. Le front lit `GET /api/theme` et pose une feuille de style qui
+surcharge celle qu'il embarque.
+
+```json
+"colors": { "light": { "accent": "#4a1b6b" }, "dark": { "accent": "#c186e8" } },
+"fonts":  { "sans": "\"Archivo\", Arial, sans-serif" },
+"brand":  { "name": "CartePro", "logo": "/logo/mark-purple.svg" }
+```
+
+Ce que le fichier ne dit pas retombe sur les valeurs compilées dans
+`frontend/app/globals.css`, qui restent la référence — un serveur muet laisse le
+site exactement tel qu'il est livré. Deux thèmes, clair et sombre, parce
+qu'aucune clarté unique ne tient sur du blanc **et** sur du presque noir.
+
+`brand.logo` vide affiche le logotype vectorisé du composant, qui prend la
+couleur d'accent et suit donc le thème. Y mettre un chemin — le fichier va dans
+`frontend/public/` — affiche cette image à la place. Le solde de la carte, lui,
+garde sa couleur propre : elle appartient au salarié, qui la choisit dans ses
+paramètres.
+
+Après un changement de couleur, mesurez : `python3 tools/contrast.py` vérifie
+les 26 couples que l'interface emploie réellement, lus dans le CSS.
+
+Pour ajouter une police, posez le `.woff2` dans `frontend/public/fonts` et
+déclarez-la en `@font-face` dans `globals.css` : rien ne télécharge de police,
+ni au build ni à l'exécution, pour que l'application démarre depuis un clone
+sans compte nulle part.
 
 ### Instruire un dossier
 
@@ -94,6 +126,8 @@ d'encaisser plus que le solde disponible.
 
 ```
 backend/     Flask : app.py, auth.py, accounts.py, models.py, routes/, seed.py
+             theme.json  L'identité visuelle : couleurs, polices, logotype
+             instruire.py  Accepter, refuser ou suspendre un partenaire
              `models.py` porte le schéma normalisé (Employeur, Salaries,
              Partenaire, Transaction, Abondement, CoupDeCoeur, Decision,
              Admin) ; `accounts.py` traduit ces tables vers le contrat que le
@@ -115,7 +149,7 @@ dossier `src/` qui n'enveloppait que lui pendant que le front était à la racin
 
 ## Le brand book
 
-Le PDF livré est `docs/brand-book/ticket-tout-brand-book.pdf`. Il se régénère,
+Le PDF livré est `docs/brand-book/cartepro-brand-book.pdf`. Il se régénère,
 dans cet ordre, depuis la racine :
 
 ```bash

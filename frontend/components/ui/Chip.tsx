@@ -3,7 +3,7 @@ import { CHIP_MUTED, CHIP_OFFICIAL, CHIP_PLAIN } from "./surfaces";
 import type { ElementType, ReactNode } from "react";
 
 /**
- * An outlined chip. The ochre one marks what the ministry vouches for.
+ * An outlined chip. The ochre one marks what the administration vouches for.
  *
  * One size, deliberately. The same words — "Partenaire Officiel de l'administration" —
  * were rendered at 9px in the settings panel and at 15px with a 2px border and

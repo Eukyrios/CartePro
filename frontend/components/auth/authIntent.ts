@@ -14,7 +14,7 @@
  */
 import type { AuthMode } from "./AuthModal";
 
-const EVENT = "ticket-tout:auth";
+const EVENT = "cartepro:auth";
 
 /** Demande l'ouverture du dialogue. Sans effet côté serveur, où il n'y en a pas. */
 export function openAuth(mode: AuthMode = "login") {

@@ -57,7 +57,7 @@ def _salarie(email, mot_de_passe):
         prenom="Alice",
         email=email,
         employeur_id=employeur.id,
-        couleur_carte="#1b3a6b",
+        couleur_carte="#4a1b6b",
         couleur_texte="#ffffff",
         effet_metallise=20,
     )

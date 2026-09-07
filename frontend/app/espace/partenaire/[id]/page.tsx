@@ -19,9 +19,9 @@ type Props = { params: Promise<{ id: string }> };
  * ce qu'on regarde, et le `h1` de la page porte le nom.
  */
 export const metadata: Metadata = {
-  title: "Fiche partenaire | Ticket Tout",
+  title: "Fiche partenaire | CartePro",
   description:
-    "La fiche d'un partenaire du réseau Ticket Tout : ce qu'il propose, ses horaires, et le paiement simulé.",
+    "La fiche d'un partenaire du réseau CartePro : ce qu'il propose, ses horaires, et le paiement simulé.",
 };
 
 export default async function PartnerPaymentPage({ params }: Props) {

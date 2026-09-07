@@ -35,7 +35,7 @@ echo "Démarrage du Frontend..."
 (cd "$ROOT/frontend" && npm run dev) &
 
 echo "========================================="
-echo "Projet Ticket Tout en ligne !"
+echo "Projet CartePro en ligne !"
 echo "Backend : http://127.0.0.1:5000"
 echo "Frontend : http://localhost:3000"
 echo "Appuie sur Ctrl+C pour tout éteindre."

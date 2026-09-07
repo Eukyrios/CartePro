@@ -1,24 +1,62 @@
-import VectorMark from "./VectorMark";
+"use client";
+
+import Image from "next/image";
+import { useTheme } from "@/components/theme/ThemeProvider";
+import Logotype from "./Logotype";
 
 /**
- * The Ticket Tout logotype as the chrome uses it.
+ * Le logotype CartePro, tel que le châssis l'emploie.
  *
- * A thin wrapper over VectorMark that carries the ink per surface: the accent
- * blue on the page's own background — which flips to a light blue in the dark
- * theme, so one class covers both — and white where it sits on the footer's
- * near-black, in both themes.
+ * Deux sources possibles, dans cet ordre. Si `backend/theme.json` donne un
+ * chemin d'image — par exemple `/logo/mark-purple.svg` — c'est elle qui
+ * s'affiche : c'est ainsi qu'on change le logotype sans toucher au code, en
+ * posant un fichier dans `frontend/public` et en pointant le thème dessus.
+ * Sinon c'est le logotype composé — monogramme vectoriel plus nom en Archivo —
+ * qui prend la couleur d'accent avec `currentColor` et suit donc le thème sans
+ * qu'on ait à fournir deux fichiers.
  *
- * The coded lockup this replaced is still in Marks.tsx as LogoMark and
- * WordMark. Nothing about it has been deleted.
+ * Le nom vient de `brand.name`, jamais d'une constante d'ici : renommer le
+ * produit dans le thème renomme le logotype, et `WordMark` pose la graisse sur
+ * la capitale intérieure du nom qu'on lui donne.
+ *
+ * `variant="white"` est pour le pied de page, presque noir dans les deux
+ * thèmes : le thème peut y poser une image à part, faute de quoi le logotype
+ * passe en blanc.
+ *
+ * La taille se donne en corps de texte — `className="text-[25px]"` — et le
+ * monogramme s'en déduit : voir `Logotype`, où tout est en em.
+ *
+ * `unoptimized` : l'optimiseur d'images de Next refuse les SVG sans qu'on lui
+ * ouvre les SVG distants, et un logotype est un SVG.
  */
 export default function BrandLogo({
   variant = "auto",
-  className = "h-9 w-auto",
+  className = "text-[24px]",
 }: {
-  /** "auto" takes the accent, which follows the theme; "white" pins white. */
+  /** "auto" prend l'accent, qui suit le thème ; "white" fixe le blanc. */
   variant?: "auto" | "white";
+  /** La taille du logotype, donnée en corps de texte, et ce qui l'entoure. */
   className?: string;
 }) {
+  const { brand } = useTheme();
+  const source = variant === "white" ? brand.logoWhite : brand.logo;
+  const nom = brand.name || "CartePro";
+
+  if (source) {
+    return (
+      <Image
+        src={source}
+        alt={nom}
+        width={160}
+        height={36}
+        unoptimized
+        /* La hauteur suit le corps de texte demandé, comme le logotype composé :
+           1,52em, soit la hauteur du monogramme. */
+        className={`h-[1.52em] w-auto ${className}`}
+      />
+    );
+  }
+
   const ink = variant === "white" ? "text-white" : "text-cp-accent";
-  return <VectorMark className={`${ink} ${className}`} />;
+  return <Logotype name={nom} className={`${ink} ${className}`} />;
 }

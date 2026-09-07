@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble le brand book Ticket Tout en HTML paginé A4.
+"""Assemble le brand book CartePro en HTML paginé A4.
 
 Le tableau de contrastes n'est pas saisi à la main : il est repris de
 tools/contrast.py, qui lit lui-même la palette dans globals.css. Une valeur
@@ -41,7 +41,7 @@ n = len(rows)
 HTML = f"""<!doctype html>
 <html lang="fr">
 <meta charset="utf-8" />
-<title>Ticket Tout — brand book</title>
+<title>CartePro — brand book</title>
 <style>
   @font-face {{ font-family: "Marianne"; font-weight: 400; src: url("../../frontend/public/fonts/Marianne-Regular.woff2") format("woff2"); }}
   @font-face {{ font-family: "Marianne"; font-weight: 500; src: url("../../frontend/public/fonts/Marianne-Medium.woff2") format("woff2"); }}
@@ -110,10 +110,10 @@ HTML = f"""<!doctype html>
 <section class="page couv">
   <div class="tete"><span class="micro">Administration</span><span class="micro">Document de travail</span></div>
   <div>
-    <img src="../../frontend/public/logo/mark-white.svg" style="height:18mm" alt="Ticket Tout" />
-    <h1 style="margin-top:12mm">Ticket&nbsp;Tout<br /><em style="font-family:Spectral,serif;font-weight:400;color:var(--bleu-300)">brand book applicable.</em></h1>
+    <img src="../../frontend/public/logo/mark-white.svg" style="height:18mm" alt="CartePro" />
+    <h1 style="margin-top:12mm">CartePro<br /><em style="font-family:Spectral,serif;font-weight:400;color:var(--bleu-300)">brand book applicable.</em></h1>
     <p style="margin-top:8mm;max-width:52ch;color:rgba(255,255,255,.86)">
-      Règles d'usage de la marque « Ticket Tout » à l'intérieur de la charte
+      Règles d'usage de la marque « CartePro » à l'intérieur de la charte
       ministérielle, chacune vérifiable dans l'application déjà développée :
       une valeur, un emplacement dans le code, ou une capture à l'appui.
     </p>
@@ -123,34 +123,38 @@ HTML = f"""<!doctype html>
 
 <!-- ============================ 1. LOGOTYPE ============================ -->
 <section class="page">
-  <div class="tete"><span class="micro">1 — Logotype</span><span class="micro">Ticket Tout</span></div>
+  <div class="tete"><span class="micro">1 — Logotype</span><span class="micro">CartePro</span></div>
   <h2>Le logotype et ses versions</h2>
   <p>
-    Le logotype validé par l'administrateur est un cercle plein portant le mot-symbole
-    en grotesque italique très grasse. Il est décliné ici en bleu institutionnel
-    <code>#1B3A6B</code>. Les fichiers sources sont dans le dépôt, à
-    <code>frontend/public/logo/</code>.
+    Le logotype CartePro est un monogramme de carte de paiement — un rectangle
+    aux coins arrondis dans lequel sont évidés un C et une puce — suivi du nom
+    en Archivo, <code>Carte</code> en gras et <code>Pro</code> en romain. Une
+    seule encre, le violet de marque <code>#4A1B6B</code> : le C et la puce sont
+    des évidements, jamais une seconde couleur posée par-dessus, ce qui rend le
+    monogramme imprimable dans n'importe quelle teinte unique. Les fichiers
+    sources sont dans le dépôt, à <code>frontend/public/logo/</code> ; le
+    logotype assemblé, lui, est du code — <code>components/brand/Logotype.tsx</code>.
   </p>
   <div class="grille3" style="margin-top:5mm">
-    <figure><div style="background:#fff;border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/mark-blue.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version principale</strong><br />mark-blue.svg — bleu #1B3A6B sur fond clair</figcaption></figure>
-    <figure><div style="background:var(--bleu);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/mark-white.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version monochrome</strong><br />mark-white.svg — réservé blanc sur fond bleu ou noir</figcaption></figure>
-    <figure><div style="background:var(--papier);border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/app/icon.svg" style="width:22mm;height:22mm;border:0" alt="" /></div><figcaption><strong>Version favicon</strong><br />app/icon.svg — 1081×1081, blanc sur pastille bleue</figcaption></figure>
+    <figure><div style="background:#fff;border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/mark-purple.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version principale</strong><br />mark-purple.svg — violet #4A1B6B sur fond clair</figcaption></figure>
+    <figure><div style="background:var(--bleu);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/mark-white.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version monochrome</strong><br />mark-white.svg — réservé blanc sur fond violet ou noir</figcaption></figure>
+    <figure><div style="background:var(--papier);border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/app/icon.svg" style="width:22mm;height:22mm;border:0" alt="" /></div><figcaption><strong>Version favicon</strong><br />app/icon.svg — 128×128, blanc sur pastille violette</figcaption></figure>
   </div>
   <h3>Zone de protection et tailles minimales</h3>
   <p>
-    Zone de protection : une marge égale à la hauteur du cercle du logotype, sur
-    les quatre côtés, libre de tout texte, filet ou image. Dans l'application, le
-    bloc-marque occupe le coin supérieur gauche de la barre, à 3,2&nbsp;vw du bord
+    Zone de protection : une marge égale à la hauteur du monogramme, sur les
+    quatre côtés, libre de tout texte, filet ou image. Dans l'application, le
+    logotype occupe le coin supérieur gauche de la barre, à 3,2&nbsp;vw du bord
     et sur une hauteur de 38&nbsp;px pour une barre de 76&nbsp;px : la moitié de la
     hauteur disponible reste vide autour de lui.
   </p>
   <ul>
-    <li><strong>Écran</strong> — hauteur minimale 24&nbsp;px pour le logotype complet ; en dessous, utiliser la pastille favicon seule.</li>
-    <li><strong>Impression</strong> — largeur minimale 25&nbsp;mm ; l'italique très grasse se referme en dessous.</li>
-    <li><strong>Favicon</strong> — la pastille est lisible à partir de 32&nbsp;px ; à 16&nbsp;px le mot-symbole n'est plus déchiffrable et seule la pastille fait signe.</li>
+    <li><strong>Écran</strong> — hauteur minimale 22&nbsp;px pour le logotype complet ; en dessous, utiliser le monogramme seul.</li>
+    <li><strong>Impression</strong> — largeur minimale 20&nbsp;mm ; en dessous la puce se referme sur le C.</li>
+    <li><strong>Favicon</strong> — lisible dès 16&nbsp;px : à cette taille la puce se réduit à un point, mais la carte et son C se lisent encore.</li>
   </ul>
   <figure style="margin-top:4mm"><img src="captures/bloc-marque.png" alt="" /><figcaption>Capture de l'application : bloc-marque en haut à gauche, barre de 76&nbsp;px — <code>components/layout/TopBar.tsx</code></figcaption></figure>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 2</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 2</span></div>
 </section>
 
 <!-- ==================== 2. CONFLIT LOGO / CHARTE ==================== -->
@@ -194,7 +198,7 @@ HTML = f"""<!doctype html>
     Rien n'a été inventé à leur place : ces points sont signalés comme ouverts en
     dernière page.
   </p>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 3</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 3</span></div>
 </section>
 
 <!-- ============================ 3. PALETTE ============================ -->
@@ -238,7 +242,7 @@ HTML = f"""<!doctype html>
       Aucun composant ne connaît ces valeurs.
     </p>
   </div>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 4</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 4</span></div>
 </section>
 
 <!-- ======================= 4. CONTRASTES (clair) ======================= -->
@@ -257,7 +261,7 @@ HTML = f"""<!doctype html>
     <tr><th>Usage</th><th>Où</th><th>Avant-plan</th><th>Fond</th><th>Ratio</th><th>Seuil</th><th>Verdict</th></tr>
     {table("clair")}
   </table>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 5</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 5</span></div>
 </section>
 
 <!-- ======================= 5. CONTRASTES (sombre) ====================== -->
@@ -279,7 +283,7 @@ HTML = f"""<!doctype html>
       de 4,5:1.
     </p>
   </div>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 6</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 6</span></div>
 </section>
 
 <!-- ========================== 6. TYPOGRAPHIE ========================== -->
@@ -311,7 +315,7 @@ HTML = f"""<!doctype html>
     <li>Les montants sont en Spectral, avec l'espace insécable étroite avant le symbole € produite par <code>Intl.NumberFormat("fr-FR")</code>.</li>
     <li>Aucune graisse synthétique : Marianne ne livre pas d'ExtraBold, la Bold couvre donc 700 à 900.</li>
   </ul>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 7</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 7</span></div>
 </section>
 
 <!-- ======================= 7. CARTE PHYSIQUE ========================= -->
@@ -337,7 +341,7 @@ HTML = f"""<!doctype html>
       garde son propre encadré.
     </p>
   </div>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 8</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 8</span></div>
 </section>
 
 <!-- ==================== 8. MISES EN SITUATION ======================== -->
@@ -360,7 +364,7 @@ HTML = f"""<!doctype html>
       d'omissions.
     </p>
   </div>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 9</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 9</span></div>
 </section>
 
 <!-- ================= 9. LA CARTE DANS L'INTERFACE — REPOS ============ -->
@@ -369,7 +373,7 @@ HTML = f"""<!doctype html>
   <h2>La carte au repos</h2>
   <p>
     Capture de l'application en fonctionnement, espace salarié, écran « Ma
-    carte ». Session du compte de démonstration <code>employe@tickettout.fr</code>,
+    carte ». Session du compte de démonstration <code>employe@cartepro.fr</code>,
     registre remis à son état initial.
   </p>
   <figure style="margin-top:4mm"><img src="captures/carte-au-repos.png" alt="" /><figcaption>
@@ -383,7 +387,7 @@ HTML = f"""<!doctype html>
     <li>Le logotype est en réservé blanc sur le bleu institutionnel : jamais le rouge de marque sur ce fond.</li>
     <li>Le solde est formulé positivement dans la page qui l'accompagne : « Vous pouvez encore dépenser… ».</li>
   </ul>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 10</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 10</span></div>
 </section>
 
 <!-- ============== 10. LA CARTE DANS L'INTERFACE — PAIEMENT =========== -->
@@ -410,7 +414,7 @@ HTML = f"""<!doctype html>
       <code>SIMULATION_NOTICE</code> de <code>components/ui/surfaces.ts</code>.
     </p>
   </div>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 11</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 11</span></div>
 </section>
 
 <!-- ========================== 11. DÉCLINAISONS ======================= -->
@@ -422,7 +426,7 @@ HTML = f"""<!doctype html>
     <figure><img src="assets/social.png" alt="" /><figcaption><strong>Visuel réseaux sociaux 1080×1080</strong> — fond papier, logotype bleu, aucune valeur monétaire affichée donc aucun montant à justifier.</figcaption></figure>
     <figure><img src="assets/affiche-a3.png" alt="" /><figcaption><strong>Gabarit d'affiche A3</strong> — 297×420&nbsp;mm. Le bandeau haut droit reste réservé au bloc-marque ministériel, dont les règles n'ont pas été transmises.</figcaption></figure>
   </div>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 12</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 12</span></div>
 </section>
 
 <!-- ========================== 12. INTERDITS =========================== -->
@@ -478,7 +482,7 @@ HTML = f"""<!doctype html>
       </p>
     </div>
   </div>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 13</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 13</span></div>
 </section>
 
 <!-- ==================== 13. COHÉRENCE APPLICATIVE ==================== -->
@@ -493,10 +497,10 @@ HTML = f"""<!doctype html>
     <tr><td>Logotype dans l'espace salarié</td><td><code>TopBar</code> sur <code>/espace</code></td><td>en place</td></tr>
     <tr><td>Logotype dans l'espace partenaire</td><td>—</td><td class="verdict">espace non construit</td></tr>
     <tr><td>Logotype dans l'administration</td><td>—</td><td class="verdict">espace non construit</td></tr>
-    <tr><td>« Ticket Tout » — onglets, pied de page, connexion</td><td><code>app/layout.tsx</code>, <code>Footer</code>, <code>AuthModal</code></td><td>en place</td></tr>
-    <tr><td>« Ticket Tout » — jeux de démonstration</td><td><code>components/account/demoAccounts.ts</code></td><td>en place</td></tr>
-    <tr><td>« Ticket Tout » — README, artefact de build</td><td><code>frontend/README.md</code>, <code>.github/artifact/RUN.md</code></td><td>en place</td></tr>
-    <tr><td>« Ticket Tout » — courriels applicatifs, exports, pages d'erreur</td><td>—</td><td class="verdict">non produits</td></tr>
+    <tr><td>« CartePro » — onglets, pied de page, connexion</td><td><code>app/layout.tsx</code>, <code>Footer</code>, <code>AuthModal</code></td><td>en place</td></tr>
+    <tr><td>« CartePro » — jeux de démonstration</td><td><code>components/account/demoAccounts.ts</code></td><td>en place</td></tr>
+    <tr><td>« CartePro » — README, artefact de build</td><td><code>frontend/README.md</code>, <code>.github/artifact/RUN.md</code></td><td>en place</td></tr>
+    <tr><td>« CartePro » — courriels applicatifs, exports, pages d'erreur</td><td>—</td><td class="verdict">non produits</td></tr>
     <tr><td>Mention de simulation partout où un montant apparaît</td><td><code>SIMULATION_NOTICE</code>, 4 écrans</td><td>en place</td></tr>
     <tr><td>Solde formulé positivement</td><td><code>BalanceSection.tsx</code></td><td>en place</td></tr>
     <tr><td>Erreur distincte du rouge de marque</td><td><code>--cp-alert</code> → <code>--danger-fg</code></td><td>en place</td></tr>
@@ -514,7 +518,7 @@ HTML = f"""<!doctype html>
       touché.
     </p>
   </div>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 14</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 14</span></div>
 </section>
 
 <!-- ========================= 14. OMISSIONS =========================== -->
@@ -563,7 +567,7 @@ HTML = f"""<!doctype html>
     <code>tools/capture.js</code>, contrastes par <code>tools/contrast.py</code>.
     Tout est reproductible depuis le dépôt.
   </p>
-  <div class="pied"><span class="micro">Ticket Tout — brand book</span><span class="micro">Page 15</span></div>
+  <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 15</span></div>
 </section>
 </html>
 """

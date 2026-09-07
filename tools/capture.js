@@ -161,11 +161,11 @@ async function main() {
 
   // La session de démonstration : le compte employé et un registre neuf.
   await go(base);
-  await evaluate(`localStorage.setItem("ticket-tout.profile", JSON.stringify({
-    audience: "employee", username: "Camille Fontaine", email: "employe@tickettout.fr",
+  await evaluate(`localStorage.setItem("cartepro.profile", JSON.stringify({
+    audience: "employee", username: "Camille Fontaine", email: "employe@cartepro.fr",
     partner: { raisonSociale: "", siren: "", objetSocial: "", categorie: "", adresse: "", ville: "", codePostal: "", nomRepresentant: "" },
-    cardStyle: { color: "#1b3a6b", text: "#ffffff", pattern: "waves", metalness: 45 }
-  })); localStorage.removeItem("ticket-tout.ledger"); "ok"`);
+    cardStyle: { color: "#4a1b6b", text: "#ffffff", pattern: "waves", metalness: 45 }
+  })); localStorage.removeItem("cartepro.ledger"); "ok"`);
 
   // Les deux thèmes : le book présente le thème clair, le sombre est montré
   // comme déclinaison — et les deux doivent être vérifiables.

@@ -16,7 +16,7 @@ from PIL import Image
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PAGES = sorted((ROOT / "docs/brand-book/pages").glob("page-*.png"))
-OUT = ROOT / "docs/brand-book/ticket-tout-brand-book.pdf"
+OUT = ROOT / "docs/brand-book/cartepro-brand-book.pdf"
 
 # Les captures sont à 2× la taille CSS : 96 dpi × 2.
 DPI = 192

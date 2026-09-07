@@ -23,6 +23,7 @@ from routes.partenaires import partenaires_bp
 from routes.admin import admin_bp
 from routes.transactions import transactions_bp
 from routes.sirh import sirh_bp
+from routes.theme import theme_bp
 from flask import jsonify
 from flasgger import Swagger
 
@@ -94,6 +95,8 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
     app.register_blueprint(sirh_bp, url_prefix='/api/v1')
+    # L'identité visuelle : couleurs, polices, logotype. Voir theme.json.
+    app.register_blueprint(theme_bp, url_prefix='/api/theme')
 
     # Création automatique des tables SQLite si elles n'existent pas.
     #

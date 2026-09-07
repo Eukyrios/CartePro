@@ -8,7 +8,7 @@ import type { ComponentProps, ReactNode } from "react";
  * The three buttons this design has, and no fourth.
  *
  * `solid` is the one committing action of a panel, filled with the foreground
- * ink and never with the institutional blue — the charter reserves #1B3A6B for
+ * ink and never with the brand colour — the charter reserves #4A1B6B for
  * identity and text, so no button may be a field of it. `outline` is everything
  * secondary. `danger` is destruction.
  *

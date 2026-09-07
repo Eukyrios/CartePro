@@ -19,7 +19,7 @@ import unicodedata
 from models import Admin, Categorie, Employeur, Partenaire, PartnerStatus, Salaries, db
 
 DEFAULT_CARD_STYLE = {
-    "color": "#1b3a6b",
+    "color": "#4a1b6b",
     "text": "#ffffff",
     "pattern": "waves",
     "metalness": 20,

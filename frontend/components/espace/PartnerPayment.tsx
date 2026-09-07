@@ -114,7 +114,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
       density="tight"
     >
       <div className="mb-5 flex items-center gap-4">
-        {/* Back to wherever you came from — the catalogue, or the Minister's
+        {/* Back to wherever you came from — the catalogue, or the administration's
             selection. A fresh tab has no history to go back through, so that
             case lands on the space instead of doing nothing. */}
         <IconButton
