@@ -1,30 +1,92 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
-from sqlalchemy import CheckConstraint
-from sqlalchemy import event
+from sqlalchemy import CheckConstraint, event, Enum as SQLEnum
+import enum
 
 db = SQLAlchemy()
 
-class User(db.Model):
-    __tablename__ = "users"
+# -----------------------------------------------------------------------------
+# Enums
+# -----------------------------------------------------------------------------
+class PartnerStatus(enum.Enum):
+    en_attente = "en_attente"
+    valide = "validé"
+    refuse = "refusé"
+    suspendu = "suspendu"
+
+class DecisionSens(enum.Enum):
+    accepte = "accepté"
+    refuse = "refusé"
+    suspendu = "suspendu"
+
+class TransactionStatut(enum.Enum):
+    validee = "validée"
+    annulee = "annulée"
+    correction = "correction"
+
+class MotifCarte(enum.Enum):
+    vagues = "vagues"
+    points = "points"
+    grille = "grille"
+    rayures = "rayures"
+    croisillons = "croisillons"
+    cercles = "cercles"
+    damier = "damier"
+    aucun = "aucun"
+
+class CoupDeCoeurStatut(enum.Enum):
+    actif = "actif"
+    suspendu = "suspendu"
+
+# -----------------------------------------------------------------------------
+# Employeur
+# -----------------------------------------------------------------------------
+class Employeur(db.Model):
+    __tablename__ = "employeurs"
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=True, index=True)
-    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    raison_sociale = db.Column(db.String(255), nullable=False)
+
+    # Relations
+    salaries = db.relationship("Salaries", back_populates="employeur", cascade="all, delete-orphan")
+    abondements = db.relationship("Abondement", back_populates="employeur", cascade="all, delete-orphan")
+
+# -----------------------------------------------------------------------------
+# Catégorie (pour les partenaires)
+# -----------------------------------------------------------------------------
+class Categorie(db.Model):
+    __tablename__ = "categories"
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(100), nullable=False, unique=True)
+
+# -----------------------------------------------------------------------------
+# Salarié
+# -----------------------------------------------------------------------------
+class Salaries(db.Model):
+    __tablename__ = "salaries"
+    id = db.Column(db.Integer, primary_key=True)
+    nom = db.Column(db.String(100), nullable=False)
+    prenom = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default="user")
-    audience = db.Column(db.String(20), nullable=False, default="employee")
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    employeur_id = db.Column(db.Integer, db.ForeignKey("employeurs.id"), nullable=False)
+    couleur_carte = db.Column(db.String(7), nullable=False)  # HEX, ex: "#FF5733"
+    couleur_texte = db.Column(db.String(7), nullable=False)  # HEX
+    motif = db.Column(SQLEnum(MotifCarte), nullable=False, default=MotifCarte.aucun)
+    effet_metallise = db.Column(db.Integer, nullable=False, default=0)  # 0–100
 
-    # --- NOUVEAUTÉ : Le solde ---
-    solde = db.Column(db.Float, default=50.0, nullable=False) # 50€ offerts à l'inscription par exemple
+    # Relation
+    employeur = db.relationship("Employeur", back_populates="salaries")
+    transactions = db.relationship("Transaction", back_populates="salarie", foreign_keys="Transaction.salarie_id", cascade="all, delete-orphan")
+    abondements_recus = db.relationship("Abondement", back_populates="salarie", cascade="all, delete-orphan")
 
-    # Champs spécifiques partenaire (optionnels)
-    company_name = db.Column(db.String(120), nullable=True)
-    siret = db.Column(db.String(20), nullable=True)
-    partner_data = db.Column(db.JSON, nullable=False, default=dict)
-    card_style = db.Column(db.JSON, nullable=False, default=dict)
+    # Propriété dérivée : solde courant
+    @property
+    def solde(self):
+        from sqlalchemy import func
+        total_credits = db.session.query(func.sum(Abondement.montant)).filter_by(salarie_id=self.id).scalar() or 0
+        total_debits = db.session.query(func.sum(Transaction.montant)).filter_by(salarie_id=self.id, statut=TransactionStatut.validee).scalar() or 0
+        return total_credits - total_debits
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -32,34 +94,118 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def __repr__(self):
-        return f"<User {self.email} ({self.role})>"
+# -----------------------------------------------------------------------------
+# Partenaire
+# -----------------------------------------------------------------------------
+class Partenaire(db.Model):
+    __tablename__ = "partenaires"
+    id = db.Column(db.Integer, primary_key=True)
+    raison_sociale = db.Column(db.String(255), nullable=False)
+    siren = db.Column(db.String(9), nullable=False, unique=True)  # contrôlé via Luhn côté applicatif
+    objet_social = db.Column(db.String(255), nullable=True)
+    categorie_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
+    adresse = db.Column(db.String(255), nullable=False)
+    ville = db.Column(db.String(100), nullable=False)
+    code_postal = db.Column(db.String(10), nullable=False)
+    email_contact = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    nom_representant = db.Column(db.String(150), nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    statut = db.Column(SQLEnum(PartnerStatus), nullable=False, default=PartnerStatus.en_attente)
+    image_partenaire = db.Column(db.String(512), nullable=True)  # URL ou chemin
 
-# --- NOUVEAUTÉ : La table des transactions ---
+    # Relations
+    categorie = db.relationship("Categorie")
+    transactions = db.relationship("Transaction", back_populates="partenaire", cascade="all, delete-orphan")
+    coups_de_coeur = db.relationship("CoupDeCoeur", back_populates="partenaire", cascade="all, delete-orphan")
+    decisions = db.relationship("Decision", back_populates="partenaire", cascade="all, delete-orphan")
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+# -----------------------------------------------------------------------------
+# Transaction
+# -----------------------------------------------------------------------------
 class Transaction(db.Model):
     __tablename__ = "transactions"
     id = db.Column(db.Integer, primary_key=True)
-    salarie_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    partenaire_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    salarie_id = db.Column(db.Integer, db.ForeignKey("salaries.id"), nullable=False)
+    partenaire_id = db.Column(db.Integer, db.ForeignKey("partenaires.id"), nullable=False)
     montant = db.Column(db.Float, nullable=False)
-    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    statut = db.Column(db.String(20), default="validee") # "validee" ou "annulee"
-    
-    # 🔒 Clé d'idempotence pour bloquer les doubles scans
-    idempotency_key = db.Column(db.String(512), unique=True, nullable=True) 
+    horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    statut = db.Column(SQLEnum(TransactionStatut), nullable=False, default=TransactionStatut.validee)
+    reference_qr = db.Column(db.String(255), nullable=False, unique=True)
+    idempotency_key = db.Column(db.String(512), unique=True, nullable=True)
+    sens_ecriture = db.Column(db.String(20), nullable=False, default="debit")  # "debit" ou "contre-ecriture"
+    transaction_originale_id = db.Column(db.Integer, db.ForeignKey("transactions.id"), nullable=True)  # pour correction
+
+    # Relations
+    salarie = db.relationship("Salaries", foreign_keys=[salarie_id], back_populates="transactions")
+    partenaire = db.relationship("Partenaire", back_populates="transactions")
+    corrections = db.relationship("Transaction", backref=db.backref("originale", remote_side=[id]), foreign_keys=[transaction_originale_id])
 
     __table_args__ = (
         CheckConstraint("montant > 0", name="ck_transaction_montant_positive"),
     )
 
-    # Relations pour accéder facilement aux objets User liés
-    salarie = db.relationship("User", foreign_keys=[salarie_id])
-    partenaire = db.relationship("User", foreign_keys=[partenaire_id])
-
 @event.listens_for(Transaction, 'before_update')
 def block_transaction_update(mapper, connection, target):
+    # On autorise uniquement les corrections via une nouvelle transaction, pas de modification directe
     raise Exception("Règle comptable : Une transaction validée est immuable. Les UPDATE sont interdits.")
 
 @event.listens_for(Transaction, 'before_delete')
 def block_transaction_delete(mapper, connection, target):
     raise Exception("Règle comptable : Une transaction validée est immuable. Les DELETE sont interdits.")
+
+# -----------------------------------------------------------------------------
+# Abondement (crédit employeur → salarié)
+# -----------------------------------------------------------------------------
+class Abondement(db.Model):
+    __tablename__ = "abondements"
+    id = db.Column(db.Integer, primary_key=True)
+    employeur_id = db.Column(db.Integer, db.ForeignKey("employeurs.id"), nullable=False)
+    salarie_id = db.Column(db.Integer, db.ForeignKey("salaries.id"), nullable=False)
+    montant = db.Column(db.Float, nullable=False)
+    horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    agent_admin_id = db.Column(db.Integer, nullable=False)  # ID de l’admin ayant saisi
+
+    # Relations
+    employeur = db.relationship("Employeur", back_populates="abondements")
+    salarie = db.relationship("Salaries", back_populates="abondements_recus")
+
+    __table_args__ = (
+        CheckConstraint("montant > 0", name="ck_abondement_montant_positive"),
+    )
+
+# -----------------------------------------------------------------------------
+# Coup de cœur du Ministre
+# -----------------------------------------------------------------------------
+class CoupDeCoeur(db.Model):
+    __tablename__ = "coups_de_coeur"
+    id = db.Column(db.Integer, primary_key=True)
+    partenaire_id = db.Column(db.Integer, db.ForeignKey("partenaires.id"), nullable=False)
+    mot_du_ministre = db.Column(db.Text, nullable=False)
+    horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    statut = db.Column(SQLEnum(CoupDeCoeurStatut), nullable=False, default=CoupDeCoeurStatut.actif)
+    nombre_clicks = db.Column(db.Integer, nullable=False, default=0)
+
+    # Relation
+    partenaire = db.relationship("Partenaire", back_populates="coups_de_coeur")
+
+# -----------------------------------------------------------------------------
+# Table de décision / traçabilité (exigée par Pontaillac)
+# -----------------------------------------------------------------------------
+class Decision(db.Model):
+    __tablename__ = "decisions"
+    id = db.Column(db.Integer, primary_key=True)
+    partenaire_id = db.Column(db.Integer, db.ForeignKey("partenaires.id"), nullable=False)
+    agent_id = db.Column(db.Integer, nullable=False)  # ID de l’administrateur
+    sens = db.Column(SQLEnum(DecisionSens), nullable=False)
+    motif_ecrit = db.Column(db.Text, nullable=False)
+    horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    # Relation
+    partenaire = db.relationship("Partenaire", back_populates="decisions")
+    
