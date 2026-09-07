@@ -10,6 +10,7 @@ import { useAccount } from "@/components/account/AccountProvider";
 import SignInButton from "@/components/auth/SignInButton";
 import { useBalance } from "@/components/account/useBalance";
 import { partnerCategoryLabel } from "@/components/data/partnerCategories";
+import { MINISTER_PICK_ENABLED } from "@/components/minister/MinisterPickSection";
 import PartnerPhoto from "@/components/ui/PartnerPhoto";
 import BlueprintFrame from "@/components/ui/BlueprintFrame";
 import Breadcrumb from "@/components/ui/Breadcrumb";
@@ -126,11 +127,13 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
         <Breadcrumb
           trail={
             mode === "visitor"
-              ? [
-                  { label: "Accueil", href: "/" },
-                  { label: "Coup de cœur", href: "/#coup-de-coeur" },
-                  { label: "Fiche" },
-                ]
+              ? MINISTER_PICK_ENABLED
+                ? [
+                    { label: "Accueil", href: "/" },
+                    { label: "Coup de cœur", href: "/#coup-de-coeur" },
+                    { label: "Fiche" },
+                  ]
+                : [{ label: "Accueil", href: "/" }, { label: "Fiche" }]
               : [
                   { label: "Mon espace", href: "/espace" },
                   { label: "Le réseau", href: "/espace#reseau" },

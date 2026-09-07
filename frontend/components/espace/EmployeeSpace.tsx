@@ -8,7 +8,9 @@ import EmptyState from "@/components/ui/EmptyState";
 import Note from "@/components/ui/Note";
 import BalanceSection, { SpendingStatement } from "./BalanceSection";
 import HistorySection from "./HistorySection";
-import MinisterPickSection from "@/components/minister/MinisterPickSection";
+import MinisterPickSection, {
+  MINISTER_PICK_ENABLED,
+} from "@/components/minister/MinisterPickSection";
 import type { RailSection } from "@/components/layout/SectionNav";
 
 /**
@@ -16,12 +18,18 @@ import type { RailSection } from "@/components/layout/SectionNav";
  * every other numbered list in the design; the greeting belongs to the balance
  * screen rather than being a screen of its own.
  */
-const SECTIONS: readonly RailSection[] = [
-  { id: "solde", index: "01", label: "Ma carte" },
-  { id: "coup-de-coeur", index: "02", label: "Coup de cœur" },
-  { id: "reseau", index: "03", label: "Réseau" },
-  { id: "historique", index: "04", label: "Historique" },
-];
+const SECTIONS: readonly RailSection[] = MINISTER_PICK_ENABLED
+  ? [
+      { id: "solde", index: "01", label: "Ma carte" },
+      { id: "coup-de-coeur", index: "02", label: "Coup de cœur" },
+      { id: "reseau", index: "03", label: "Réseau" },
+      { id: "historique", index: "04", label: "Historique" },
+    ]
+  : [
+      { id: "solde", index: "01", label: "Ma carte" },
+      { id: "reseau", index: "02", label: "Réseau" },
+      { id: "historique", index: "03", label: "Historique" },
+    ];
 
 /**
  * The salarié space: one full-height screen per subject, snapping as the

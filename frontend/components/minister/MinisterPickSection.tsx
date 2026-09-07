@@ -8,6 +8,14 @@ import PartnerTile from "@/components/ui/PartnerTile";
 import Screen from "@/components/ui/Screen";
 
 /**
+ * Coupe la section — et tout ce qui y mène ailleurs dans le site (le bouton du
+ * hero, l'entrée du rail, le fil d'Ariane de la fiche partenaire) — pendant
+ * que l'espace d'administration qui la pilotera est en construction. Le code
+ * reste en place pour ce jour-là ; seul cet interrupteur change.
+ */
+export const MINISTER_PICK_ENABLED = false;
+
+/**
  * « Coup de cœur du Ministre » : un partenaire, et ce que le Ministre en dit.
  *
  * Un seul. La section en montrait quatre côte à côte, ce qui en faisait une
@@ -37,6 +45,8 @@ export default function MinisterPickSection({
   /** "page" sur la page d'accueil, dont les écrans vont de bord à bord. */
   gutter?: "container" | "page";
 }) {
+  if (!MINISTER_PICK_ENABLED) return null;
+
   const chosen = ministerPick();
 
   // Sélection vide : pas de titre au-dessus de rien.

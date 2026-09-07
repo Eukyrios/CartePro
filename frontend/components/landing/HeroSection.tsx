@@ -1,5 +1,6 @@
 import { CardTag } from "@/components/card/CardStage";
 import CreditCard3D from "@/components/card/CreditCard3D";
+import { MINISTER_PICK_ENABLED } from "@/components/minister/MinisterPickSection";
 import Button from "@/components/ui/Button";
 import Display from "@/components/ui/Display";
 import Screen from "@/components/ui/Screen";
@@ -52,11 +53,13 @@ export default function HeroSection() {
           {/* Une porte vers le réseau, avant qu'on ait à faire défiler pour le
               découvrir : le coup de cœur est le seul partenaire nommé de la
               page d'accueil. Une ancre, donc elle se copie et se partage. */}
-          <div className="mt-8">
-            <Button href="#coup-de-coeur" arrow>
-              Le coup de cœur du Ministre
-            </Button>
-          </div>
+          {MINISTER_PICK_ENABLED && (
+            <div className="mt-8">
+              <Button href="#coup-de-coeur" arrow>
+                Le coup de cœur du Ministre
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

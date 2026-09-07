@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MINISTER_PICK_ENABLED } from "@/components/minister/MinisterPickSection";
 import { MICRO } from "@/components/ui/surfaces";
 
 /**
@@ -16,12 +17,18 @@ export type RailSection = {
   label: string;
 };
 
-const LANDING_SECTIONS: readonly RailSection[] = [
-  { id: "accueil", index: "", label: "Accueil" },
-  { id: "fonctionnement", index: "01", label: "Fonctionnement" },
-  { id: "coup-de-coeur", index: "02", label: "Coup de cœur" },
-  { id: "confiance", index: "03", label: "Confiance" },
-];
+const LANDING_SECTIONS: readonly RailSection[] = MINISTER_PICK_ENABLED
+  ? [
+      { id: "accueil", index: "", label: "Accueil" },
+      { id: "fonctionnement", index: "01", label: "Fonctionnement" },
+      { id: "coup-de-coeur", index: "02", label: "Coup de cœur" },
+      { id: "confiance", index: "03", label: "Confiance" },
+    ]
+  : [
+      { id: "accueil", index: "", label: "Accueil" },
+      { id: "fonctionnement", index: "01", label: "Fonctionnement" },
+      { id: "confiance", index: "02", label: "Confiance" },
+    ];
 
 /**
  * A slim timeline pinned to the side: one rule per screen, the current one
