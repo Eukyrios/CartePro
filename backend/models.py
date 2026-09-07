@@ -19,6 +19,12 @@ class DecisionSens(enum.Enum):
     accepte = "accepté"
     refuse = "refusé"
     suspendu = "suspendu"
+    # Une demande de reexamen n'est pas une decision de l'administration : c'est
+    # l'etablissement qui redepose. Elle a sa place dans la meme table parce que
+    # c'est le journal de l'instruction, et qu'un dossier qui rouvre doit
+    # laisser une trace comme celui qui se ferme. La noter « suspendu », faute
+    # de mieux, rendait l'historique illisible : « refuse → suspendu → refuse ».
+    reexamen = "réexamen demandé"
 
 class TransactionStatut(enum.Enum):
     validee = "validée"

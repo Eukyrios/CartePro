@@ -22,27 +22,65 @@ née avant lui n'a pas les mêmes tables, et `db.create_all()` ne migre rien.
 
 ### Comptes de démonstration
 
-Mot de passe commun : `TicketTout2026`.
+Mot de passe commun pour tous : `TicketTout2026`.
 
-| Type | Identifiant |
-|---|---|
-| salarié | `camille.durand@administration.gouv.fr` — 32,50 € |
-| partenaire | `contact@poney-dream-78.fr` — conventionné |
-| partenaire en attente | `contact@kostumparty.fr` — encaissement et recettes barrés |
-| partenaire refusé | `contact@spa-vosges.fr` — se connecte, et son espace ouvre sur la décision et son motif |
-| admin | `admin@administration.gouv.fr` |
+Un compte par situation à montrer — chacun ouvre sur un écran différent.
 
-Le panel du cabinet est semé avec 16 partenaires, dans les trois statuts que le
-dispositif connaît : **11 conventionnés**, 3 en attente d'examen, 2 refusés — et
-un refus porte son motif écrit — que **seul l'établissement concerné** lit, en
-premier écran de son espace. La fiche publique n'en dit rien : le statut est un
-fait, le motif est un dossier. Puis 50 salariés, 200 opérations planifiées — 161 écrites, 39
-refusées — et les cas limites exigés : trois soldes à zéro, plusieurs sous cinq
-euros.
+**Salariés** — `…@administration.gouv.fr`
 
-Les seize fiches ont une présentation, des horaires et un site. Trois sont
-écrites en français et font foi — dont celles que l'administrateur distingue ; les
-treize autres sont remplies avec la légende de Romulus et Remus, en latin. C'est
+| Identifiant | Solde | Ce qu'il montre |
+|---|---|---|
+| `camille.durand` | 32,50 € | Le parcours normal : la carte, le QR, l'historique avec son crédit employeur et deux paiements |
+| `salarie0` | 0,00 € | Le solde épuisé — tout partenaire refuse, et l'écran dit pourquoi |
+| `salarie5` | 4,96 € | Le solde tout juste : seul le partenaire le moins cher passe — Glaces Corrèze à 4,50 € — les quinze autres refusent |
+| `salarie19` | — | L'historique dense : sept opérations, de quoi exercer les filtres et la pagination |
+| `salarie38` | 149,26 € | Le solde confortable, pour enchaîner les paiements sans buter sur le refus |
+| `admin` | — | Le rôle administrateur : export CSV de toutes les transactions (`/api/admin/transactions.csv`) |
+
+**Partenaires** — `contact@<slug>.fr`
+
+| Identifiant | Statut | Ce qu'il montre |
+|---|---|---|
+| `contact@poney-dream-78.fr` | conventionné | L'espace complet : encaisser, réseau, recettes. Coup de cœur de l'administrateur, fiche rédigée, horaires |
+| `contact@kostumparty.fr` | **en attente** | Encaissement et recettes **barrés** — l'accès dépend du conventionnement, pas de la connexion |
+| `contact@spa-vosges.fr` | **refusé** | Son espace ouvre sur la décision, son motif et le bouton de réexamen. Refusé deux fois : l'historique de l'instruction est visible avec `python instruire.py` |
+| `contact@camping-etang-bleu.fr` | **refusé** | Un refus simple, jamais réexaminé |
+| `contact@cinema-rex-lille.fr` | conventionné | Une fiche de **démonstration** : présentation en latin, pastille « Fiche de démonstration » |
+
+Sans être connecté : la vitrine, le coup de cœur de l'administrateur, et la
+fiche publique d'un partenaire — où la carte est barrée et invite à se
+connecter. Les cinquante salariés du panel vont de `salarie0` à `salarie49`.
+
+### Instruire un dossier
+
+L'espace d'administration n'existe pas encore. En attendant, les décisions se
+prennent en ligne de commande, et elles s'écrivent :
+
+```bash
+cd backend
+python instruire.py                                  # l'état des seize dossiers
+python instruire.py refuser  spa-vosges  "motif écrit"
+python instruire.py accepter kostumparty "motif écrit"
+```
+
+Chaque geste laisse une décision motivée dans la table `decisions` — rien n'est
+effacé, les précédentes restent. C'est ce que la traçabilité exige, et c'est ce
+que le partenaire lit dans son espace.
+
+### Ce que le seed contient
+
+Seize partenaires, dans les trois statuts que le dispositif connaît : **11
+conventionnés**, 3 en attente d'examen, 2 refusés. Un refus porte son motif
+écrit, que **seul l'établissement concerné** lit — la fiche publique n'en dit
+rien : le statut est un fait, le motif est un dossier.
+
+Puis 51 salariés et 200 opérations planifiées, dont 161 écrites et 39 refusées,
+avec les cas limites exigés : trois soldes à zéro, sept sous cinq euros.
+
+Les seize fiches ont une présentation, des horaires et un site. **Quatre** sont
+écrites en français et font foi — exactement celles que l'administrateur
+distingue par un coup de cœur ; les douze autres sont remplies avec la légende
+de Romulus et Remus, en latin. C'est
 le lorem ipsum de ce démonstrateur : du faux texte qui s'assume, plutôt que des
 mots français qu'on pourrait prendre pour vrais. Le remplissage ne recouvre
 jamais une présentation rédigée à la main.

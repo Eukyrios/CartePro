@@ -140,7 +140,7 @@ def demander_reexamen():
         # L'agent n'est pas connu : c'est le partenaire qui demande, pas
         # l'administration qui tranche. Zero marque « a instruire ».
         agent_id=0,
-        sens=DecisionSens.suspendu,
+        sens=DecisionSens.reexamen,
         motif_ecrit="Reexamen demande par l'etablissement.",
         horodatage=datetime.now(timezone.utc),
     ))
