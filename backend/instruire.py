@@ -15,17 +15,11 @@ Le partenaire lit la decision dans son espace, et lui seul : le motif ne sort
 jamais par le catalogue public.
 """
 import sys
-from datetime import datetime, timezone
 
 from app import create_app
-from models import Decision, DecisionSens, Partenaire, PartnerStatus, db
-
-#: Le sens de la decision, et le statut qu'elle laisse au dossier.
-GESTES = {
-    "accepter": (DecisionSens.accepte, PartnerStatus.valide),
-    "refuser": (DecisionSens.refuse, PartnerStatus.refuse),
-    "suspendre": (DecisionSens.suspendu, PartnerStatus.suspendu),
-}
+from instruction import GESTES, MotifManquant
+from instruction import instruire as appliquer
+from models import Partenaire, db
 
 
 def etat():
@@ -40,27 +34,26 @@ def etat():
 
 
 def instruire(geste, slug, motif):
-    sens, statut = GESTES[geste]
+    """Le meme geste que l'API d'administration, depuis le clavier.
+
+    La logique est dans `instruction.py`, partagee avec `routes/admin.py` :
+    une decision prise ici et une decision prise a l'ecran doivent laisser la
+    meme trace, motif compris. Ce qui reste propre a la ligne de commande, ce
+    sont les messages et le code de sortie.
+    """
     partenaire = Partenaire.query.filter_by(slug=slug).first()
     if not partenaire:
         print(f"Aucun partenaire ne porte le slug « {slug} ».", file=sys.stderr)
         return 1
-    if not motif.strip():
-        print("Une decision se motive : donnez un motif ecrit.", file=sys.stderr)
+
+    try:
+        avant, apres = appliquer(partenaire, geste, motif)
+    except MotifManquant as manque:
+        print(manque, file=sys.stderr)
         return 1
 
-    avant = partenaire.statut.value
-    partenaire.statut = statut
-    db.session.add(Decision(
-        partenaire_id=partenaire.id,
-        # 1 : l'agent de demonstration. Le compte admin du seed.
-        agent_id=1,
-        sens=sens,
-        motif_ecrit=motif.strip(),
-        horodatage=datetime.now(timezone.utc),
-    ))
     db.session.commit()
-    print(f"{partenaire.raison_sociale} : {avant} → {statut.value}")
+    print(f"{partenaire.raison_sociale} : {avant} → {apres}")
     print(f"  motif : {motif.strip()}")
     return 0
 

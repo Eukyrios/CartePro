@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { demoAccountFor } from "@/components/account/demoAccounts";
+import { DEMO_ACCOUNTS } from "@/components/account/demoAccounts";
 import Button from "@/components/ui/Button";
 import Display from "@/components/ui/Display";
 import Micro from "@/components/ui/Micro";
@@ -57,9 +57,11 @@ export default function AuthForm({
 }: Props) {
   const { values, setValue } = form;
 
-  // The demonstration account for this tab, offered on sign-in only: there is
-  // one per audience, and registering does not need it.
-  const demo = mode === "login" ? demoAccountFor(audience) : null;
+  /* Les comptes de démonstration, à la connexion seulement — s'inscrire n'en
+     a pas besoin. Les trois sont offerts ensemble depuis que la connexion tient
+     sur un écran : c'est l'endroit d'où l'on peut entrer dans les trois
+     espaces, et le seul où l'on apprend que le troisième existe. */
+  const demos = mode === "login" ? DEMO_ACCOUNTS : [];
 
   return (
     <form onSubmit={onSubmit}>
@@ -80,25 +82,47 @@ export default function AuthForm({
         <SignupClientFields form={form} />
       )}
 
-      {demo && (
+      {demos.length > 0 && (
         <Note as="div" className="mt-5">
           <Micro tone="accent" as="p">
-            {demo.label}
+            Comptes de démonstration
           </Micro>
-          <p className="text-cp-fg mt-2 font-mono text-[12px] break-all">
-            {demo.email} · {demo.password}
-          </p>
-          {/* One tap on a tablet beats typing a password into a demo. */}
-          <button
-            type="button"
-            onClick={() => {
-              setValue("email", demo.email);
-              setValue("password", demo.password);
-            }}
-            className={`text-cp-fg decoration-cp-accent mt-2.5 underline underline-offset-4 hover:decoration-2 ${MICRO}`}
-          >
-            Remplir ces identifiants
-          </button>
+          <ul className="mt-3 grid gap-3">
+            {demos.map((demo) => (
+              <li
+                key={demo.email}
+                className="border-cp-border border-t pt-3 first:border-0 first:pt-0"
+              >
+                {/* Un bouton par compte, et le libellé *est* le bouton : sur
+                    une tablette, un appui vaut mieux qu'un mot de passe tapé
+                    dans une démonstration. L'adresse est en dessous, en
+                    `break-all` parce qu'elle dépasse la largeur du dialogue. */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValue("email", demo.email);
+                    setValue("password", demo.password);
+                  }}
+                  className="group block w-full cursor-pointer text-left"
+                >
+                  <span
+                    className={`text-cp-fg decoration-cp-accent underline underline-offset-4 group-hover:decoration-2 ${MICRO}`}
+                  >
+                    {demo.label}
+                  </span>
+                  <span className="text-cp-muted mt-1 block text-[12px] leading-[1.5]">
+                    {demo.hint}
+                  </span>
+                  <span className="text-cp-muted mt-1 block font-mono text-[11px] break-all">
+                    {demo.email}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <Micro as="p" tone="muted" className="mt-3">
+            Mot de passe commun : {demos[0].password}
+          </Micro>
         </Note>
       )}
 

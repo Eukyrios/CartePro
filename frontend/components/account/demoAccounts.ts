@@ -1,5 +1,3 @@
-import type { AuthAudience } from "@/components/auth/AuthModal";
-
 /**
  * Les comptes de démonstration proposés sous le formulaire de connexion, pour
  * qu'on puisse ouvrir l'application et la montrer sans rien créer.
@@ -12,11 +10,23 @@ import type { AuthAudience } from "@/components/auth/AuthModal";
  *
  * Ces deux listes doivent donc bouger ensemble. Si le seed change un email ou
  * le mot de passe, ce fichier le suit — sinon le raccourci ment de nouveau.
+ *
+ * Les trois y sont désormais, agent de l'administration compris. Ils n'y
+ * étaient pas tant que la connexion se faisait par deux onglets, « Employés »
+ * et « Partenaires » : il n'y avait pas d'onglet où poser le troisième. Le
+ * formulaire de connexion n'en a plus qu'un seul, et la liste peut dire ce qui
+ * existe vraiment.
  */
+
+/** À quoi sert le compte, une fois entré. */
+export type DemoRole = "employee" | "partner" | "admin";
+
 export type DemoAccount = {
-  audience: AuthAudience;
+  role: DemoRole;
   /** Comment le compte est annoncé dans le dialogue de connexion. */
   label: string;
+  /** Ce qu'on voit en entrant avec lui, en quelques mots. */
+  hint: string;
   email: string;
   /** Le même pour tous les comptes semés : une seule chose à retenir. */
   password: string;
@@ -25,22 +35,26 @@ export type DemoAccount = {
 /** Le mot de passe commun, tel que `backend/seed.py` le pose. */
 export const DEMO_PASSWORD = "CartePro2026";
 
-/** Dans l'ordre des onglets, pour que le dialogue puisse choisir par audience. */
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
-    audience: "employee",
-    label: "Compte salarié de démonstration",
+    role: "employee",
+    label: "Salarié",
+    hint: "Un crédit à dépenser, le réseau, l’historique",
     email: "camille.durand@administration.example",
     password: DEMO_PASSWORD,
   },
   {
-    audience: "partner",
-    label: "Compte partenaire de démonstration",
+    role: "partner",
+    label: "Partenaire conventionné",
+    hint: "Encaisser, le réseau, les recettes",
     email: "contact@poney-dream-78.fr",
     password: DEMO_PASSWORD,
   },
+  {
+    role: "admin",
+    label: "Agent de l’administration",
+    hint: "Instruire les dossiers, voir les conventionnés",
+    email: "admin@administration.example",
+    password: DEMO_PASSWORD,
+  },
 ];
-
-export function demoAccountFor(audience: AuthAudience) {
-  return DEMO_ACCOUNTS.find((account) => account.audience === audience);
-}

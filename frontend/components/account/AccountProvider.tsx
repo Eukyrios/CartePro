@@ -51,6 +51,16 @@ export const DEFAULT_CARD_STYLE: CardStyle = {
  */
 export type Profile = {
   id?: number;
+  /**
+   * « admin », « partenaire » ou « user ».
+   *
+   * Vient du jeton — `accounts.role()` le pose comme claim à l'émission — et
+   * n'est jamais déduit côté client. L'espace d'administration s'en sert pour
+   * ne pas montrer son interface à qui n'y a pas droit, mais ce n'est qu'un
+   * confort d'affichage : chaque route `/api/admin` vérifie le claim
+   * elle-même.
+   */
+  role: string;
   balanceCents: number;
   audience: AuthAudience;
   username: string;

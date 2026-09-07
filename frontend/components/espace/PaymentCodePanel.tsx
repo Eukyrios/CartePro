@@ -59,9 +59,6 @@ export default function PaymentCodePanel() {
             de paiement.
           </span>
         </h3>
-        <Micro as="p" tone="muted" className="mt-2">
-          Générez un code <Slash /> À présenter au partenaire
-        </Micro>
       </div>
 
       {/* Centré et contraint en largeur pour ne pas exploser la hauteur de la colonne */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MICRO } from "@/components/ui/surfaces";
 
 /**
@@ -41,27 +41,84 @@ export default function SectionNav({
   sections?: readonly RailSection[];
 }) {
   const [active, setActive] = useState<string>(sections[0].id);
+  /* Les écrans réellement dans le document, dans l'ordre du rail.
+     Tous au départ : c'est ce que le serveur a rendu, donc l'hydratation
+     retrouve le même balisage, et la liste se resserre ensuite. */
+  const [presents, setPresents] = useState<readonly string[]>(() =>
+    sections.map((section) => section.id),
+  );
 
   useEffect(() => {
-    const elements = sections
-      .map(({ id }) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
-    if (elements.length === 0) return;
+    let intersection: IntersectionObserver | null = null;
+    let cibles: HTMLElement[] = [];
 
-    // Collapsing the root to the viewport's middle line means exactly one
-    // full-height section intersects at a time: the one you are looking at.
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) setActive(entry.target.id);
-        }
-      },
-      { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
-    );
+    /* Rebranche l'observateur sur les écrans présents, si la liste a changé.
+       Appelé au montage **et** à chaque modification du document, et c'est
+       tout l'objet de cette fonction : la version précédente relevait les
+       cibles une seule fois, après le premier rendu, et un écran monté plus
+       tard n'était jamais observé. Mesuré sur la page d'accueil :
+       l'observateur se branchait à 338 ms sur « accueil », « fonctionnement »
+       et « confiance », tandis que « Coup de cœur » — dont le contenu vient
+       d'un appel au serveur, et qui ne rend rien avant la réponse —
+       apparaissait à 371 ms. Trente-trois millisecondes de retard, et son
+       entrée du rail ne s'allumait plus jamais. */
+    const brancher = () => {
+      const trouves = sections
+        .map(({ id }) => document.getElementById(id))
+        .filter((el): el is HTMLElement => el !== null);
 
-    elements.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+      const identique =
+        trouves.length === cibles.length &&
+        trouves.every((el, rang) => el === cibles[rang]);
+      if (identique) return;
+
+      cibles = trouves;
+      setPresents(trouves.map((el) => el.id));
+      intersection?.disconnect();
+      intersection = null;
+      if (trouves.length === 0) return;
+
+      // Collapsing the root to the viewport's middle line means exactly one
+      // full-height section intersects at a time: the one you are looking at.
+      intersection = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) setActive(entry.target.id);
+          }
+        },
+        { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
+      );
+      trouves.forEach((el) => intersection?.observe(el));
+    };
+
+    brancher();
+    /* `brancher` sort immédiatement quand rien n'a bougé — quelques
+       `getElementById` et une comparaison d'identité — donc surveiller tout le
+       document coûte peu, et les mutations arrivent par lots. */
+    const arrivees = new MutationObserver(brancher);
+    arrivees.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      arrivees.disconnect();
+      intersection?.disconnect();
+    };
   }, [sections]);
+
+  /* Le rail ne liste que ce qui existe, et renumérote ce qu'il liste.
+     Deux raisons distinctes. Une entrée vers un écran absent est un bouton qui
+     ne fait rien : sans coup de cœur actif, `Coup de cœur` restait dans le
+     rail et le clic ne menait nulle part. Et un « 02 » manquant entre 01 et 03
+     se lit comme une erreur — c'est déjà la règle de l'espace partenaire, dont
+     le nombre d'écrans dépend du statut du compte. */
+  const entrees = useMemo(() => {
+    let rang = 0;
+    return sections
+      .filter((section) => presents.includes(section.id))
+      .map((section) => ({
+        ...section,
+        index: section.index ? String(++rang).padStart(2, "0") : "",
+      }));
+  }, [sections, presents]);
 
   function goTo(id: string) {
     // Scrolling to 0 rather than to the hero keeps the header in view, which is
@@ -79,7 +136,7 @@ export default function SectionNav({
       aria-label="Sections de la page"
       className="fixed top-1/2 right-5 z-40 hidden -translate-y-1/2 flex-col items-end gap-3.5 mix-blend-difference lg:flex"
     >
-      {sections.map(({ id, index, label }) => (
+      {entrees.map(({ id, index, label }) => (
         <button
           key={id}
           type="button"
