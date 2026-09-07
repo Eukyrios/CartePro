@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { Arrow } from "@/components/brand/Marks";
 import { categoryLabel, useCategories } from "@/components/data/useCategories";
 import {
@@ -62,7 +63,58 @@ const NO_FILTERS: Filters = {
  * past on its own, and a filter leaving eleven matches reads better as one
  * moving row than as four pages to click through.
  */
-export default function PartnerCatalogue() {
+/**
+ * Le réseau qu'on parcourt pour dépenser : tout, sauf les écartés.
+ *
+ * Les établissements refusés ne sont pas dans le catalogue qu'on feuillette —
+ * leur candidature a été refusée, et les afficher inviterait à s'y rendre.
+ * Leur fiche reste accessible par son adresse, et elle ouvre sur la décision
+ * qui les écarte.
+ */
+export const estAuReseau = (entry: ApiPartner) => entry.statut !== "refusé";
+
+/** Les conventionnés seulement : ce que l'administration appelle officiel. */
+export const estConventionne = (entry: ApiPartner) => entry.statut === "validé";
+
+export default function PartnerCatalogue({
+  id = "reseau",
+  heading = "Le réseau",
+  eyebrow,
+  keep = estAuReseau,
+  last = false,
+  hrefOf,
+}: {
+  /** L'ancre de l'écran et l'entrée du rail qui y mène. */
+  id?: string;
+  /** Le titre de l'écran. Le point final est ajouté par `Display`. */
+  heading?: string;
+  /** Une sur-ligne au-dessus du titre, pour un écran qui a besoin d'un cadre. */
+  eyebrow?: ReactNode;
+  /**
+   * Quels partenaires garder, sur la réponse brute du catalogue.
+   *
+   * Par défaut, tout le réseau sauf les établissements écartés. L'espace
+   * d'administration passe un prédicat plus étroit — les conventionnés
+   * seulement — plutôt que d'appeler une autre route : c'est la même liste,
+   * lue avec une exigence différente.
+   */
+  keep?: (entry: ApiPartner) => boolean;
+  /**
+   * Dernier écran de la page, donc celui à qui appartient le pied de page.
+   *
+   * Les deux ensemble font une fenêtre : voir `Screen`, `screen-minus-footer`.
+   */
+  last?: boolean;
+  /**
+   * Où mène une tuile. Par défaut la fiche du partenaire.
+   *
+   * L'espace d'administration l'envoie sur les recettes de l'établissement :
+   * c'est la même liste d'établissements, mais on ne vient pas y chercher la
+   * même chose — un salarié cherche où dépenser, l'administration ce qui a été
+   * encaissé.
+   */
+  hrefOf?: (partner: Partner) => string;
+} = {}) {
   const [partners, setPartners] = useState<Partner[]>([]);
   /* Trois états et non deux : « en cours », « chargé », « en panne ». Avec un
      seul booléen, un serveur qui ne répond pas donnait exactement la même
@@ -81,17 +133,17 @@ export default function PartnerCatalogue() {
        repli qui n'a plus lieu d'être puisque la base porte l'image. */
     api<ApiPartner[]>("/api/partenaires/catalogue")
       .then((items) => {
-        /* Les établissements écartés ne sont pas dans le réseau qu'on parcourt
-           pour dépenser : leur candidature a été refusée, et les afficher ici
-           inviterait à s'y rendre. Leur fiche reste accessible par son adresse,
-           et elle ouvre sur la décision qui les écarte. */
-        setPartners(
-          items.filter((item) => item.statut !== "refusé").map(fromApi),
-        );
+        /* Le tri est celui que l'appelant demande — voir `keep`, dont la
+           valeur par défaut écarte les établissements refusés. */
+        setPartners(items.filter(keep).map(fromApi));
         setState("ready");
       })
       .catch(() => setState("error"));
-  }, []);
+    /* `keep` est dans les dépendances, donc il doit être stable : les deux
+       prédicats fournis sont des constantes de module (`estAuReseau`,
+       `estConventionne`). Une fonction écrite en ligne dans le JSX serait
+       recréée à chaque rendu et relancerait la requête indéfiniment. */
+  }, [keep]);
 
   const categories = useMemo(
     () =>
@@ -117,10 +169,21 @@ export default function PartnerCatalogue() {
   const handleKeyDown = useArrowKeys(nudge);
 
   return (
-    <Screen id="reseau" aria-labelledby="reseau-titre">
+    <Screen
+      id={id}
+      height={last ? "screen-minus-footer" : "screen"}
+      aria-labelledby={`${id}-titre`}
+    >
+      {eyebrow}
       {/* Titled like the other screens of the space. */}
-      <Display level={2} id="reseau-titre" accent="." br={false}>
-        Le réseau
+      <Display
+        level={2}
+        id={`${id}-titre`}
+        accent="."
+        br={false}
+        className={eyebrow ? "mt-4" : undefined}
+      >
+        {heading}
       </Display>
 
       <FilterGrid className="mt-8">
@@ -217,6 +280,7 @@ export default function PartnerCatalogue() {
                   >
                     <PartnerTile
                       partner={partner}
+                      href={hrefOf?.(partner)}
                       tabIndex={copy > 0 ? -1 : undefined}
                       onClick={(event) => {
                         /* Pushing the row along is not choosing a partner.

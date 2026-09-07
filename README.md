@@ -28,24 +28,29 @@ Un compte par situation à montrer — chacun ouvre sur un écran différent.
 
 **Salariés** — `…@administration.example`
 
-| Identifiant | Solde | Ce qu'il montre |
-|---|---|---|
-| `camille.durand` | 32,50 € | Le parcours normal : la carte, le QR, l'historique avec son crédit employeur et deux paiements |
-| `salarie0` | 0,00 € | Le solde épuisé — tout partenaire refuse, et l'écran dit pourquoi |
-| `salarie5` | 4,96 € | Le solde tout juste : seul le partenaire le moins cher passe — Glaces Corrèze à 4,50 € — les quinze autres refusent |
-| `salarie19` | — | L'historique dense : sept opérations, de quoi exercer les filtres et la pagination |
-| `salarie38` | 149,26 € | Le solde confortable, pour enchaîner les paiements sans buter sur le refus |
-| `admin` | — | Le rôle administrateur : export CSV de toutes les transactions (`/api/admin/transactions.csv`) |
+| Identifiant      | Solde    | Ce qu'il montre                                                                                                     |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
+| `camille.durand` | 32,50 €  | Le parcours normal : la carte, le QR, l'historique avec son crédit employeur et deux paiements                      |
+| `salarie0`       | 0,00 €   | Le solde épuisé — tout partenaire refuse, et l'écran dit pourquoi                                                   |
+| `salarie5`       | 4,96 €   | Le solde tout juste : seul le partenaire le moins cher passe — Glaces Corrèze à 4,50 € — les quinze autres refusent |
+| `salarie19`      | —        | L'historique dense : sept opérations, de quoi exercer les filtres et la pagination                                  |
+| `salarie38`      | 149,26 € | Le solde confortable, pour enchaîner les paiements sans buter sur le refus                                          |
+
+**Administration** — `admin@administration.example`
+
+| Identifiant                    | Ce qu'il montre                                                                                                                                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `admin@administration.example` | L'espace d'administration, qui **est** sa page d'accueil : les trois dossiers en attente à instruire, puis les onze conventionnés. Un dossier s'ouvre à `/dossier/<slug>`. Plus l'export CSV de toutes les transactions (`/api/admin/transactions.csv`) |
 
 **Partenaires** — `contact@<slug>.fr`
 
-| Identifiant | Statut | Ce qu'il montre |
-|---|---|---|
-| `contact@poney-dream-78.fr` | conventionné | L'espace complet : encaisser, réseau, recettes. Coup de cœur de l'administrateur, fiche rédigée, horaires |
-| `contact@kostumparty.fr` | **en attente** | Encaissement et recettes **barrés** — l'accès dépend du conventionnement, pas de la connexion |
-| `contact@spa-vosges.fr` | **refusé** | Son espace ouvre sur la décision, son motif et le bouton de réexamen. Refusé deux fois : l'historique de l'instruction est visible avec `python instruire.py` |
-| `contact@camping-etang-bleu.fr` | **refusé** | Un refus simple, jamais réexaminé |
-| `contact@cinema-rex-lille.fr` | conventionné | Une fiche de **démonstration** : présentation en latin, pastille « Fiche de démonstration » |
+| Identifiant                     | Statut         | Ce qu'il montre                                                                                                                                               |
+| ------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contact@poney-dream-78.fr`     | conventionné   | L'espace complet : encaisser, réseau, recettes. Coup de cœur de l'administrateur, fiche rédigée, horaires                                                     |
+| `contact@kostumparty.fr`        | **en attente** | Encaissement et recettes **barrés** — l'accès dépend du conventionnement, pas de la connexion                                                                 |
+| `contact@spa-vosges.fr`         | **refusé**     | Son espace ouvre sur la décision, son motif et le bouton de réexamen. Refusé deux fois : l'historique de l'instruction est visible avec `python instruire.py` |
+| `contact@camping-etang-bleu.fr` | **refusé**     | Un refus simple, jamais réexaminé                                                                                                                             |
+| `contact@cinema-rex-lille.fr`   | conventionné   | Une fiche de **démonstration** : présentation en latin, pastille « Fiche de démonstration »                                                                   |
 
 Sans être connecté : la vitrine, le coup de cœur de l'administrateur, et la
 fiche publique d'un partenaire — où la carte est barrée et invite à se
@@ -61,7 +66,7 @@ surcharge celle qu'il embarque.
 ```json
 "colors": { "light": { "accent": "#4a1b6b" }, "dark": { "accent": "#c186e8" } },
 "fonts":  { "sans": "\"Archivo\", Arial, sans-serif" },
-"brand":  { "name": "CartePro", "logo": "/logo/mark-purple.svg" }
+"brand":  { "name": "CartePro", "logo": "/logo/wordmark-purple.svg" }
 ```
 
 Ce que le fichier ne dit pas retombe sur les valeurs compilées dans
@@ -85,8 +90,11 @@ sans compte nulle part.
 
 ### Instruire un dossier
 
-L'espace d'administration n'existe pas encore. En attendant, les décisions se
-prennent en ligne de commande, et elles s'écrivent :
+Deux chemins, un seul geste. À l'écran, en se connectant avec le compte
+d'administration : l'accueil **est** la liste des dossiers, et chaque ligne
+ouvre le dossier à `/dossier/<slug>`, où la décision se prend. Il n'y a pas de
+préfixe `/admin` — comme pour un salarié ou un partenaire, la page d'accueil est
+l'espace du compte. En ligne de commande, sans passer par le navigateur :
 
 ```bash
 cd backend
@@ -95,9 +103,35 @@ python instruire.py refuser  spa-vosges  "motif écrit"
 python instruire.py accepter kostumparty "motif écrit"
 ```
 
-Chaque geste laisse une décision motivée dans la table `decisions` — rien n'est
-effacé, les précédentes restent. C'est ce que la traçabilité exige, et c'est ce
-que le partenaire lit dans son espace.
+Les deux appellent le même code — `backend/instruction.py` — précisément pour
+qu'une décision prise à l'écran et une décision prise au clavier laissent la
+même trace. Chaque geste écrit une décision **motivée** dans la table
+`decisions`, et rien n'est effacé : les précédentes restent. C'est ce que la
+traçabilité exige, et c'est ce que le partenaire lit dans son espace — lui
+seul, le motif ne sort jamais par le catalogue public.
+
+Le motif est obligatoire, refus comme acceptation : le serveur répond 422 sans
+lui.
+
+### L'API d'administration
+
+Toutes ces routes portent `@admin_required` (`backend/decorators.py`) : sans
+jeton c'est 401, avec un jeton de salarié ou de partenaire c'est 403.
+
+| Route                                          |                                                               |
+| ---------------------------------------------- | ------------------------------------------------------------- |
+| `GET /api/admin/partenaires/demandes`          | Les dossiers en attente, avec leur historique de décisions    |
+| `GET /api/admin/partenaires`                   | Les conventionnés                                             |
+| `POST /api/admin/partenaires/<slug>/approuver` | `{ motif }` — conventionne                                    |
+| `POST /api/admin/partenaires/<slug>/refuser`   | `{ motif }` — écarte, et c'est ce motif que le titulaire lira |
+| `POST /api/admin/partenaires/<slug>/suspendre` | `{ motif }` — suspend, et le compte ne peut plus se connecter |
+| `GET /api/admin/transactions`                  | Tous les paiements validés, en JSON — l'écran « Les recettes » |
+| `GET /api/admin/transactions.csv`              | Les mêmes, en CSV, pour l'emporter                            |
+| `POST /api/admin/transactions/<id>/annuler`    | **501** — pas encore écrite, et le dit                        |
+
+`backend/test_admin_api.py` vérifie les deux choses séparément : que chaque
+route refuse ce qu'elle doit refuser, et qu'une décision change le statut **et**
+écrit sa ligne dans `decisions`.
 
 ### Ce que le seed contient
 

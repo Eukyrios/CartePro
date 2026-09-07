@@ -88,3 +88,52 @@ export const CHIP_MUTED = `${CHIP} border-cp-border text-cp-muted`;
  * required to stay visible rather than be tucked behind an interaction.
  */
 export const SIMULATION_NOTICE = `text-cp-official ${MICRO}`;
+
+/**
+ * La fenêtre d'une liste longue : **deux écrans au plus, pied de page compris**,
+ * puis elle défile.
+ *
+ * Trois écrans portent une liste paginée — les recettes d'un partenaire, celles
+ * que l'administration lit sur un établissement, et l'historique d'un salarié —
+ * et les trois plafonnaient à une fraction de fenêtre : 38vh pour deux d'entre
+ * eux, 46vh pour le troisième. Une liste de six lignes se retrouvait donc dans
+ * un cadre qui défilait alors que la page avait de la place à revendre, et la
+ * barre intérieure apparaissait avant que l'écran ne soit rempli.
+ *
+ * Deux écrans, et non un : le titre, les filtres et le total occupent déjà le
+ * premier, si bien qu'une liste bornée à une fenêtre n'en montrait qu'un tiers.
+ *
+ * Ce qui est retranché, mesuré et non estimé, sur une fenêtre de 900px :
+ *
+ *   12vh   le décalage du haut de la section — `Screen`, `density="offset"`
+ *   32rem  tout ce qui entoure le tableau : surtitre, titre sur deux lignes,
+ *          mention de simulation, grille de filtres, compteur, total, pagination
+ *          et la marge basse (510px sur l'écran le plus chargé des trois ;
+ *          l'historique en prend 484)
+ *   115px  **le pied de page**, comme le fait `screen-minus-footer` pour un
+ *          écran simple : les deux ensemble doivent faire deux écrans, sinon le
+ *          pied tombe sur un troisième
+ *
+ * D'où `188dvh - 40rem`, les 12vh étant retirés des 200. Sans le pied, la
+ * section dépassait les deux écrans de 257px et le pied se retrouvait seul en
+ * bas d'un troisième.
+ *
+ * `max-height` et non `height` : en dessous du plafond, le cadre prend la
+ * hauteur de son contenu et **aucune barre n'apparaît**. Elle ne revient que
+ * quand une page de liste dépasse les deux écrans, ce qui est le cas sur une
+ * fenêtre courte — c'est là qu'elle est utile.
+ *
+ * `dvh` et non `vh` : sur un navigateur mobile à barre escamotable, `vh` est
+ * plus grand que le visible, et le bas de la liste passait sous le pli.
+ */
+export const LIST_WINDOW = "max-h-[calc(188dvh-40rem)] overflow-y-auto";
+
+/**
+ * Combien de lignes une page de liste montre.
+ *
+ * Calé sur `LIST_WINDOW` : à ~55px la ligne plus 40px d'en-tête, dix-huit
+ * lignes font 1030px, soit ce que les deux écrans laissent à la liste sur une
+ * fenêtre de 900px de haut (1084px). Une page tient donc entière dès 900px, et
+ * défile en dessous — c'est là que la barre intérieure sert.
+ */
+export const LIST_PER_PAGE = 18;
