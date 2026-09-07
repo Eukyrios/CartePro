@@ -1,29 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="CartePro">
   <!--
-    Le favicon : le monogramme CartePro en blanc sur une tuile violette.
+    Le favicon : le C du logotype, en violet, dans une boîte blanche aux bords
+    arrondis.
 
-    Blanc sur violet, et non violet sur transparence : un favicon se pose sur
-    une barre d'onglets dont la couleur appartient au navigateur, et #4a1b6b
-    disparaît sur une barre sombre. La tuile fixe le contraste à toutes les
-    tailles qu'on lui demande — 11,3:1 en clair, 7,2:1 sur la variante sombre.
+    Le logotype est le nom seul — voir components/brand/Logotype.tsx — et
+    « CartePro » ne tient pas dans un carré de 16 px. Le favicon garde donc la
+    seule chose qui y tienne : la capitale initiale, dans la fonte du logotype
+    (Archivo 700) et non redessinée, pour que ce soit la même lettre que celle
+    de la barre haute.
 
-    La carte fait 112x80 et l'icône est carrée : le tracé est ramené à 96 de
-    large, centré, le reste en marge. Le C et la puce tiennent jusqu'à 16px —
-    la puce s'y réduit à un point, mais la carte et son C restent lus.
+    La boîte est blanche dans les deux thèmes, et c'est voulu : elle porte le
+    violet de marque, qui est la couleur de l'identité, et le blanc lui donne
+    un fond connu. Sur une barre d'onglets claire la boîte se fond, mais le C
+    reste lu à 11,3:1 ; sur une barre sombre la boîte détache le tout.
 
-    Même géométrie que public/logo/mark-purple.svg et que
-    components/brand/VectorMark.tsx : les trois se retouchent ensemble.
+    Le tracé de la lettre vient de fontTools, comme public/logo/wordmark-*.svg,
+    et app/favicon.ico en est la rasterisation.
   -->
-  <style>
-    .tuile { fill: #4a1b6b }
-    @media (prefers-color-scheme: dark) {
-      .tuile { fill: #6b2a99 }
-    }
-  </style>
-  <rect class="tuile" width="128" height="128"/>
-  <path fill="#ffffff" fill-rule="evenodd"
-        transform="translate(16 29.71) scale(0.857)"
-        d="M13 0 H99 A13 13 0 0 1 112 13 V67 A13 13 0 0 1 99 80 H13 A13 13 0 0 1 0 67 V13 A13 13 0 0 1 13 0 Z
-           M58.36 19.32 A27 27 0 1 0 58.36 60.68 L49.03 49.57 A12.5 12.5 0 1 1 49.03 30.43 Z
-           M83 31 H97 A3 3 0 0 1 100 34 V46 A3 3 0 0 1 97 49 H83 A3 3 0 0 1 80 46 V34 A3 3 0 0 1 83 31 Z"/>
+  <path fill="#ffffff" d="M26 0 H102 A26 26 0 0 1 128 26 V102 A26 26 0 0 1 102 128 H26 A26 26 0 0 1 0 102 V26 A26 26 0 0 1 26 0 Z"/>
+  <path fill="#4a1b6b" transform="translate(24.63 101.20) scale(0.10845)"
+        d="M378.0 12.0Q273.0 12.0 198.5 -25.0Q124.0 -62.0 84.5 -140.5Q45.0 -219.0 45.0 -343.0Q45.0 -524.0 133.0 -611.0Q221.0 -698.0 378.0 -698.0Q463.0 -698.0 531.5 -669.0Q600.0 -640.0 640.5 -581.5Q681.0 -523.0 681.0 -433.0H548.0Q548.0 -483.0 526.5 -517.5Q505.0 -552.0 467.0 -570.0Q429.0 -588.0 380.0 -588.0Q312.0 -588.0 267.0 -561.5Q222.0 -535.0 200.5 -483.0Q179.0 -431.0 179.0 -354.0V-332.0Q179.0 -254.0 200.5 -202.0Q222.0 -150.0 266.5 -124.0Q311.0 -98.0 380.0 -98.0Q432.0 -98.0 471.0 -115.5Q510.0 -133.0 531.5 -167.5Q553.0 -202.0 553.0 -252.0H681.0Q681.0 -162.0 641.0 -103.5Q601.0 -45.0 532.5 -16.5Q464.0 12.0 378.0 12.0Z"/>
 </svg>

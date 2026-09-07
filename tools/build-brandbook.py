@@ -110,7 +110,7 @@ HTML = f"""<!doctype html>
 <section class="page couv">
   <div class="tete"><span class="micro">Administration</span><span class="micro">Document de travail</span></div>
   <div>
-    <img src="../../frontend/public/logo/mark-white.svg" style="height:18mm" alt="CartePro" />
+    <img src="../../frontend/public/logo/wordmark-white.svg" style="height:18mm" alt="CartePro" />
     <h1 style="margin-top:12mm">CartePro<br /><em style="font-family:Spectral,serif;font-weight:400;color:var(--bleu-300)">brand book applicable.</em></h1>
     <p style="margin-top:8mm;max-width:52ch;color:rgba(255,255,255,.86)">
       Règles d'usage de la marque « CartePro » à l'intérieur de la charte
@@ -126,32 +126,33 @@ HTML = f"""<!doctype html>
   <div class="tete"><span class="micro">1 — Logotype</span><span class="micro">CartePro</span></div>
   <h2>Le logotype et ses versions</h2>
   <p>
-    Le logotype CartePro est un monogramme de carte de paiement — un rectangle
-    aux coins arrondis dans lequel sont évidés un C et une puce — suivi du nom
-    en Archivo, <code>Carte</code> en gras et <code>Pro</code> en romain. Une
-    seule encre, le violet de marque <code>#4A1B6B</code> : le C et la puce sont
-    des évidements, jamais une seconde couleur posée par-dessus, ce qui rend le
-    monogramme imprimable dans n'importe quelle teinte unique. Les fichiers
-    sources sont dans le dépôt, à <code>frontend/public/logo/</code> ; le
-    logotype assemblé, lui, est du code — <code>components/brand/Logotype.tsx</code>.
+    Le logotype CartePro est le nom seul, sans pictogramme : <code>Carte</code>
+    en Archivo 700, <code>Pro</code> en Archivo 400, dans une seule encre — le
+    violet de marque <code>#4A1B6B</code>. Trois marques dessinées ont été
+    essayées et écartées : elles n'ajoutaient rien que le nom ne disait déjà, et
+    aucune ne tenait à 16&nbsp;px sans se refermer. Une seule encre et deux
+    graisses, donc : le logotype s'imprime dans n'importe quelle teinte unique,
+    y compris celle que le salarié choisit pour sa carte. Les fichiers sources
+    sont à <code>frontend/public/logo/</code> ; dans l'application, le logotype
+    est du texte — <code>components/brand/Logotype.tsx</code>.
   </p>
   <div class="grille3" style="margin-top:5mm">
-    <figure><div style="background:#fff;border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/mark-purple.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version principale</strong><br />mark-purple.svg — violet #4A1B6B sur fond clair</figcaption></figure>
-    <figure><div style="background:var(--bleu);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/mark-white.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version monochrome</strong><br />mark-white.svg — réservé blanc sur fond violet ou noir</figcaption></figure>
-    <figure><div style="background:var(--papier);border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/app/icon.svg" style="width:22mm;height:22mm;border:0" alt="" /></div><figcaption><strong>Version favicon</strong><br />app/icon.svg — 128×128, blanc sur pastille violette</figcaption></figure>
+    <figure><div style="background:#fff;border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/wordmark-purple.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version principale</strong><br />wordmark-purple.svg — violet #4A1B6B sur fond clair</figcaption></figure>
+    <figure><div style="background:var(--bleu);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/public/logo/wordmark-white.svg" style="width:100%;border:0" alt="" /></div><figcaption><strong>Version monochrome</strong><br />wordmark-white.svg — réservé blanc sur fond violet ou noir</figcaption></figure>
+    <figure><div style="background:var(--papier);border:1px solid var(--filet);padding:6mm;display:grid;place-items:center;height:34mm"><img src="../../frontend/app/icon.svg" style="width:22mm;height:22mm;border:0" alt="" /></div><figcaption><strong>Version favicon</strong><br />app/icon.svg — 128×128, l'initiale dans une boîte blanche</figcaption></figure>
   </div>
   <h3>Zone de protection et tailles minimales</h3>
   <p>
-    Zone de protection : une marge égale à la hauteur du monogramme, sur les
+    Zone de protection : une marge égale à la hauteur des capitales, sur les
     quatre côtés, libre de tout texte, filet ou image. Dans l'application, le
     logotype occupe le coin supérieur gauche de la barre, à 3,2&nbsp;vw du bord
     et sur une hauteur de 38&nbsp;px pour une barre de 76&nbsp;px : la moitié de la
     hauteur disponible reste vide autour de lui.
   </p>
   <ul>
-    <li><strong>Écran</strong> — hauteur minimale 22&nbsp;px pour le logotype complet ; en dessous, utiliser le monogramme seul.</li>
-    <li><strong>Impression</strong> — largeur minimale 20&nbsp;mm ; en dessous la puce se referme sur le C.</li>
-    <li><strong>Favicon</strong> — lisible dès 16&nbsp;px : à cette taille la puce se réduit à un point, mais la carte et son C se lisent encore.</li>
+    <li><strong>Écran</strong> — corps minimal 15&nbsp;px pour le nom complet ; en dessous, utiliser l'initiale seule.</li>
+    <li><strong>Impression</strong> — largeur minimale 22&nbsp;mm ; en dessous la distinction des deux graisses se perd.</li>
+    <li><strong>Favicon</strong> — l'initiale dans sa boîte blanche, lisible dès 16&nbsp;px ; le nom entier n'y tient pas.</li>
   </ul>
   <figure style="margin-top:4mm"><img src="captures/bloc-marque.png" alt="" /><figcaption>Capture de l'application : bloc-marque en haut à gauche, barre de 76&nbsp;px — <code>components/layout/TopBar.tsx</code></figcaption></figure>
   <div class="pied"><span class="micro">CartePro — brand book</span><span class="micro">Page 2</span></div>

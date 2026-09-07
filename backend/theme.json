@@ -21,7 +21,7 @@
     "logoWhite": "",
     "_note": [
       "logo : chemin d'une image servie par le front, par exemple",
-      "/logo/mark-purple.svg. Vide = le logotype vectorisé du composant, qui",
+      "/logo/wordmark-purple.svg. Vide = le logotype vectorisé du composant, qui",
       "prend la couleur d'accent et suit donc le thème.",
       "logoWhite : la version posée sur le pied de page, presque noir."
     ]

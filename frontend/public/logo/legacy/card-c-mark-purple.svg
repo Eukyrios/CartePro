@@ -10,13 +10,13 @@
     encre, donc — ce qui le rend imprimable dans n’importe quelle couleur, y
     compris celle que le salarié choisit pour sa carte.
 
-    Géométrie : carte 112x80 (r 13), C centré en (41,40) — rayons 27 et 12,5,
-    ouverture de 100° à droite —, puce 20x18 en (80,31). Lisible jusqu’à 16px.
+    Géométrie : carte 112x80 (r 13), C centré en (38,40) — rayons 24 et 13,
+    ouverture de 56° à droite —, puce 19x14 en (76,33), r 3. Lisible jusqu’à 16px.
     Toute retouche doit être reportée dans components/brand/VectorMark.tsx, qui
     porte le même tracé en ligne.
   -->
-  <path fill="#ffffff" fill-rule="evenodd"
+  <path fill="#4a1b6b" fill-rule="evenodd"
         d="M13 0 H99 A13 13 0 0 1 112 13 V67 A13 13 0 0 1 99 80 H13 A13 13 0 0 1 0 67 V13 A13 13 0 0 1 13 0 Z
-           M58.36 19.32 A27 27 0 1 0 58.36 60.68 L49.03 49.57 A12.5 12.5 0 1 1 49.03 30.43 Z
-           M83 31 H97 A3 3 0 0 1 100 34 V46 A3 3 0 0 1 97 49 H83 A3 3 0 0 1 80 46 V34 A3 3 0 0 1 83 31 Z"/>
+           M59.19 28.73 A24 24 0 1 0 59.19 51.27 L49.48 46.1 A13 13 0 1 1 49.48 33.9 Z
+           M79 33 H92 A3 3 0 0 1 95 36 V44 A3 3 0 0 1 92 47 H79 A3 3 0 0 1 76 44 V36 A3 3 0 0 1 79 33 Z"/>
 </svg>

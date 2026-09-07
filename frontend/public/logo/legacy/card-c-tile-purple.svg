@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CartePro"
+     viewBox="0 0 128 128" width="128" height="128">
+  <!--
+    Le monogramme en tuile, pour les usages qui réclament un carré :
+    trombinoscopes, vignettes de partage, icône d'application.
+
+    Comme app/icon.svg — dont c'est le même tracé — la tuile joue la carte :
+    seuls le C et la puce sont dessinés. Empiler le monogramme entier sur un
+    fond aurait donné deux rectangles arrondis emboîtés et trois valeurs, ce
+    qui se referme dès qu'on réduit. Le monogramme sans fond, celui qui porte
+    sa propre carte, est mark-purple.svg.
+  -->
+  <path fill="#4a1b6b" d="M26 0 H102 A26 26 0 0 1 128 26 V102 A26 26 0 0 1 102 128 H26 A26 26 0 0 1 0 102 V26 A26 26 0 0 1 26 0 Z"/>
+  <path fill="#ffffff" fill-rule="evenodd"
+        d="M75.14 48.51 A33 33 0 1 0 75.14 79.49 L61.45 72.22 A17.5 17.5 0 1 1 61.45 55.78 Z
+           M92 55 H108 A4 4 0 0 1 112 59 V69 A4 4 0 0 1 108 73 H92 A4 4 0 0 1 88 69 V59 A4 4 0 0 1 92 55 Z"/>
+</svg>

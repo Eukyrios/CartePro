@@ -2,11 +2,10 @@
  * The type half of the CartePro identity, and the diagonal arrow that trails
  * every call to action.
  *
- * The drawn half — the card monogram — is `VectorMark`, and the two assembled
- * are `Logotype`. What lives here is the wordmark: set in the brand face rather
- * than vectorised, because real type stays crisp at every size, follows the
- * theme's ink, and lets `backend/theme.json` rename the product without anyone
- * redrawing a letter.
+ * The wordmark *is* the logotype — `Logotype` is this and nothing else. It is
+ * set in the brand face rather than vectorised, because real type stays crisp
+ * at every size, follows the theme's ink, and lets `backend/theme.json` rename
+ * the product without anyone redrawing a letter.
  *
  * Marks and type only. Two helpers used to live here — `Eyebrow`, which was
  * `MICRO` minus `font-sans` and `uppercase`, and `SectionRail` — and they
@@ -14,10 +13,13 @@
  * `<Micro tone="accent">`, and the second went with the two landing sections
  * that were its only callers and were rendered nowhere.
  *
- * `LogoMark` used to live here too: three skewed bars in a skewed square, the
- * previous brand's monogram. It had no caller left when the card monogram
- * replaced it, so it went rather than being redrawn; the artwork it was built
- * from is in `public/logo/legacy`.
+ * Two drawn monograms used to live alongside it and neither survived contact
+ * with the navbar: `LogoMark`, three skewed bars in a skewed square from the
+ * previous brand, and `VectorMark`, a payment card with a C and a chip cut out
+ * of it. The second was tried in four proportions and two apertures before the
+ * verdict was that the name alone reads better than the name plus a picture of
+ * a card. Both are kept as artwork in `public/logo/legacy`, so the decision is
+ * reversible without redrawing anything.
  */
 
 /**

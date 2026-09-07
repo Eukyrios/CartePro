@@ -1,39 +1,37 @@
-import VectorMark from "./VectorMark";
 import { WordMark } from "./Marks";
 
 /**
- * Le logotype CartePro assemblé : le monogramme de carte, puis le nom.
+ * Le logotype CartePro : le nom, et rien d'autre.
  *
- * Tout est en em, et la seule chose à régler est la taille du texte — le
- * monogramme fait 1,52em de haut, l'écart 0,36em. C'est ce qui permet au même
- * composant de servir la barre haute (`text-[25px]`), le pied de page
- * (`text-[27px]`) et la carte de crédit, qui mesure tout en `cqw` et ne
- * connaît donc aucune taille en pixels. Une hauteur en pixels, elle, aurait
- * obligé chaque appelant à recalculer le corps du texte.
+ * Pas de pictogramme. Trois marques dessinées ont été essayées devant la barre
+ * haute — un C évidé dans une carte, la même en contour, la carte et ses ondes
+ * — et aucune ne tenait à côté du nom sans l'encombrer. Le nom seul est ce que
+ * font Stripe ou Klarna, et il a trois propriétés qu'aucun pictogramme n'avait
+ * ici : il ne rétrécit jamais mal, il dit le produit sans qu'on l'apprenne, et
+ * il suit `brand.name` — renommer le produit dans `backend/theme.json` renomme
+ * le logotype, sans qu'on redessine une lettre.
  *
- * Une seule encre, héritée : `currentColor` pour le monogramme, la couleur de
- * texte pour le nom. Le contraste du logotype est donc celui de la classe
- * posée par l'appelant, et il n'y a rien à vérifier de plus que pour du texte.
+ * Ce composant reste, plutôt que d'appeler `WordMark` partout : c'est lui qui
+ * définit ce qu'est *le logotype*, et l'endroit où un pictogramme reviendrait
+ * s'il revenait un jour. Il ne tient plus qu'une chose, et c'est l'information.
+ *
+ * La taille se règle par `text-*`, comme avant, ce qui laisse la carte de
+ * crédit mesurer le logotype en `cqw` sans connaître un seul pixel.
+ *
+ * L'initiale seule, pour les carrés de 16 px où le nom ne tient pas, vit dans
+ * `app/icon.svg` et `public/logo/tile-white.svg`.
  */
 export default function Logotype({
   className = "",
   name,
   style,
 }: {
-  /** La taille — `text-*` — et l'encre. Tout le reste en découle. */
+  /** La taille — `text-*` — et l'encre. */
   className?: string;
   /** Le nom à composer. Par défaut celui de la marque livrée. */
   name?: string;
   /** Pour une encre qui n'est pas connue à la compilation, comme celle de la carte. */
   style?: React.CSSProperties;
 }) {
-  return (
-    <span
-      style={style}
-      className={`inline-flex items-center gap-[0.36em] ${className}`}
-    >
-      <VectorMark decorative className="h-[1.52em] w-auto" />
-      <WordMark name={name} />
-    </span>
-  );
+  return <WordMark name={name} style={style} className={className} />;
 }
