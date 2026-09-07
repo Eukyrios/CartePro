@@ -54,7 +54,7 @@ export default function HeroSection() {
               page d'accueil. Une ancre, donc elle se copie et se partage. */}
           <div className="mt-8">
             <Button href="#coup-de-coeur" arrow>
-              Le coup de cœur du Ministre
+              Le coup de cœur de l&apos;administrateur
             </Button>
           </div>
         </div>

@@ -10,7 +10,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Conditions d’utilisation | Ticket Tout",
   description:
-    "Projet de conditions générales d’utilisation du démonstrateur Ticket Tout, soumis à l’avis préalable du service juridique du Ministère.",
+    "Projet de conditions générales d’utilisation du démonstrateur Ticket Tout, soumis à l’avis préalable du service juridique de l'administration.",
   /* Un projet non validé n'a rien à faire dans un index de moteur de
      recherche : la page existe pour être lue depuis le pied de page, pas pour
      être trouvée avant que le service juridique se soit prononcé. */
@@ -36,7 +36,7 @@ export default function ConditionsPage() {
         <Micro as="p" tone="accent">
           Ticket Tout
           <Slash />
-          Ministère du Job et Bonheur
+          Administration
         </Micro>
 
         {/* Échelle « section » et non « page » : à 98 px le titre tenait sur

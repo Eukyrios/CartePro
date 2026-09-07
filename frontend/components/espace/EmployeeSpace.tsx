@@ -8,7 +8,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import Note from "@/components/ui/Note";
 import BalanceSection, { SpendingStatement } from "./BalanceSection";
 import HistorySection from "./HistorySection";
-import MinisterPickSection from "@/components/minister/MinisterPickSection";
+import AdminPickSection from "@/components/administration/AdminPickSection";
 import type { RailSection } from "@/components/layout/SectionNav";
 
 /**
@@ -73,7 +73,7 @@ export default function EmployeeSpace() {
       >
         <SpendingStatement />
       </BalanceSection>
-      <MinisterPickSection />
+      <AdminPickSection />
       <PartnerCatalogue />
       <HistorySection />
 

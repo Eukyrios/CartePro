@@ -5,7 +5,7 @@ import type { ElementType, ReactNode } from "react";
 /**
  * An outlined chip. The ochre one marks what the ministry vouches for.
  *
- * One size, deliberately. The same words — "Partenaire Officiel du Ministère" —
+ * One size, deliberately. The same words — "Partenaire Officiel de l'administration" —
  * were rendered at 9px in the settings panel and at 15px with a 2px border and
  * a fixed 17rem width on the payment page, which reads as two different claims
  * about how official something is. A caller who needs the chip to sit at the
@@ -14,7 +14,7 @@ import type { ElementType, ReactNode } from "react";
 /**
  * Trois teintes, et pas une quatrième.
  *
- * `official` — l'ochre — marque ce dont le Ministère se porte garant. `plain`
+ * `official` — l'ochre — marque ce dont l'administration se porte garant. `plain`
  * est le fait neutre. `muted` est pour ce qui n'est ni l'un ni l'autre : un
  * constat en retrait, qu'on lit si on le cherche — « fiche de démonstration »
  * ne réclame pas la même attention qu'un conventionnement.

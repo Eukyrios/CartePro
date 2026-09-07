@@ -5,7 +5,7 @@
  * service juridique, c'est donc lui qui fait foi. Ce fichier en est la copie
  * lisible par le navigateur — et cette dualité est le vrai coût de la page :
  * une correction dans le .docx doit être reportée ici, sinon le site affirme
- * autre chose que ce que le Ministère a visé. À la première divergence, la
+ * autre chose que ce que l'administration a visé. À la première divergence, la
  * bonne réponse sera de générer ce fichier depuis le .docx plutôt que de le
  * tenir à la main.
  *
@@ -16,7 +16,7 @@
 
 /** Ce que le document dit de lui-même. Repris mot pour mot, en tête de page. */
 export const CGU_STATUS =
-  "Le présent document constitue un projet de CGU spécifique au fonctionnement décrit pour le démonstrateur Ticket Tout. Il est transmis pour avis préalable au service juridique du Ministère et ne doit pas être publié en l’état.";
+  "Le présent document constitue un projet de CGU spécifique au fonctionnement décrit pour le démonstrateur Ticket Tout. Il est transmis pour avis préalable au service juridique de l'administration et ne doit pas être publié en l’état.";
 
 export type Article = {
   /** « Article 1 », tel qu'il est numéroté dans le document. */
@@ -31,7 +31,7 @@ export const CGU_ARTICLES: readonly Article[] = [
     number: "Article 1",
     title: "Objet du service",
     body: [
-      "Ticket Tout est un démonstrateur de dispositif d’avantages salariés dématérialisés. Il permet à des salariés de disposer d’un crédit fictif utilisable auprès de partenaires référencés par le Ministère du Job et Bonheur. Les montants affichés dans l’application sont exclusivement destinés à la simulation : aucun paiement, transfert ou encaissement de valeur monétaire réelle n’est réalisé par le démonstrateur.",
+      "Ticket Tout est un démonstrateur de dispositif d’avantages salariés dématérialisés. Il permet à des salariés de disposer d’un crédit fictif utilisable auprès de partenaires référencés par l'Administration. Les montants affichés dans l’application sont exclusivement destinés à la simulation : aucun paiement, transfert ou encaissement de valeur monétaire réelle n’est réalisé par le démonstrateur.",
     ],
   },
   {
@@ -67,7 +67,7 @@ export const CGU_ARTICLES: readonly Article[] = [
     number: "Article 6",
     title: "Annulation exceptionnelle",
     body: [
-      "Une transaction validée est en principe irréversible. Lorsqu’une correction exceptionnelle est nécessaire, elle relève d’un administrateur habilité du Ministère. L’annulation doit être justifiée par un motif enregistré et laisser une trace de l’opération. Elle ne doit pas supprimer ou modifier l’enregistrement initial ; le cas échéant, une opération corrective distincte peut recréditer le salarié.",
+      "Une transaction validée est en principe irréversible. Lorsqu’une correction exceptionnelle est nécessaire, elle relève d’un administrateur habilité de l'administration. L’annulation doit être justifiée par un motif enregistré et laisser une trace de l’opération. Elle ne doit pas supprimer ou modifier l’enregistrement initial ; le cas échéant, une opération corrective distincte peut recréditer le salarié.",
       "Cette procédure constitue une règle cible du présent projet : la fonctionnalité d’annulation n’est pas actuellement implémentée dans le démonstrateur et devra être validée avant toute mise en œuvre.",
     ],
   },
@@ -82,7 +82,7 @@ export const CGU_ARTICLES: readonly Article[] = [
     number: "Article 8",
     title: "Données personnelles",
     body: [
-      "Le fonctionnement du service implique le traitement de données relatives aux comptes et aux transactions. Les modalités détaillées de ces traitements figurent dans le registre des traitements associé au projet. Les utilisateurs doivent être informés des droits dont ils disposent et des coordonnées du responsable du traitement selon les mentions validées par le Ministère.",
+      "Le fonctionnement du service implique le traitement de données relatives aux comptes et aux transactions. Les modalités détaillées de ces traitements figurent dans le registre des traitements associé au projet. Les utilisateurs doivent être informés des droits dont ils disposent et des coordonnées du responsable du traitement selon les mentions validées par l'administration.",
     ],
   },
   {
@@ -96,7 +96,7 @@ export const CGU_ARTICLES: readonly Article[] = [
     number: "Article 10",
     title: "Modification et validation",
     body: [
-      "Le présent texte est un projet. Il ne peut être mis en ligne avant l’avis préalable du service juridique du Ministère. Les mentions légales, coordonnées, règles de responsabilité, modalités relatives aux droits des personnes et toute autre clause juridique requise devront être complétées ou ajustées avant publication.",
+      "Le présent texte est un projet. Il ne peut être mis en ligne avant l’avis préalable du service juridique de l'administration. Les mentions légales, coordonnées, règles de responsabilité, modalités relatives aux droits des personnes et toute autre clause juridique requise devront être complétées ou ajustées avant publication.",
     ],
   },
 ];

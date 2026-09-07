@@ -88,7 +88,7 @@ def valider_transaction():
         # établissements en attente ou écartés — mais une barrière d'interface
         # n'est pas un contrôle d'accès : sans cette vérification, un appel
         # direct à la route encaissait quand même. Le statut est la décision du
-        # Ministère, donc c'est ici qu'elle s'applique.
+        # administration, donc c'est ici qu'elle s'applique.
         if partenaire_ref.statut != PartnerStatus.valide:
             return jsonify({
                 "status": "error",

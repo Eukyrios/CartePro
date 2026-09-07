@@ -135,3 +135,21 @@ export async function validateEncaissement(input: {
     };
   }
 }
+
+/**
+ * Le partenaire écarté redépose son dossier.
+ *
+ *   POST /api/partenaires/reexamen
+ *   → 200 { "message": "…", "statut": "en_attente" }
+ *   → 409 si le dossier n'est pas en état de refus
+ *
+ * Rend le message du serveur, pour que l'écran affiche ses mots plutôt qu'une
+ * confirmation réécrite ici.
+ */
+export async function demanderReexamen(): Promise<string> {
+  const data = await api<{ message: string; statut: string }>(
+    "/api/partenaires/reexamen",
+    { method: "POST" },
+  );
+  return data.message;
+}

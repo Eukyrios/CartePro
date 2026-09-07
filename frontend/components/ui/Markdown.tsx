@@ -18,7 +18,7 @@ import type { ReactNode } from "react";
  * listes, citations, titres. Les tableaux, les images et le HTML en ligne n'y
  * sont pas, et ne pas les accepter est un choix : une fiche de partenaire n'a
  * pas à pouvoir insérer une image distante ni un tableau dans la mise en page
- * du Ministère.
+ * de l'administration.
  *
  * Les liens ne sont admis qu'en `http`, `https`, `mailto` ou en chemin interne
  * commençant par `/`. Tout le reste — `javascript:` au premier chef — est

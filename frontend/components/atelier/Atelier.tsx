@@ -166,7 +166,7 @@ export default function Atelier() {
             <div className="flex flex-wrap gap-3">
               <UI.Chip>Employé</UI.Chip>
               <UI.Chip tone="official">
-                Partenaire Officiel du Ministère
+                Partenaire Officiel de l&apos;administration
               </UI.Chip>
               <UI.Chip tone="muted">Fiche de démonstration</UI.Chip>
             </div>
@@ -454,7 +454,7 @@ export default function Atelier() {
             <div className="grid gap-6">
               <UI.IdentityStrip
                 name="Camille Durand"
-                email="camille.durand@ministere.gouv.fr"
+                email="camille.durand@administration.gouv.fr"
               >
                 <UI.Chip className="ms-auto">Employé</UI.Chip>
               </UI.IdentityStrip>
@@ -463,7 +463,7 @@ export default function Atelier() {
                   <Avatar name="Camille Durand" size="sm" />
                   <NameEmail
                     name="Camille Durand"
-                    email="camille@ministere.gouv.fr"
+                    email="camille@administration.gouv.fr"
                     size="sm"
                   />
                 </div>

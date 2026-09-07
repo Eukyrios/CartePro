@@ -1,7 +1,7 @@
 import ConfidenceSection from "./ConfidenceSection";
 import HeroSection from "./HeroSection";
 import HowItWorksSection from "./HowItWorksSection";
-import MinisterPickSection from "@/components/minister/MinisterPickSection";
+import AdminPickSection from "@/components/administration/AdminPickSection";
 import SectionNav from "@/components/layout/SectionNav";
 import PageMain from "@/components/ui/PageMain";
 
@@ -23,7 +23,7 @@ export default function LandingPage() {
       {/* Avant « Confiance » : le visiteur voit à quoi ressemble le réseau
           avant qu'on lui parle de la mécanique du paiement. Gouttières de
           page, comme les autres écrans de la vitrine. */}
-      <MinisterPickSection gutter="page" />
+      <AdminPickSection gutter="page" />
       <ConfidenceSection />
 
       <SectionNav />

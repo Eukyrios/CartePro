@@ -49,7 +49,7 @@ def app():
 
 
 def _salarie(email, mot_de_passe):
-    employeur = Employeur.query.first() or Employeur(raison_sociale="Ministere")
+    employeur = Employeur.query.first() or Employeur(raison_sociale="administration")
     db.session.add(employeur)
     db.session.flush()
     salarie = Salaries(

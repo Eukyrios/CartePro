@@ -80,7 +80,7 @@ const STATUT_LABEL = {
   employe: "Employé",
   partenaire: "Partenaire",
   attente: "Partenaire en attente de confirmation",
-  officiel: "Partenaire Officiel du Ministère",
+  officiel: "Partenaire Officiel de l'administration",
 } as const;
 
 const PenIcon: FC<ComponentProps<"svg">> = (props) => (
@@ -200,7 +200,7 @@ export default function AccountSettings() {
 
       {/* Une seule pastille, qui dit le compte et son statut d'un même souffle
           — parce que pour un partenaire les deux ne se lisent pas séparément :
-          savoir qu'on est « Partenaire » sans savoir si le Ministère a
+          savoir qu'on est « Partenaire » sans savoir si l&apos;administration a
           conventionné l'établissement n'apprend pas ce qu'on est venu vérifier.
           L'ochre reste réservé au conventionnement accordé ; l'attente est
           neutre, car ce n'est pas une distinction. */}

@@ -1,11 +1,15 @@
+from datetime import datetime, timezone
+
 from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
+
+from accounts import compte_depuis_identite
 from models import (
     Categorie,
-    CoupDeCoeur,
-    CoupDeCoeurStatut,
     Decision,
     DecisionSens,
+    CoupDeCoeur,
+    CoupDeCoeurStatut,
     Partenaire,
     PartnerStatus,
     db,
@@ -15,9 +19,9 @@ partenaires_bp = Blueprint('partenaires', __name__)
 
 
 def _est_coup_de_coeur(partenaire):
-    """Le coup de coeur du Ministre est une entree active, pas un booleen.
+    """Le coup de coeur de l'administrateur est une entree active, pas un booleen.
 
-    Le schema en fait une table a part — avec le mot du Ministre et un
+    Le schema en fait une table a part — avec le mot de l'administrateur et un
     horodatage — parce que c'est une decision editoriale qui se date et se
     retire. L'API, elle, expose toujours un booleen : le front n'a pas a
     connaitre cette histoire pour poser un badge.
@@ -25,27 +29,6 @@ def _est_coup_de_coeur(partenaire):
     return any(
         cdc.statut == CoupDeCoeurStatut.actif for cdc in partenaire.coups_de_coeur
     )
-
-
-def _refus(partenaire):
-    """Le motif du refus, s'il y en a un. Sinon None.
-
-    La derniere decision defavorable fait foi : un partenaire peut avoir ete
-    refuse, puis reexamine. La table `decisions` garde tout, l'API rend
-    l'actuelle.
-    """
-    if partenaire.statut != PartnerStatus.refuse:
-        return None
-    decision = (
-        Decision.query.filter_by(
-            partenaire_id=partenaire.id, sens=DecisionSens.refuse
-        )
-        .order_by(Decision.horodatage.desc())
-        .first()
-    )
-    if not decision:
-        return None
-    return {"motif": decision.motif_ecrit, "at": decision.horodatage.isoformat()}
 
 
 def _entree(partenaire):
@@ -61,15 +44,17 @@ def _entree(partenaire):
         "codePostal": partenaire.code_postal or "",
         "amountCents": round((partenaire.tarif or 0) * 100),
         "photo": partenaire.image_partenaire or "",
-        # Le conventionnement « Partenaire Officiel du Ministere » : un statut
+        # Le conventionnement « Partenaire Officiel de l'administration » : un statut
         # administratif, distinct du coup de coeur, qui est un gout.
         "officiel": partenaire.statut == PartnerStatus.valide,
         # Le statut administratif en clair, et non plus seulement le booleen du
         # conventionnement : « en attente » et « refuse » ne sont pas la meme
         # chose, et un ecran qui les confond ne peut pas expliquer l'un.
+        # Le statut, oui ; le motif d'un refus, non. Cette route est publique,
+        # et la raison pour laquelle un etablissement a ete ecarte est un
+        # dossier administratif adresse a lui seul. Il la lit dans son espace,
+        # par `/api/auth/me`.
         "statut": partenaire.statut.value,
-        # Le motif, pour un partenaire ecarte. `None` sinon.
-        "refus": _refus(partenaire),
         "featured": _est_coup_de_coeur(partenaire),
         # Fiche redigee, ou fiche de remplissage : le lecteur a le droit de
         # savoir ce qu'il regarde dans un demonstrateur.
@@ -110,7 +95,7 @@ def categories():
 
 @partenaires_bp.route('/coup-de-coeur', methods=['GET'])
 def get_coup_de_coeur():
-    """Le coup de coeur actif le plus recent, avec le mot du Ministre."""
+    """Le coup de coeur actif le plus recent, avec le mot de l'administrateur."""
     choix = (
         CoupDeCoeur.query.filter_by(statut=CoupDeCoeurStatut.actif)
         .order_by(CoupDeCoeur.horodatage.desc())
@@ -120,10 +105,51 @@ def get_coup_de_coeur():
     if choix and choix.partenaire:
         # L'entree complete, plus les mots : la section d'accueil affiche une
         # tuile de partenaire — photographie, adresse, categorie — et la phrase
-        # du Ministre. Deux requetes pour une seule section n'apprendraient
+        # de l'administrateur. Deux requetes pour une seule section n'apprendraient
         # rien de plus.
-        retour = {**_entree(choix.partenaire), "mot": choix.mot_du_ministre}
+        retour = {**_entree(choix.partenaire), "mot": choix.mot_administrateur}
     return jsonify({"status": "success", "coup_de_coeur": retour}), 200
+
+
+@partenaires_bp.route('/reexamen', methods=['POST'])
+@jwt_required()
+def demander_reexamen():
+    """Le partenaire ecarte redepose son dossier.
+
+    Son etablissement repasse « en attente », et la demande s'ecrit dans la
+    table des decisions : un dossier qui rouvre laisse une trace, comme celui
+    qui se ferme. Rien n'est efface — le refus precedent reste, avec son motif
+    et sa date, parce que c'est l'historique de l'instruction.
+
+    Reserve au titulaire du compte, et au seul cas ou il y a quelque chose a
+    reexaminer : un partenaire deja conventionne ou deja en attente n'a rien a
+    redeposer.
+    """
+    compte = compte_depuis_identite(get_jwt_identity())
+    if not isinstance(compte, Partenaire):
+        return jsonify({"error": "Reserve aux comptes partenaires."}), 403
+    if compte.statut != PartnerStatus.refuse:
+        return jsonify({
+            "error": "Votre dossier n'est pas en etat de refus : il n'y a rien "
+                     "a reexaminer."
+        }), 409
+
+    compte.statut = PartnerStatus.en_attente
+    db.session.add(Decision(
+        partenaire_id=compte.id,
+        # L'agent n'est pas connu : c'est le partenaire qui demande, pas
+        # l'administration qui tranche. Zero marque « a instruire ».
+        agent_id=0,
+        sens=DecisionSens.suspendu,
+        motif_ecrit="Reexamen demande par l'etablissement.",
+        horodatage=datetime.now(timezone.utc),
+    ))
+    db.session.commit()
+    return jsonify({
+        "message": "Votre demande de reexamen est enregistree. Votre dossier "
+                   "repasse en attente d'instruction.",
+        "statut": compte.statut.value,
+    }), 200
 
 
 @partenaires_bp.route('/admin/supprimer/<int:partenaire_id>', methods=['DELETE'])

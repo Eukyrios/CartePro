@@ -12,16 +12,21 @@ import HatchedPanel from "@/components/ui/HatchedPanel";
 import Note from "@/components/ui/Note";
 import EncaissementSection from "./EncaissementSection";
 import ReceiptsSection from "./ReceiptsSection";
+import RefusalSection from "./RefusalSection";
 import type { RailSection } from "@/components/layout/SectionNav";
 
 /**
  * Les écrans de l'espace partenaire, dans l'ordre, pour le rail latéral.
- * Numérotés depuis 01 comme toute liste numérotée du design.
+ *
+ * Numérotés **après** filtrage, et non écrits en dur : un établissement écarté
+ * en a un de plus — la décision qui l'écarte, en tête — et un « 01 » manquant
+ * se lirait comme une erreur.
  */
-const SECTIONS: readonly RailSection[] = [
-  { id: "encaissement", index: "01", label: "Encaisser" },
-  { id: "reseau", index: "02", label: "Réseau" },
-  { id: "recettes", index: "03", label: "Recettes" },
+const SECTIONS: readonly Omit<RailSection, "index">[] = [
+  { id: "refus", label: "Refus" },
+  { id: "encaissement", label: "Encaisser" },
+  { id: "reseau", label: "Réseau" },
+  { id: "recettes", label: "Recettes" },
 ];
 
 /**
@@ -41,13 +46,13 @@ const SECTIONS: readonly RailSection[] = [
  * adaptation : un partenaire regarde le réseau dont il fait partie.
  *
  * Encaisser et compter ses recettes supposent un établissement conventionné :
- * tant que le Ministère ne l'a pas accepté, les deux écrans s'affichent barrés
+ * tant que l'administration ne l'a pas accepté, les deux écrans s'affichent barrés
  * (voir `gate` plus bas). Le réseau, lui, reste ouvert — consulter le
  * catalogue ne demande l'accord de personne, et c'est ce qui donne au
  * partenaire en attente une raison d'être là.
  */
 export default function PartnerSpace() {
-  const { profile, ready } = useAccount();
+  const { profile, ready, refreshAccount } = useAccount();
   /* Sa fiche au réseau : le slug que l'encaissement envoie, le tarif proposé,
      et le conventionnement qui décide de tout le reste. Les paramètres posent
      la même question au même endroit — voir account/usePartnerEntry. */
@@ -113,9 +118,9 @@ export default function PartnerSpace() {
           ) : (
             <>
               Votre compte attend le{" "}
-              <strong className="font-black">conventionnement</strong> du
-              Ministère : un administrateur doit accepter votre établissement
-              comme Partenaire Officiel pour ouvrir {quoi}.
+              <strong className="font-black">conventionnement</strong> de
+              l&apos;administration : un administrateur doit accepter votre
+              établissement comme Partenaire Officiel pour ouvrir {quoi}.
             </>
           )
         }
@@ -131,13 +136,42 @@ export default function PartnerSpace() {
       </HatchedPanel>
     );
 
+  /* La décision qui écarte l'établissement, s'il y en a une. Elle vient du
+     profil — donc du compte, donc de son seul titulaire — et non du catalogue,
+     qui est public. */
+  const refus = profile.refus ?? null;
+
+  const sections = SECTIONS.filter(
+    (entry) => entry.id !== "refus" || Boolean(refus),
+  ).map((entry, position) => ({
+    ...entry,
+    index: String(position + 1).padStart(2, "0"),
+  }));
+
   return (
     <>
+      {/* Un établissement écarté ouvre son espace par la décision. Les écrans
+          suivants restent en place, barrés : ce n'est pas la connexion qui
+          ouvre l'encaissement, c'est le conventionnement. */}
+      {refus && (
+        <RefusalSection
+          nom={profile.partner.raisonSociale}
+          refus={refus}
+          /* Le dossier reparti en instruction, le profil doit être relu : le
+             statut a changé, donc la barrière et le rail avec lui. */
+          onReexamen={refreshAccount}
+        />
+      )}
+
       {barrer(
         <EncaissementSection
           partnerId={me?.id ?? null}
           defaultAmountCents={me?.amountCents ?? 0}
           onEncaisse={() => setEncaissements((count) => count + 1)}
+          /* Il n'est premier que s'il n'y a pas de décision de refus au-dessus
+             de lui — et c'est ce qui décide de sa hauteur et de son point
+             d'accroche. */
+          first={!refus}
         />,
         "l\u2019encaissement",
       )}
@@ -155,7 +189,7 @@ export default function PartnerSpace() {
         "le tableau de vos recettes",
       )}
 
-      <SectionNav sections={SECTIONS} />
+      <SectionNav sections={sections} />
     </>
   );
 }

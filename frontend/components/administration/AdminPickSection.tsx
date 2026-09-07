@@ -2,7 +2,7 @@
 
 import { fromApi } from "@/components/data/partners";
 import { categoryLabel, useCategories } from "@/components/data/useCategories";
-import { useMinisterPick } from "./useMinisterPick";
+import { useAdminPick } from "./useAdminPick";
 import { Arrow } from "@/components/brand/Marks";
 import Chip from "@/components/ui/Chip";
 import Display from "@/components/ui/Display";
@@ -11,17 +11,17 @@ import PartnerTile from "@/components/ui/PartnerTile";
 import Screen from "@/components/ui/Screen";
 
 /**
- * « Coup de cœur du Ministre » : un partenaire, et ce que le Ministre en dit.
+ * « Coup de cœur de l'administrateur » : un partenaire, et ce que l'administrateur en dit.
  *
  * Un seul. La section en montrait quatre côte à côte, ce qui en faisait une
  * rangée de plus dans un site qui en compte déjà — le réseau, l'historique, la
  * pile des trois gestes. Or un coup de cœur qui se décline en quatre n'est plus
  * un coup de cœur, c'est une étagère : le lecteur compare au lieu de retenir.
- * Un seul rend la phrase du Ministre lisible en grand, à l'échelle des autres
+ * Un seul rend la phrase de l'administrateur lisible en grand, à l'échelle des autres
  * titres de la page, et le nom du partenaire devient une recommandation plutôt
  * qu'une vignette.
  *
- * Le choix vient de la base — table `coups_de_coeur`, avec le mot du Ministre —
+ * Le choix vient de la base — table `coups_de_coeur`, avec le mot de l'administrateur —
  * et non plus d'une liste écrite dans le front. Le serveur rend le plus récent
  * des coups de cœur actifs : changer de coup de cœur, c'est en enregistrer un
  * nouveau, et l'espace d'administration fera exactement cela.
@@ -34,13 +34,13 @@ import Screen from "@/components/ui/Screen";
  * n'y en a qu'un, parce qu'un bouton « Voir la fiche » posé à côté d'une tuile
  * qui mène au même endroit se lit comme deux destinations.
  */
-export default function MinisterPickSection({
+export default function AdminPickSection({
   gutter = "container",
 }: {
   /** "page" sur la page d'accueil, dont les écrans vont de bord à bord. */
   gutter?: "container" | "page";
 }) {
-  const { pick, loaded } = useMinisterPick();
+  const { pick, loaded } = useAdminPick();
   const { categories } = useCategories();
 
   /* Rien avant la réponse, et rien s'il n'y a pas de coup de cœur actif : pas
@@ -56,14 +56,14 @@ export default function MinisterPickSection({
       <div className="mx-auto grid w-full max-w-[1400px] items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,52%)] lg:gap-[56px]">
         <div>
           <Chip tone="official" className="inline-block">
-            Choisi par le Ministère
+            Choisi par l&apos;administration
           </Chip>
 
-          <Display level={2} accent="du Ministre." className="mt-6">
+          <Display level={2} accent="de l'administrateur." className="mt-6">
             Coup de cœur
           </Display>
 
-          {/* La phrase du Ministre, dans la serif de la marque et à la taille
+          {/* La phrase de l'administrateur, dans la serif de la marque et à la taille
               d'une citation : c'est le contenu de la section, pas sa légende. */}
           <blockquote className="text-cp-fg mt-12 font-serif text-[clamp(24px,2.6vw,36px)] leading-[1.25] italic">
             «&nbsp;{pick.mot}&nbsp;»

@@ -9,7 +9,7 @@ import { useAccount } from "./AccountProvider";
  *
  * C'est là que vivent son slug — l'identifiant que l'encaissement doit envoyer
  * — son tarif, et surtout son **conventionnement** : `officiel` est la réponse
- * du Ministère, et rien d'autre ne la donne. Le compte, lui, ne porte que le
+ * de l'administration, et rien d'autre ne la donne. Le compte, lui, ne porte que le
  * profil déclaré par le partenaire.
  *
  * Extrait parce que deux écrans posent la même question et devaient y répondre

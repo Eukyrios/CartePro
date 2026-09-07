@@ -378,7 +378,7 @@ NETWORK = [
 
 # Le salarié de démonstration : un compte à part du panel statistique, dont le
 # solde reste ce qu'il est — les cinquante autres servent aux cas limites.
-DEMO_EMPLOYEE_EMAIL = "camille.durand@ministere.gouv.fr"
+DEMO_EMPLOYEE_EMAIL = "camille.durand@administration.gouv.fr"
 
 # Le compte de demonstration : un credit, deux paiements, et le solde qui en
 # resulte. Ce sont de vraies lignes en base, et non plus une histoire simulee
@@ -392,7 +392,7 @@ DEMO_EMPLOYEE_PAIEMENTS = [
 DEMO_EMPLOYEE_BALANCE = DEMO_EMPLOYEE_CREDIT - sum(
     p["montant"] for p in DEMO_EMPLOYEE_PAIEMENTS
 )
-DEMO_ADMIN_EMAIL = "admin@ministere.gouv.fr"
+DEMO_ADMIN_EMAIL = "admin@administration.gouv.fr"
 
 DEFAULT_CARD_STYLE = {
     "color": "#1b3a6b",
@@ -508,7 +508,7 @@ def presentation_de(entry):
     """La presentation d'un partenaire : la vraie si elle existe, sinon du faux.
 
     `PRESENTATIONS` est ecrite a la main et fait foi. Elle contient exactement
-    les quatre partenaires que le Ministre distingue — la regle est simple et
+    les quatre partenaires que l'administrateur distingue — la regle est simple et
     sans exception : redige si et seulement si coup de coeur. Les douze autres
     recoivent le remplissage latin, et leur fiche le dit.
     """
@@ -558,13 +558,13 @@ def statut_de(entry):
     return PartnerStatus.valide
 
 
-# Les mots du Ministre sur ses coups de cœur, par slug.
+# Les mots de l'administrateur sur ses coups de cœur, par slug.
 #
-# Le schéma leur donne une colonne — `CoupDeCoeur.mot_du_ministre` — donc ils
+# Le schéma leur donne une colonne — `CoupDeCoeur.mot_administrateur` — donc ils
 # vivent en base et non plus seulement dans le front. Les quatre phrases sont
 # celles de `frontend/components/data/ministerPicks.ts` : la même sélection,
 # les mêmes mots, jusqu'à ce que l'espace d'administration prenne la main.
-MOTS_DU_MINISTRE = {
+MOTS_ADMINISTRATEUR = {
     "poney-dream-78": "Parfait pour ressouder une équipe et renouer avec la nature.",
     "kostumparty": "La créativité est la clé du bonheur au travail.",
     "glaces-correze": "Soutenir l'artisanat français, un parfum à la fois.",
@@ -591,7 +591,7 @@ def make_partner(entry, categories):
     resout — il vient des donnees, pas d'une cle primaire, parce que les pages
     du front sont pre-rendues sur lui.
 
-    Le conventionnement est un statut du Ministere : `valide` pour un
+    Le conventionnement est un statut de l'administration : `valide` pour un
     partenaire officiel, `en_attente` pour les autres. C'est lui que l'espace
     partenaire lit pour ouvrir ou barrer l'encaissement.
     """
@@ -644,7 +644,7 @@ def run_seed():
         db.create_all()
 
         # 1. L'employeur du dispositif, et les categories du reseau.
-        employeur = Employeur(raison_sociale="Ministere du Job et Bonheur")
+        employeur = Employeur(raison_sociale="Administration")
         db.session.add(employeur)
         db.session.flush()
         categories = _categories(db.session)
@@ -669,15 +669,15 @@ def run_seed():
                     horodatage=REFERENCE_DATE + timedelta(days=12),
                 ))
 
-        # 4. Le coup de coeur du Ministre : une entree datee, avec ses mots.
+        # 4. Le coup de coeur de l'administrateur : une entree datee, avec ses mots.
         # C'est une table a part et non un booleen, parce qu'une decision
         # editoriale se date et se retire.
         for entry, partenaire in zip(NETWORK, partenaires):
             if entry["featured"]:
                 db.session.add(CoupDeCoeur(
                     partenaire_id=partenaire.id,
-                    mot_du_ministre=MOTS_DU_MINISTRE.get(
-                        entry["slug"], f"Un choix du Ministre : {entry['nom']}."
+                    mot_administrateur=MOTS_ADMINISTRATEUR.get(
+                        entry["slug"], f"Un choix de l'administrateur : {entry['nom']}."
                     ),
                     statut=CoupDeCoeurStatut.actif,
                     horodatage=REFERENCE_DATE,
@@ -691,7 +691,7 @@ def run_seed():
         for i in range(50):
             dotation = dotations_ciblees[i] if i < 5 else round(random.uniform(60, 200), 2)
             salarie = make_salarie(
-                f"salarie{i}@ministere.gouv.fr", fake.first_name(), f"Salarie{i}", employeur
+                f"salarie{i}@administration.gouv.fr", fake.first_name(), f"Salarie{i}", employeur
             )
             db.session.add(salarie)
             salaries.append(salarie)
@@ -702,7 +702,7 @@ def run_seed():
         demo_employee = make_salarie(DEMO_EMPLOYEE_EMAIL, "Camille", "Durand", employeur)
         db.session.add(demo_employee)
 
-        admin = Admin(email=DEMO_ADMIN_EMAIL, nom="Agent du Ministere")
+        admin = Admin(email=DEMO_ADMIN_EMAIL, nom="Agent de l'administration")
         admin.set_password(DEMO_PASSWORD)
         db.session.add(admin)
         db.session.flush()
@@ -819,7 +819,7 @@ def run_seed():
         non_conv = next(e for e in NETWORK if not e["official"])
         print(f"  partenaire  contact@{non_conv['slug']}.fr  ({non_conv['nom']}, en attente)")
         print(f"  admin       {DEMO_ADMIN_EMAIL}")
-        print("  (les 50 salaries du panel : salarie0@ministere.gouv.fr ... salarie49@, meme mot de passe)")
+        print("  (les 50 salaries du panel : salarie0@administration.gouv.fr ... salarie49@, meme mot de passe)")
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ import LandingPage from "./LandingPage";
 /**
  * What "/" is depends on who is looking: the landing page for a visitor, and
  * the salarié space for a signed-in employé — the space is their homepage, and
- * the Coup de cœur du Ministre section belongs on it.
+ * the Coup de cœur de l'administrateur section belongs on it.
  *
  * The landing page is what renders until the stored session is known, because
  * it is also what the server rendered: swapping only after `ready` keeps the

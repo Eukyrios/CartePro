@@ -1,6 +1,6 @@
 # Ticket Tout
 
-Démonstrateur du crédit salarié du « Ministère du Job et Bonheur » : un employeur
+Démonstrateur du crédit salarié de l'« Administration » : un employeur
 crédite ses salariés, qui dépensent chez des partenaires conventionnés.
 
 Front Next.js 15 (App Router, Tailwind v4), back Flask + SQLite.
@@ -26,21 +26,22 @@ Mot de passe commun : `TicketTout2026`.
 
 | Type | Identifiant |
 |---|---|
-| salarié | `camille.durand@ministere.gouv.fr` — 32,50 € |
+| salarié | `camille.durand@administration.gouv.fr` — 32,50 € |
 | partenaire | `contact@poney-dream-78.fr` — conventionné |
 | partenaire en attente | `contact@kostumparty.fr` — encaissement et recettes barrés |
-| partenaire refusé | `contact@spa-vosges.fr` — **la connexion est refusée** ; sa fiche s'ouvre sur la décision |
-| admin | `admin@ministere.gouv.fr` |
+| partenaire refusé | `contact@spa-vosges.fr` — se connecte, et son espace ouvre sur la décision et son motif |
+| admin | `admin@administration.gouv.fr` |
 
 Le panel du cabinet est semé avec 16 partenaires, dans les trois statuts que le
 dispositif connaît : **11 conventionnés**, 3 en attente d'examen, 2 refusés — et
-un refus porte son motif écrit, que la fiche de l'établissement affiche en
-premier écran. Puis 50 salariés, 200 opérations planifiées — 161 écrites, 39
+un refus porte son motif écrit — que **seul l'établissement concerné** lit, en
+premier écran de son espace. La fiche publique n'en dit rien : le statut est un
+fait, le motif est un dossier. Puis 50 salariés, 200 opérations planifiées — 161 écrites, 39
 refusées — et les cas limites exigés : trois soldes à zéro, plusieurs sous cinq
 euros.
 
 Les seize fiches ont une présentation, des horaires et un site. Trois sont
-écrites en français et font foi — dont celles que le Ministre distingue ; les
+écrites en français et font foi — dont celles que l'administrateur distingue ; les
 treize autres sont remplies avec la légende de Romulus et Remus, en latin. C'est
 le lorem ipsum de ce démonstrateur : du faux texte qui s'assume, plutôt que des
 mots français qu'on pourrait prendre pour vrais. Le remplissage ne recouvre

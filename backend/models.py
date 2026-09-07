@@ -129,7 +129,7 @@ class Partenaire(db.Model):
     # donnees ont ete redigees, et un reseau de remplissage dont les textes
     # sont du latin genere. Une colonne le dit, plutot que de laisser le
     # lecteur deviner — et plutot que de le deduire du coup de coeur, qui est un
-    # gout du Ministre et non un constat sur la qualite des donnees.
+    # gout de l'administrateur et non un constat sur la qualite des donnees.
     donnees_reelles = db.Column(db.Boolean, nullable=False, default=False)
 
     # La presentation que le partenaire ecrit lui-meme, depuis ses parametres,
@@ -158,7 +158,7 @@ class Partenaire(db.Model):
 # Administrateur
 # -----------------------------------------------------------------------------
 class Admin(db.Model):
-    """L'agent du Ministere : celui qui conventionne et qui abonde.
+    """L'agent de l'administration : celui qui conventionne et qui abonde.
 
     `Abondement.agent_admin_id` et `Decision.agent_id` referencaient deja un
     administrateur, mais par un entier nu sans table derriere. Les deux routes
@@ -169,7 +169,7 @@ class Admin(db.Model):
     __tablename__ = "admins"
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    nom = db.Column(db.String(150), nullable=False, default="Agent du Ministere")
+    nom = db.Column(db.String(150), nullable=False, default="Agent de l'administration")
     password_hash = db.Column(db.String(256), nullable=False)
 
     def set_password(self, password):
@@ -233,13 +233,13 @@ class Abondement(db.Model):
     )
 
 # -----------------------------------------------------------------------------
-# Coup de cœur du Ministre
+# Coup de cœur de l'administrateur
 # -----------------------------------------------------------------------------
 class CoupDeCoeur(db.Model):
     __tablename__ = "coups_de_coeur"
     id = db.Column(db.Integer, primary_key=True)
     partenaire_id = db.Column(db.Integer, db.ForeignKey("partenaires.id"), nullable=False)
-    mot_du_ministre = db.Column(db.Text, nullable=False)
+    mot_administrateur = db.Column(db.Text, nullable=False)
     horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     statut = db.Column(SQLEnum(CoupDeCoeurStatut), nullable=False, default=CoupDeCoeurStatut.actif)
     nombre_clicks = db.Column(db.Integer, nullable=False, default=0)

@@ -9,7 +9,6 @@ import Note from "@/components/ui/Note";
 import PageMain from "@/components/ui/PageMain";
 import PartnerPayment from "./PartnerPayment";
 import PartnerPresentation, { hasPresentation } from "./PartnerPresentation";
-import PartnerRefusal from "./PartnerRefusal";
 import Link from "next/link";
 import type { RailSection } from "@/components/layout/SectionNav";
 
@@ -67,12 +66,13 @@ export default function PartnerFiche({ slug }: { slug: string }) {
   const partner = fromApi(entry);
   const presentation = hasPresentation(entry) ? entry : null;
   const canPay = ready && Boolean(profile) && profile?.audience !== "partner";
-  /* Un établissement écarté ouvre sa fiche par la décision qui l'écarte. Le
-     rail le liste en 01 : c'est le premier écran, donc la première entrée. */
-  const refuse = Boolean(entry.refus);
 
+  /* Rien du refus ici. La fiche est publique, et le motif pour lequel un
+     établissement a été écarté est un dossier administratif adressé à lui
+     seul — il le lit dans son espace (voir partenaire/RefusalSection). Ce que
+     la fiche dit déjà suffit : la pastille « Partenaire Officiel du
+     administration » est absente, et le réseau ne le liste pas. */
   const ecrans: RailSection[] = [];
-  if (refuse) ecrans.push({ id: "refus", index: "", label: "Refus" });
   ecrans.push({ id: "paiement", index: "", label: canPay ? "Payer" : "Fiche" });
   if (presentation) {
     ecrans.push({ id: "presentation", index: "", label: "Présentation" });
@@ -91,7 +91,6 @@ export default function PartnerFiche({ slug }: { slug: string }) {
 
   return (
     <PageMain snap={Boolean(sections)}>
-      {refuse && <PartnerRefusal entry={entry} />}
       <PartnerPayment partner={partner} />
       {presentation && <PartnerPresentation entry={presentation} />}
       {sections && <SectionNav sections={sections} />}

@@ -23,7 +23,7 @@ def set_featured_partner(partenaire_id):
     # TODO: Ton mate fera l'UPDATE en base pour passer 'featured' à True
     return jsonify({
         "status": "success",
-        "message": f"Le partenaire {partenaire_id} est maintenant le coup de coeur du Ministre."
+        "message": f"Le partenaire {partenaire_id} est maintenant le coup de coeur de l'administrateur."
     }), 200
 
 @admin_bp.route('/transactions/<int:transaction_id>/annuler', methods=['POST'])

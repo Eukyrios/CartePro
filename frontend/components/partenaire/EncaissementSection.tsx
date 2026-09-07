@@ -56,6 +56,7 @@ export default function EncaissementSection({
   partnerId,
   defaultAmountCents,
   onEncaisse,
+  first = true,
 }: {
   /**
    * Le slug du partenaire connecté, tel que le catalogue l'expose. `null` tant
@@ -71,6 +72,18 @@ export default function EncaissementSection({
    * fait juste au-dessus se lit comme une erreur de comptage.
    */
   onEncaisse?: () => void;
+  /**
+   * Cet écran est-il le premier de la page ?
+   *
+   * Il ne l'est pas toujours : un établissement écarté ouvre son espace par la
+   * décision qui l'écarte, et l'encaissement passe en second. Or les deux
+   * réglages d'un premier écran — sa hauteur, et l'absence de point d'accroche
+   * — sont faux pour un écran du milieu. Sans ce drapeau, l'encaissement
+   * n'avait aucun point d'accroche alors que ses voisins en avaient : avec
+   * `scroll-snap-type: mandatory`, il devenait proprement inatteignable, ni au
+   * défilement ni par le rail.
+   */
+  first?: boolean;
 }) {
   const [code, setCode] = useState("");
   const [euros, setEuros] = useState(() => enEuros(defaultAmountCents));
@@ -133,11 +146,15 @@ export default function EncaissementSection({
   }
 
   return (
-    /* `below-bar` et pas de point d'accroche : la barre haute appartient à
-       ce premier écran, elle ne s'empile pas au-dessus et on ne peut pas la
-       faire sortir de l'écran en s'accrochant au bord de la section. Voir
-       BalanceSection, même raison. */
-    <Screen id="encaissement" height="below-bar" snap={false} gap={9}>
+    /* Premier écran : `below-bar`, parce que la barre haute lui appartient, et
+       pas de point d'accroche, pour qu'on ne puisse pas la faire sortir de
+       l'écran. Écran du milieu : l'inverse des deux. Voir `first`. */
+    <Screen
+      id="encaissement"
+      height={first ? "below-bar" : "screen"}
+      snap={!first}
+      gap={9}
+    >
       <div>
         <Display level={1} accent="un paiement.">
           Encaisser

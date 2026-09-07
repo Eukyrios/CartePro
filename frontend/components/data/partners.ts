@@ -40,10 +40,10 @@ export type Partner = {
    */
   amountCents: number;
   /**
-   * Conventionné « Partenaire Officiel du Ministère ».
+   * Conventionné « Partenaire Officiel de l'administration ».
    *
-   * Statut administratif, décidé par le Ministère et porté par les données :
-   * il n'a rien à voir avec le « Coup de cœur du Ministre », qui est une
+   * Statut administratif, décidé par l'administration et porté par les données :
+   * il n'a rien à voir avec le « Coup de cœur de l'administrateur », qui est une
    * sélection éditoriale et changeante, servie par le catalogue. Un partenaire
    * peut être l'un, l'autre, les deux ou aucun.
    */
@@ -54,7 +54,7 @@ export type Partner = {
    * Le démonstrateur mêle quelques partenaires dont les données ont été
    * rédigées et un réseau dont les textes sont générés. L'écran le dit plutôt
    * que de laisser le lecteur deviner. Distinct du coup de cœur : l'un est un
-   * goût du Ministre, l'autre un constat sur la donnée.
+   * goût de l'administrateur, l'autre un constat sur la donnée.
    */
   real: boolean;
 };

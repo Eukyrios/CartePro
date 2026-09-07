@@ -108,7 +108,7 @@ HTML = f"""<!doctype html>
 
 <!-- ============================ COUVERTURE ============================ -->
 <section class="page couv">
-  <div class="tete"><span class="micro">Ministère du Job et Bonheur</span><span class="micro">Document de travail</span></div>
+  <div class="tete"><span class="micro">Administration</span><span class="micro">Document de travail</span></div>
   <div>
     <img src="../../frontend/public/logo/mark-white.svg" style="height:18mm" alt="Ticket Tout" />
     <h1 style="margin-top:12mm">Ticket&nbsp;Tout<br /><em style="font-family:Spectral,serif;font-weight:400;color:var(--bleu-300)">brand book applicable.</em></h1>
@@ -126,7 +126,7 @@ HTML = f"""<!doctype html>
   <div class="tete"><span class="micro">1 — Logotype</span><span class="micro">Ticket Tout</span></div>
   <h2>Le logotype et ses versions</h2>
   <p>
-    Le logotype validé par le Ministre est un cercle plein portant le mot-symbole
+    Le logotype validé par l'administrateur est un cercle plein portant le mot-symbole
     en grotesque italique très grasse. Il est décliné ici en bleu institutionnel
     <code>#1B3A6B</code>. Les fichiers sources sont dans le dépôt, à
     <code>frontend/public/logo/</code>.
@@ -298,7 +298,7 @@ HTML = f"""<!doctype html>
     <tr><th>Niveau</th><th>Famille</th><th>Taille</th><th>Graisse</th><th>Interligne</th><th>Où</th></tr>
     <tr><td>Titre d'écran</td><td>Marianne</td><td>clamp 38→64 px</td><td>700–900</td><td>0,84</td><td class="ou">« Bonjour Camille. »</td></tr>
     <tr><td>Titre de section</td><td>Marianne</td><td>clamp 34→58 px</td><td>700–900</td><td>0,86</td><td class="ou">« Historique. »</td></tr>
-    <tr><td>Accent de titre</td><td>Spectral italique</td><td>hérite du titre</td><td>400</td><td>hérite</td><td class="ou">« du Ministre. »</td></tr>
+    <tr><td>Accent de titre</td><td>Spectral italique</td><td>hérite du titre</td><td>400</td><td>hérite</td><td class="ou">« de l'administrateur. »</td></tr>
     <tr><td>Sous-titre</td><td>Marianne</td><td>24–30 px</td><td>700</td><td>0,95</td><td class="ou">panneaux de réglages</td></tr>
     <tr><td>Corps</td><td>Spectral</td><td>15–19 px</td><td>400</td><td>1,55</td><td class="ou">adresses, descriptions</td></tr>
     <tr><td>Micro-libellé</td><td>Marianne</td><td>9–11 px, +0,16 em</td><td>700</td><td>1</td><td class="ou">« MONTANT DEMANDÉ »</td></tr>
@@ -524,13 +524,13 @@ HTML = f"""<!doctype html>
   <h3>Faute de la charte ministérielle</h3>
   <ul>
     <li><strong>Position réglementaire du bloc-marque ministériel</strong> et sa zone de protection : le gabarit d'affiche lui réserve un emplacement vide plutôt que d'en inventer un.</li>
-    <li><strong>Règles de co-signature</strong> État / Ministère / dispositif, et hiérarchie entre les trois blocs.</li>
+    <li><strong>Règles de co-signature</strong> État / administration / dispositif, et hiérarchie entre les trois blocs.</li>
     <li><strong>Nuances secondaires officielles</strong> : les accents de ce book sont dérivés de #1B3A6B par rotation de teinte, faute de liste officielle à respecter.</li>
     <li><strong>Marianne sous licence</strong> : les fichiers embarqués viennent du paquet public du système de design de l'État. Une diffusion hors démonstrateur demande la vérification des droits.</li>
   </ul>
   <h3>Faute d'écran existant</h3>
   <ul>
-    <li><strong>Espace partenaire et espace administration</strong> : non construits. Le logotype ne peut donc pas y être montré, et le badge « Partenaire Officiel du Ministère » comme le contrôle « Featured » ne sont pas documentés en situation.</li>
+    <li><strong>Espace partenaire et espace administration</strong> : non construits. Le logotype ne peut donc pas y être montré, et le badge « Partenaire Officiel de l'administration » comme le contrôle « Featured » ne sont pas documentés en situation.</li>
     <li><strong>Courriels applicatifs, exports, pages d'erreur personnalisées</strong> : aucun de ces artefacts n'existe ; la règle de nommage est énoncée mais non illustrée.</li>
   </ul>
   <h3>Faute de matière photographique</h3>

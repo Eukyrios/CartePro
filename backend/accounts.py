@@ -42,8 +42,8 @@ PATTERNS_INVERSE = {valeur: nom for nom, valeur in PATTERNS.items()}
 
 #: L'employeur par défaut. Le schéma exige un employeur pour tout salarié, et
 #: une inscription depuis l'interface n'en déclare pas : le démonstrateur n'a
-#: qu'un donneur d'ordre, le Ministère lui-même.
-EMPLOYEUR_DEFAUT = "Ministère du Job et Bonheur"
+#: qu'un donneur d'ordre, l'administration lui-même.
+EMPLOYEUR_DEFAUT = "Administration"
 
 #: Idem pour la catégorie d'un partenaire, quand elle n'est pas renseignée.
 CATEGORIE_DEFAUT = "autres"
@@ -191,6 +191,32 @@ def style_carte(compte):
     }
 
 
+def refus_de(partenaire):
+    """La décision qui écarte ce partenaire, ou None.
+
+    Réservée à son propriétaire : elle sort par `/api/auth/me` et par la mise à
+    jour du profil, jamais par le catalogue. Le catalogue est public, et le
+    motif d'un refus n'a pas à y être — c'est un dossier administratif, adressé
+    à l'établissement concerné.
+    """
+    from models import Decision, DecisionSens
+
+    if not isinstance(partenaire, Partenaire):
+        return None
+    if partenaire.statut != PartnerStatus.refuse:
+        return None
+    decision = (
+        Decision.query.filter_by(
+            partenaire_id=partenaire.id, sens=DecisionSens.refuse
+        )
+        .order_by(Decision.horodatage.desc())
+        .first()
+    )
+    if not decision:
+        return None
+    return {"motif": decision.motif_ecrit, "at": decision.horodatage.isoformat()}
+
+
 def fiche_partenaire(partenaire):
     """Les champs que le formulaire de profil partenaire lit et écrit."""
     return {
@@ -216,6 +242,11 @@ def profil(compte):
         "email": email_de(compte),
         "partner": fiche_partenaire(compte) if isinstance(compte, Partenaire) else {},
         "cardStyle": style_carte(compte),
+        # En dehors de `partner`, et à dessein : c'est une décision du
+        # administration, pas un champ que le partenaire déclare. Le formulaire de
+        # profil renvoie `partner` entier ; il n'a pas à pouvoir réécrire ça.
+        "statut": compte.statut.value if isinstance(compte, Partenaire) else None,
+        "refus": refus_de(compte),
     }
 
 
@@ -225,9 +256,20 @@ def solde_euros(compte):
 
 
 def actif(compte):
-    """Un compte refusé ou suspendu ne se connecte plus."""
+    """Ce compte peut-il encore se connecter ?
+
+    Un partenaire **refusé** peut. Il ne l'a pas toujours pu, et c'était une
+    faute : le motif de son refus était servi par une route publique, donc tout
+    le monde le lisait — sauf lui. Or une décision se notifie à l'intéressé.
+    Il entre, et son espace porte un écran de plus qui dit la décision et sa
+    raison ; l'encaissement et les recettes lui restent fermés, parce que ce
+    n'est pas la connexion qui les ouvre mais le conventionnement.
+
+    Un compte **suspendu**, lui, reste dehors : c'est une mesure en cours, pas
+    une décision motivée à lire.
+    """
     if isinstance(compte, Partenaire):
-        return compte.statut not in (PartnerStatus.refuse, PartnerStatus.suspendu)
+        return compte.statut != PartnerStatus.suspendu
     return True
 
 

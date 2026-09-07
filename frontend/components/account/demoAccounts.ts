@@ -30,7 +30,7 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     audience: "employee",
     label: "Compte salarié de démonstration",
-    email: "camille.durand@ministere.gouv.fr",
+    email: "camille.durand@administration.gouv.fr",
     password: DEMO_PASSWORD,
   },
   {

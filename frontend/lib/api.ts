@@ -15,6 +15,17 @@ export type ApiUser = {
     email: string;
     partner: PartnerFields;
     cardStyle: CardStyle;
+    /** « validé », « en_attente », « refusé », « suspendu ». `null` pour un salarié. */
+    statut: string | null;
+    /**
+     * La décision qui écarte ce partenaire, adressée à lui seul.
+     *
+     * Hors de `partner`, et à dessein : c'est une décision de l'administration, pas un
+     * champ que le partenaire déclare — le formulaire de profil renvoie
+     * `partner` entier, il n'a pas à pouvoir réécrire ça. Elle ne sort jamais
+     * par le catalogue, qui est public.
+     */
+    refus: { motif: string; at: string } | null;
   };
 };
 
@@ -28,16 +39,16 @@ export type ApiPartner = {
   amountCents: number;
   /** Chemin de la photographie, servie par le front depuis /public. */
   photo: string;
-  /** Conventionné « Partenaire Officiel du Ministère » — statut administratif. */
+  /** Conventionné « Partenaire Officiel de l'administration » — statut administratif. */
   officiel: boolean;
-  /** Coup de cœur du Ministre — sélection éditoriale, sans rapport avec le
+  /** Coup de cœur de l'administrateur — sélection éditoriale, sans rapport avec le
    *  conventionnement : un partenaire peut être l'un, l'autre, les deux ou
    *  aucun. */
   featured: boolean;
   /**
    * Fiche renseignée pour de vrai, ou fiche de remplissage. Le démonstrateur
    * mêle les deux, et l'écran le dit. Distinct du coup de cœur : l'un est un
-   * goût du Ministre, l'autre un constat sur la donnée.
+   * goût de l'administrateur, l'autre un constat sur la donnée.
    */
   donneesReelles: boolean;
   /**
@@ -47,14 +58,9 @@ export type ApiPartner = {
    * l'un des deux.
    */
   statut: string;
-  /**
-   * Le motif du refus, pour un établissement écarté. `null` sinon.
-   *
-   * Un refus se motive par écrit : c'est ce que la table des décisions exige,
-   * et c'est la seule façon honnête d'écarter quelqu'un. La fiche l'affiche en
-   * première position, avant tout le reste.
-   */
-  refus: { motif: string; at: string } | null;
+  /* Le motif d'un refus n'est **pas** ici : cette route est publique, et la
+     raison pour laquelle un établissement a été écarté est un dossier
+     administratif adressé à lui seul. Il la lit dans son espace. */
   /**
    * La présentation écrite par le partenaire, et son site.
    *
@@ -151,6 +157,11 @@ export function userProfile(user: ApiUser): Profile {
          non contrôlé que le reste de ce correctif évite. */
       horaires: toHoraires(user.profile?.partner?.horaires),
     },
+    /* La décision de l'administration, en lecture seule : elle traverse le profil
+       parce que c'est l'écran du partenaire qui l'affiche, mais rien dans les
+       formulaires ne l'écrit. */
+    statut: user.profile?.statut ?? null,
+    refus: user.profile?.refus ?? null,
     email: user.email,
     username: user.username,
   };

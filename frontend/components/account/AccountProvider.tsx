@@ -57,6 +57,15 @@ export type Profile = {
   email: string;
   partner: PartnerFields;
   cardStyle: CardStyle;
+  /**
+   * Le statut administratif d'un partenaire, et la décision qui l'écarte.
+   *
+   * En lecture seule : c'est l'administration qui décide, pas le titulaire du
+   * compte. Hors de `partner` pour cette raison — le formulaire de profil
+   * renvoie `partner` entier, et il n'a rien à dire ici.
+   */
+  statut?: string | null;
+  refus?: { motif: string; at: string } | null;
 };
 
 type Account = {

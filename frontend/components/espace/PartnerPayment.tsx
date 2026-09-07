@@ -162,13 +162,13 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
             les partenaires conventionnés, et en haut de colonne parce que c'est
             ce que le porteur doit voir avant de payer. */}
         {/* Deux pastilles, deux faits distincts : le conventionnement est une
-            décision du Ministère, la provenance des données est un constat sur
+            décision de l&apos;administration, la provenance des données est un constat sur
             le démonstrateur. Les confondre reviendrait à laisser croire qu'une
             fiche de remplissage n'est pas conventionnée, ou l'inverse. */}
         <div className="mt-2 flex flex-wrap items-start gap-2 self-start">
           {partner.official && (
             <Chip tone="official" as="p">
-              Partenaire Officiel du Ministère
+              Partenaire Officiel de l&apos;administration
             </Chip>
           )}
           <Chip as="p" tone={partner.real ? "plain" : "muted"}>
