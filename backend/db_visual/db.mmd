@@ -1,0 +1,89 @@
+erDiagram
+    EMPLOYEUR ||--o{ SALARIES : "emploie"
+    EMPLOYEUR ||--o{ ABONDEMENT : "é««met"
+    SALARIES ||--o{ TRANSACTION : "effectue"
+    SALARIES ||--o{ ABONDEMENT : "reç«§oit"
+    PARTENAIRE ||--o{ TRANSACTION : "reç«§oit"
+    PARTENAIRE ||--o{ COUP_DE_COEUR : "possè««de"
+    PARTENAIRE ||--o{ DECISION : "fait l'objet"
+    CATEGORIE ||--o{ PARTENAIRE : "caté««gorise"
+    TRANSACTION ||--o{ TRANSACTION : "correction"
+
+    EMPLOYEUR {
+        int id PK
+        string raison_sociale
+    }
+
+    SALARIES {
+        int id PK
+        string nom
+        string prenom
+        string email UK
+        string password_hash
+        int employeur_id FK
+        string couleur_carte
+        string couleur_texte
+        enum motif
+        int effet_metallise
+    }
+
+    PARTENAIRE {
+        int id PK
+        string raison_sociale
+        string siren UK
+        string objet_social
+        int categorie_id FK
+        string adresse
+        string ville
+        string code_postal
+        string email_contact UK
+        string nom_representant
+        string password_hash
+        enum statut
+        string image_partenaire
+    }
+
+    CATEGORIE {
+        int id PK
+        string nom UK
+    }
+
+    TRANSACTION {
+        int id PK
+        int salarie_id FK
+        int partenaire_id FK
+        float montant
+        datetime horodatage
+        enum statut
+        string reference_qr UK
+        string idempotency_key UK
+        string sens_ecriture
+        int transaction_originale_id FK
+    }
+
+    ABONDEMENT {
+        int id PK
+        int employeur_id FK
+        int salarie_id FK
+        float montant
+        datetime horodatage
+        int agent_admin_id
+    }
+
+    COUP_DE_COEUR {
+        int id PK
+        int partenaire_id FK
+        text mot_du_ministre
+        datetime horodatage
+        enum statut
+        int nombre_clicks
+    }
+
+    DECISION {
+        int id PK
+        int partenaire_id FK
+        int agent_id
+        enum sens
+        text motif_ecrit
+        datetime horodatage
+    }
