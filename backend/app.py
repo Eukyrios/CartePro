@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_jwt_extended import JWTManager
 import os
 
@@ -46,6 +46,7 @@ def health_check():
 
 def create_app():
     app = Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     CORS(app)
 
     app.config['SWAGGER'] = {
