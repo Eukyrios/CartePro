@@ -27,6 +27,7 @@ type AdminTransaction = {
   at: string;
   amountCents: number;
   label: string;
+  kind?: "credit" | "debit";
 };
 
 /**

@@ -19,6 +19,7 @@ import pytest
 
 from app import create_app
 from models import (
+    Abondement,
     Admin,
     Categorie,
     Decision,
@@ -27,6 +28,7 @@ from models import (
     Partenaire,
     PartnerStatus,
     Salaries,
+    TransactionStatut,
     db,
 )
 
@@ -420,15 +422,103 @@ def test_dossier_introuvable(app):
     assert reponse.status_code == 404
 
 
-def test_annuler_une_transaction_dit_qu_elle_n_est_pas_implementee(app):
-    """501, et non « success » : la route ne fait rien, elle doit le dire."""
+def test_annuler_une_transaction_inconnue_repond_404(app):
+    """Une transaction qui n'existe pas ne s'annule pas, et la route le dit.
+
+    Le test attendait 501 : la route etait un talon qui ne faisait rien. Elle
+    est ecrite depuis — elle insere une contre-ecriture — donc c'est ce
+    comportement-la qu'il faut verifier, et non l'aveu qu'elle n'existait pas.
+    """
     with app.app_context():
         _admin()
 
     with app.test_client() as client:
         jeton = _jeton(client, "agent@administration.example")
         reponse = client.post(
-            "/api/admin/transactions/1/annuler", headers=_entetes(jeton)
+            "/api/admin/transactions/1/annuler",
+            json={"motif": "essai"},
+            headers=_entetes(jeton),
         )
 
-    assert reponse.status_code == 501
+    assert reponse.status_code == 404
+
+
+def test_annuler_une_transaction_ecrit_une_contre_ecriture(app):
+    """Annuler n'efface rien : cela ecrit une seconde ligne, inverse.
+
+    Une transaction validee est immuable — `models.py` bloque tout UPDATE et
+    tout DELETE dessus — donc la correction ne peut etre qu'une ecriture de
+    plus, qui reference l'originale et rend son montant au salarie. Les deux
+    lignes restent lisibles dans les deux historiques, ce qui est la seule
+    facon honnete de raconter une annulation.
+    """
+    from models import Transaction
+
+    with app.app_context():
+        agent = _admin()
+        salarie = _salarie()
+        partenaire = _partenaire("un-partenaire", statut=PartnerStatus.valide)
+        db.session.add(
+            Abondement(
+                employeur_id=salarie.employeur_id,
+                salarie_id=salarie.id,
+                montant=50.0,
+                agent_admin_id=agent.id,
+            )
+        )
+        db.session.add(
+            Transaction(
+                salarie_id=salarie.id,
+                partenaire_id=partenaire.id,
+                montant=12.5,
+                statut=TransactionStatut.validee,
+                reference_qr="ESSAI-ANNULATION",
+                idempotency_key="ESSAI-ANNULATION",
+                sens_ecriture="debit",
+            )
+        )
+        db.session.commit()
+        transaction_id = Transaction.query.filter_by(
+            reference_qr="ESSAI-ANNULATION"
+        ).one().id
+        salarie_id = salarie.id
+
+    with app.test_client() as client:
+        jeton = _jeton(client, "agent@administration.example")
+        entetes = _entetes(jeton)
+
+        # Le motif est exige : une annulation sans raison n'explique rien a qui
+        # relira l'historique.
+        sans_motif = client.post(
+            f"/api/admin/transactions/{transaction_id}/annuler", headers=entetes
+        )
+        assert sans_motif.status_code == 400
+
+        reponse = client.post(
+            f"/api/admin/transactions/{transaction_id}/annuler",
+            json={"motif": "Encaissement en double, constate par l'etablissement."},
+            headers=entetes,
+        )
+        assert reponse.status_code == 200, reponse.get_json()
+
+        # Et pas deux fois : la seconde demande porte sur une transaction deja
+        # corrigee.
+        assert (
+            client.post(
+                f"/api/admin/transactions/{transaction_id}/annuler",
+                json={"motif": "encore"},
+                headers=entetes,
+            ).status_code
+            == 400
+        )
+
+    with app.app_context():
+        contre = Transaction.query.filter_by(
+            transaction_originale_id=transaction_id
+        ).one()
+        assert contre.sens_ecriture == "contre-ecriture"
+        assert contre.montant == 12.5
+        assert contre.motif
+        # L'originale n'a pas bouge, et le solde est revenu a l'abondement.
+        assert Transaction.query.get(transaction_id).sens_ecriture == "debit"
+        assert db.session.get(Salaries, salarie_id).solde == 50.0

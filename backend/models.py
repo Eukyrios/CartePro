@@ -9,6 +9,11 @@ db = SQLAlchemy()
 # -----------------------------------------------------------------------------
 # Enums
 # -----------------------------------------------------------------------------
+
+class CoupDeCoeurStatut(enum.Enum):
+    actif = "actif"
+    suspendu = "suspendu"
+
 class PartnerStatus(enum.Enum):
     en_attente = "en_attente"
     valide = "validé"
@@ -73,10 +78,6 @@ class MotifCarte(enum.Enum):
     damier = "damier"
     aucun = "aucun"
 
-class CoupDeCoeurStatut(enum.Enum):
-    actif = "actif"
-    suspendu = "suspendu"
-
 # -----------------------------------------------------------------------------
 # Employeur
 # -----------------------------------------------------------------------------
@@ -138,8 +139,9 @@ class Salaries(db.Model):
     def solde(self):
         from sqlalchemy import func
         total_credits = db.session.query(func.sum(Abondement.montant)).filter_by(salarie_id=self.id).scalar() or 0
-        total_debits = db.session.query(func.sum(Transaction.montant)).filter_by(salarie_id=self.id, statut=TransactionStatut.validee).scalar() or 0
-        return total_credits - total_debits
+        total_debits = db.session.query(func.sum(Transaction.montant)).filter_by(salarie_id=self.id, statut=TransactionStatut.validee, sens_ecriture="debit").scalar() or 0
+        total_contres = db.session.query(func.sum(Transaction.montant)).filter_by(salarie_id=self.id, statut=TransactionStatut.validee, sens_ecriture="contre-ecriture").scalar() or 0
+        return total_credits - total_debits + total_contres
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -169,6 +171,7 @@ class Partenaire(db.Model):
     nom_representant = db.Column(db.String(150), nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     statut = db.Column(SQLEnum(PartnerStatus), nullable=False, default=PartnerStatus.en_attente)
+    likes = db.relationship("PartenaireLike", backref="partenaire", cascade="all, delete-orphan")
     image_partenaire = db.Column(db.String(512), nullable=True)  # URL ou chemin
 
     # Le tarif inscrit sur la fiche : ce que le partenaire demande. C'est le
@@ -198,7 +201,6 @@ class Partenaire(db.Model):
     # Relations
     categorie = db.relationship("Categorie")
     transactions = db.relationship("Transaction", back_populates="partenaire", cascade="all, delete-orphan")
-    coups_de_coeur = db.relationship("CoupDeCoeur", back_populates="partenaire", cascade="all, delete-orphan")
     decisions = db.relationship("Decision", back_populates="partenaire", cascade="all, delete-orphan")
 
     def set_password(self, password):
@@ -246,6 +248,7 @@ class Transaction(db.Model):
     idempotency_key = db.Column(db.String(512), unique=True, nullable=True)
     sens_ecriture = db.Column(db.String(20), nullable=False, default="debit")  # "debit" ou "contre-ecriture"
     transaction_originale_id = db.Column(db.Integer, db.ForeignKey("transactions.id"), nullable=True)  # pour correction
+    motif = db.Column(db.String(512), nullable=True)
 
     # Relations
     salarie = db.relationship("Salaries", foreign_keys=[salarie_id], back_populates="transactions")
@@ -323,19 +326,19 @@ class MesureCompte(db.Model):
     salarie = db.relationship("Salaries", back_populates="mesures")
 
 # -----------------------------------------------------------------------------
-# Coup de cœur de l'administrateur
+# Coup de cœur des utilisateurs
 # -----------------------------------------------------------------------------
-class CoupDeCoeur(db.Model):
-    __tablename__ = "coups_de_coeur"
+class PartenaireLike(db.Model):
+    __tablename__ = "partenaire_likes"
     id = db.Column(db.Integer, primary_key=True)
+    salarie_id = db.Column(db.Integer, db.ForeignKey("salaries.id"), nullable=False)
     partenaire_id = db.Column(db.Integer, db.ForeignKey("partenaires.id"), nullable=False)
-    mot_administrateur = db.Column(db.Text, nullable=False)
-    horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    statut = db.Column(SQLEnum(CoupDeCoeurStatut), nullable=False, default=CoupDeCoeurStatut.actif)
-    nombre_clicks = db.Column(db.Integer, nullable=False, default=0)
+    horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # Relation
-    partenaire = db.relationship("Partenaire", back_populates="coups_de_coeur")
+    # Un salarié ne peut liker un même partenaire qu'une seule fois
+    __table_args__ = (
+        db.UniqueConstraint('salarie_id', 'partenaire_id', name='uq_salarie_partenaire_like'),
+    )
 
 # -----------------------------------------------------------------------------
 # Table de décision / traçabilité (exigée par Pontaillac)

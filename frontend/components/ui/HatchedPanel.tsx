@@ -53,7 +53,7 @@ export default function HatchedPanel({
        au-dessus sont donc numérotées, et elles le sont dans ce contexte. */
     <div className={cx("relative isolate", className)}>
       <div
-        className="pointer-events-none relative z-0 select-none"
+        className="pointer-events-none relative z-0 select-none h-full"
         aria-hidden="true"
       >
         {children}

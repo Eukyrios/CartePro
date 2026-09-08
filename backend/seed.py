@@ -37,14 +37,13 @@ from models import (
     Admin,
     Categorie,
     CompteStatut,
-    CoupDeCoeur,
-    CoupDeCoeurStatut,
     Decision,
     DecisionSens,
     Employeur,
     MesureCompte,
     MotifCarte,
     Partenaire,
+    PartenaireLike,
     PartnerStatus,
     Salaries,
     Transaction,
@@ -314,150 +313,6 @@ NETWORK = [
         "amountCents": 1900,
         "official": False,
         "featured": True,
-    },
-    {
-        "slug": "table-des-quais",
-        "nom": "La Table des Quais",
-        "secteur": "restauration",
-        "adresse": "7 quai de la Fosse",
-        "ville": "Nantes",
-        "codePostal": "44000",
-        "photo": "/partenaires/table-des-quais.svg",
-        "amountCents": 1900,
-        "official": False,
-        "featured": False,
-    },
-    {
-        "slug": "librairie-bellevue",
-        "nom": "Librairie Bellevue",
-        "secteur": "culture",
-        "adresse": "22 cours Berriat",
-        "ville": "Grenoble",
-        "codePostal": "38000",
-        "photo": "/partenaires/librairie-bellevue.svg",
-        "amountCents": 1650,
-        "official": True,
-        "featured": False,
-    },
-    {
-        "slug": "atelier-savon-marseille",
-        "nom": "Atelier du Savon de Marseille",
-        "secteur": "commerce",
-        "adresse": "9 rue Sainte",
-        "ville": "Marseille",
-        "codePostal": "13001",
-        "photo": "/partenaires/atelier-savon-marseille.svg",
-        "amountCents": 900,
-        "official": False,
-        "featured": False,
-    },
-    {
-        "slug": "thermes-chaudes-aigues",
-        "nom": "Thermes de Chaudes-Aigues",
-        "secteur": "bien-etre",
-        "adresse": "1 avenue Georges-Pompidou",
-        "ville": "Chaudes-Aigues",
-        "codePostal": "15110",
-        "photo": "/partenaires/thermes-chaudes-aigues.svg",
-        "amountCents": 3200,
-        "official": True,
-        "featured": False,
-    },
-    {
-        "slug": "gite-monts-dore",
-        "nom": "Gîte des Monts Dore",
-        "secteur": "hebergement",
-        "adresse": "5 route du Sancy",
-        "ville": "Le Mont-Dore",
-        "codePostal": "63240",
-        "photo": "/partenaires/gite-monts-dore.svg",
-        "amountCents": 8900,
-        "official": False,
-        "featured": False,
-    },
-    {
-        "slug": "cinema-rex-lille",
-        "nom": "Cinéma Le Rex",
-        "secteur": "culture",
-        "adresse": "31 rue de Béthune",
-        "ville": "Lille",
-        "codePostal": "59800",
-        "photo": "/partenaires/cinema-rex-lille.svg",
-        "amountCents": 750,
-        "official": True,
-        "featured": False,
-    },
-    {
-        "slug": "accrobranche-esterel",
-        "nom": "Accrobranche de l'Estérel",
-        "secteur": "loisirs",
-        "adresse": "Route du Col Notre-Dame",
-        "ville": "Fréjus",
-        "codePostal": "83600",
-        "photo": "/partenaires/accrobranche-esterel.svg",
-        "amountCents": 2200,
-        "official": False,
-        "featured": False,
-    },
-    {
-        "slug": "primeur-victor-hugo",
-        "nom": "Primeur Victor-Hugo",
-        "secteur": "commerce",
-        "adresse": "14 place Victor-Hugo",
-        "ville": "Toulouse",
-        "codePostal": "31000",
-        "photo": "/partenaires/primeur-victor-hugo.svg",
-        "amountCents": 1200,
-        "official": False,
-        "featured": False,
-    },
-    {
-        "slug": "creperie-armor",
-        "nom": "Crêperie d'Armor",
-        "secteur": "restauration",
-        "adresse": "2 venelle du Port",
-        "ville": "Vannes",
-        "codePostal": "56000",
-        "photo": "/partenaires/creperie-armor.svg",
-        "amountCents": 1450,
-        "official": False,
-        "featured": False,
-    },
-    {
-        "slug": "spa-vosges",
-        "nom": "Spa des Vosges",
-        "secteur": "bien-etre",
-        "adresse": "8 rue du Tilleul",
-        "ville": "Gérardmer",
-        "codePostal": "88400",
-        "photo": "/partenaires/spa-vosges.svg",
-        "amountCents": 5500,
-        "official": False,
-        "featured": False,
-    },
-    {
-        "slug": "musee-verre-biot",
-        "nom": "Musée du Verre de Biot",
-        "secteur": "culture",
-        "adresse": "5 chemin des Combes",
-        "ville": "Biot",
-        "codePostal": "06410",
-        "photo": "/partenaires/musee-verre-biot.svg",
-        "amountCents": 600,
-        "official": True,
-        "featured": False,
-    },
-    {
-        "slug": "camping-etang-bleu",
-        "nom": "Camping de l'Étang Bleu",
-        "secteur": "hebergement",
-        "adresse": "Lieu-dit Le Grand Étang",
-        "ville": "Vayrac",
-        "codePostal": "46110",
-        "photo": "/partenaires/camping-etang-bleu.svg",
-        "amountCents": 4200,
-        "official": False,
-        "featured": False,
     },]
 
 # Le salarié de démonstration : un compte à part du panel statistique, dont le
@@ -470,7 +325,7 @@ DEMO_EMPLOYEE_EMAIL = "camille.durand@administration.example"
 # donc il faut qu'il y ait quelque chose a lire.
 DEMO_EMPLOYEE_CREDIT = 50.00
 DEMO_EMPLOYEE_PAIEMENTS = [
-    {"slug": "creperie-armor", "montant": 5.00, "jour": 95},
+    {"slug": "epicerie-sainte-claire", "montant": 5.00, "jour": 95},
     {"slug": "comptoir-du-midi", "montant": 12.50, "jour": 89},
 ]
 DEMO_EMPLOYEE_BALANCE = DEMO_EMPLOYEE_CREDIT - sum(
@@ -790,20 +645,9 @@ def run_seed():
                     horodatage=REFERENCE_DATE + timedelta(days=12),
                 ))
 
-        # 4. Le coup de coeur de l'administrateur : une entree datee, avec ses mots.
-        # C'est une table a part et non un booleen, parce qu'une decision
-        # editoriale se date et se retire.
-        for entry, partenaire in zip(NETWORK, partenaires):
-            if entry["featured"]:
-                db.session.add(CoupDeCoeur(
-                    partenaire_id=partenaire.id,
-                    mot_administrateur=MOTS_ADMINISTRATEUR.get(
-                        entry["slug"], f"Un choix de l'administrateur : {entry['nom']}."
-                    ),
-                    statut=CoupDeCoeurStatut.actif,
-                    horodatage=REFERENCE_DATE,
-                ))
-
+        # # 4. Le coup de coeur de l'administrateur : une entree datee, avec ses mots.
+        # # C'est une table a part et non un booleen, parce qu'une decision
+        # # editoriale se date et se retire.
         # 4. Les cinquante salaries du panel, et leur dotation.
         # Salaries 0 a 2 : cibles a solde nul. Salaries 3 et 4 : sous 5 euros.
         dotations_ciblees = [50.0, 12.5, 100.0, 50.0, 20.0]

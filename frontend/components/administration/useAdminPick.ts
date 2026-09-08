@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api, type ApiPartner } from "@/lib/api";
 
 /** Le coup de cœur, tel que le serveur le rend : l'entrée du réseau, et les mots. */
-export type AdminPick = ApiPartner & { mot: string };
+export type AdminPick = ApiPartner & { mot: string; likes: number };
 
 /**
  * Le coup de cœur de l'administrateur, depuis la base.

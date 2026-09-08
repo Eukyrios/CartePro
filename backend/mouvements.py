@@ -39,10 +39,16 @@ def mouvements_du_compte(compte):
     refusé n'a pas eu lieu, et le faire figurer dans un historique reviendrait à
     inventer une opération.
 
-    Le sens est celui du compte qui lit : un partenaire ne voit que des
-    `credit` — ce qu'il a encaissé — et un salarié voit ses paiements en `debit`
-    et ses crédits d'employeur en `credit`. Le `label` suit la même règle :
-    chez qui pour l'un, de qui pour l'autre.
+    Le sens est celui du compte qui lit : un partenaire voit ses encaissements
+    en `credit`, un salarié ses paiements en `debit` et ses crédits d'employeur
+    en `credit`. Le `label` suit la même règle : chez qui pour l'un, de qui pour
+    l'autre.
+
+    **Une contre-écriture s'y lit à l'envers des deux côtés.** Annuler un
+    paiement n'efface pas la ligne — `POST /api/admin/transactions/<id>/annuler`
+    en insère une seconde, inverse, qui référence l'originale — donc le sens
+    d'une ligne ne se déduit pas du seul genre du compte : il faut lire
+    `sens_ecriture`.
     """
     est_partenaire = isinstance(compte, Partenaire)
 
@@ -57,7 +63,16 @@ def mouvements_du_compte(compte):
         {
             "id": str(t.id),
             "at": t.horodatage.isoformat(),
-            "kind": "credit" if est_partenaire else "debit",
+            # Une contre-écriture inverse le sens : l'annulation d'un paiement
+            # se lit comme un remboursement chez le salarié et comme une
+            # reprise chez l'établissement. Sans ce test, une annulation
+            # s'affichait du même côté que le paiement qu'elle défait, et le
+            # solde après opération remontait au lieu de descendre.
+            "kind": (
+                ("debit" if t.sens_ecriture == "contre-ecriture" else "credit")
+                if est_partenaire
+                else ("credit" if t.sens_ecriture == "contre-ecriture" else "debit")
+            ),
             "amountCents": round(t.montant * 100),
             "label": (
                 libelle_salarie(t.salarie)

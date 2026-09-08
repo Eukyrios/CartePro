@@ -25,6 +25,14 @@ import SimulationNotice from "@/components/ui/SimulationNotice";
 import Slash from "@/components/ui/Slash";
 import { useQrToken } from "./useQrToken";
 import type { Partner } from "@/components/data/partners";
+import { api } from "@/lib/api";
+
+
+const HeartIcon = ({ filled }: { filled: boolean }) => (
+  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill={filled ? "currentColor" : "none"} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+);
 
 function mmss(msLeft: number) {
   const total = Math.max(0, Math.ceil(msLeft / 1000));
@@ -85,6 +93,26 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
   const canPay = mode === "pay";
   const [open, setOpen] = useState(false);
   const { token, state, refusal, remaining, issue } = useQrToken();
+  const [likes, setLikes] = useState(partner.likes ?? 0);
+  const [liked, setLiked] = useState(partner.likedByUser ?? false);
+  const [likeBusy, setLikeBusy] = useState(false);
+
+  async function toggleLike() {
+    if (!canPay || likeBusy) return;
+    setLikeBusy(true);
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setLikes((l) => (newLiked ? l + 1 : l - 1));
+    try {
+      await api(`/api/partenaires/${partner.id}/like`, { method: "POST" });
+    } catch {
+      // Revert on error
+      setLiked(liked);
+      setLikes((l) => (newLiked ? l - 1 : l + 1));
+    } finally {
+      setLikeBusy(false);
+    }
+  }
 
   /* Présenter la carte, c'est demander le code : le clic ouvre la boîte et
      n'émet que s'il n'y a rien de valable à montrer. Un jeton encore vivant est
@@ -138,9 +166,18 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
       {/* Le titre tient les deux colonnes ; le lieu est redescendu sous la
           photographie, où il se lit avec elle. */}
       <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-5">
-        <Display level={1} accent={`${partner.name}.`}>
-          {canPay ? "Payer chez" : "La fiche de"}
-        </Display>
+        <div>
+          <Display level={1} accent={`${partner.name}.`}>
+            {canPay ? "Payer chez" : "La fiche de"}
+          </Display>
+          <SimulationNotice className="mt-5 block">
+            {mode === "pay"
+              ? "Simulation — aucun débit réel à ce stade"
+              : mode === "partner"
+                ? "Fiche consultée depuis un compte partenaire"
+                : "Fiche publique — la carte demande une connexion"}
+          </SimulationNotice>
+        </div>
 
         {/* Statut administratif porté par les données : affiché seulement pour
             les partenaires conventionnés, et en haut de colonne parce que c'est
@@ -185,14 +222,6 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
         {/* Droite : la carte, et rien d'autre. Le panneau prend toute la
             colonne, la carte garde sa taille au milieu. */}
         <div className="flex flex-col">
-          <SimulationNotice>
-            {mode === "pay"
-              ? "Simulation — aucun débit réel à ce stade"
-              : mode === "partner"
-                ? "Fiche consultée depuis un compte partenaire"
-                : "Fiche publique — la carte demande une connexion"}
-          </SimulationNotice>
-
           {/* La carte est le déclencheur : on la présente, le code apparaît.
               Un vrai bouton, donc le clavier l'atteint et l'annonce. */}
           {canPay ? (
@@ -201,7 +230,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
                 type="button"
                 onClick={present}
                 aria-haspopup="dialog"
-                className="focus-visible:outline-cp-accent mt-4 flex-1 cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-offset-4"
+                className="focus-visible:outline-cp-accent aspect-[3/2] max-h-[40vh] min-h-[180px] w-full shrink-0 cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-offset-4"
               >
                 <CardStage
                   className="h-full w-full"
@@ -219,13 +248,27 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
                 </CardStage>
               </button>
 
-              <Micro as="p" tone="muted" className="mt-3">
+              <Micro as="p" tone="muted" className="mt-5">
                 Cliquez la carte
                 <Slash />
                 {state === "active"
                   ? `QR valable ${mmss(remaining)}`
                   : "le QR s'affiche par-dessus"}
               </Micro>
+              <div className="mt-3 flex justify-end">
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={toggleLike}
+                    disabled={!canPay || likeBusy}
+                    aria-label={liked ? "Je n'aime plus" : "J'aime"}
+                    className={`transition-colors ${liked ? "text-red-500 hover:text-red-600" : "text-cp-muted hover:text-cp-fg"} ${!canPay ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  >
+                    <HeartIcon filled={liked} />
+                  </button>
+                  <Micro as="span" tone="muted">{likes} {likes > 1 ? "likes" : "like"}</Micro>
+                </div>
+              </div>
             </>
           ) : (
             <>
@@ -235,7 +278,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
                   une grande zone hachurée vide sous elle, et une page qui
                   débordait de l'écran. */}
               <HatchedPanel
-                className="mt-4"
+                className="aspect-[3/2] max-h-[40vh] min-h-[180px] w-full shrink-0"
                 reason={
                   mode === "partner" ? (
                     <>
@@ -264,7 +307,7 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
                 }
               >
                 <CardStage
-                  className="w-full"
+                  className="h-full w-full"
                   insetClassName="grid place-items-center p-[6%]"
                   tagClassName="hidden"
                 >
@@ -275,13 +318,27 @@ export default function PartnerPayment({ partner }: { partner: Partner }) {
                 </CardStage>
               </HatchedPanel>
 
-              <Micro as="p" tone="muted" className="mt-3">
+              <Micro as="p" tone="muted" className="mt-5">
                 {mode === "partner" ? "Fiche partenaire" : "Fiche publique"}
                 <Slash />
                 {mode === "partner"
                   ? "aucun paiement depuis ce compte"
                   : "le paiement demande un compte salarié"}
               </Micro>
+              <div className="mt-3 flex justify-end">
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={toggleLike}
+                    disabled={!canPay || likeBusy}
+                    aria-label={liked ? "Je n'aime plus" : "J'aime"}
+                    className={`transition-colors ${liked ? "text-red-500 hover:text-red-600" : "text-cp-muted hover:text-cp-fg"} ${!canPay ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  >
+                    <HeartIcon filled={liked} />
+                  </button>
+                  <Micro as="span" tone="muted">{likes} {likes > 1 ? "likes" : "like"}</Micro>
+                </div>
+              </div>
             </>
           )}
         </div>

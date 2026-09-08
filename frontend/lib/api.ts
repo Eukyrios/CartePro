@@ -77,6 +77,10 @@ export type ApiPartner = {
   presentationTexte: string;
   /** Les sept jours, toujours complets — voir `toHoraires`. */
   horaires: Horaires;
+  /** Le nombre de likes de la communaute. */
+  likes: number;
+  /** Si l'utilisateur a like. */
+  liked_by_user: boolean;
 };
 
 /**
