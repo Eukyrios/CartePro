@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from sqlalchemy import func
 
@@ -14,6 +14,7 @@ from models import (
     PartnerStatus,
     db,
 )
+from services.audit_service import record_event
 
 partenaires_bp = Blueprint('partenaires', __name__)
 
@@ -171,12 +172,30 @@ def supprimer_partenaire(partenaire_id):
 
     if partenaire.transactions:
         partenaire.statut = PartnerStatus.suspendu
+        record_event(
+            action="admin_suppression_partenaire",
+            actor_role="admin",
+            actor_id=get_jwt_identity(),
+            target_type="partenaire",
+            target_id=partenaire.slug,
+            payload={"resultat": "suspendu_a_la_place", "motif": "transactions_existantes"},
+            ip=request.remote_addr,
+        )
         db.session.commit()
         return jsonify({
             "message": f"Le partenaire {partenaire.raison_sociale} a des operations "
                        f"enregistrees : il a ete suspendu, pas supprime."
         }), 200
 
+    record_event(
+        action="admin_suppression_partenaire",
+        actor_role="admin",
+        actor_id=get_jwt_identity(),
+        target_type="partenaire",
+        target_id=partenaire.slug,
+        payload={"resultat": "supprime"},
+        ip=request.remote_addr,
+    )
     db.session.delete(partenaire)
     db.session.commit()
     return jsonify({"message": f"Le partenaire {partenaire.raison_sociale} a ete supprime."}), 200

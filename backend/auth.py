@@ -25,6 +25,7 @@ from accounts import (
     slug_libre,
 )
 from models import MotifCarte, Partenaire, PartnerStatus, Salaries, db
+from services.audit_service import record_event
 
 # Exporté : `app.py` l'importait d'ici avant la refonte, et le style par défaut
 # reste une donnée d'authentification — c'est ce qu'une carte vaut à la création.
@@ -74,6 +75,16 @@ def api_login():
 
     compte = compte_par_email(email)
     if not check_credentials(compte, password):
+        record_event(
+            action="connexion_echouee",
+            actor_role=role(compte) if compte else "anonyme",
+            actor_id=identite(compte) if compte else None,
+            target_type="compte",
+            target_id=identite(compte) if compte else email,
+            payload={"email": email},
+            ip=request.remote_addr,
+            commit=True,
+        )
         return jsonify({"error": "Email ou mot de passe incorrect."}), 401
     return _token_response(compte, message="Connexion réussie.")
 
@@ -160,6 +171,16 @@ def api_register():
 
     db.session.add(compte)
     try:
+        db.session.flush()  # assigne compte.id avant l'ecriture d'audit
+        record_event(
+            action="compte_cree",
+            actor_role=role(compte),
+            actor_id=identite(compte),
+            target_type="compte_partenaire" if audience == "partner" else "compte_salarie",
+            target_id=compte.id,
+            payload={"email": email, "audience": audience},
+            ip=request.remote_addr,
+        )
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
@@ -265,6 +286,15 @@ def api_update_profile():
         _ecrire_couleur_avatar(compte, profile.get("avatarColor"))
 
     try:
+        record_event(
+            action="compte_modifie",
+            actor_role=role(compte),
+            actor_id=identite(compte),
+            target_type="compte_partenaire" if isinstance(compte, Partenaire) else "compte_salarie",
+            target_id=compte.id,
+            payload={"username": username, "email": email},
+            ip=request.remote_addr,
+        )
         db.session.commit()
     except IntegrityError:
         db.session.rollback()

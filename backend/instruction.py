@@ -21,6 +21,16 @@ le partenaire lira dans son espace, lui seul.
 from datetime import datetime, timezone
 
 from models import Decision, DecisionSens, PartnerStatus, db
+from services.audit_service import record_event
+
+#: L'action du journal d'audit associee a chaque geste. Ecrite a cote de
+#: `GESTES` pour la meme raison : un geste ajoute ici sans son action jumelle
+#: se verrait a la lecture.
+ACTIONS_AUDIT = {
+    "accepter": "partenaire_valide",
+    "refuser": "partenaire_refuse",
+    "suspendre": "partenaire_suspendu",
+}
 
 #: Le sens de la decision, et le statut qu'elle laisse au dossier.
 #:
@@ -48,7 +58,7 @@ class MotifManquant(ValueError):
     """Leve quand on tente d'instruire un dossier sans motif ecrit."""
 
 
-def instruire(partenaire, geste, motif, agent_id=AGENT_DEMONSTRATION):
+def instruire(partenaire, geste, motif, agent_id=AGENT_DEMONSTRATION, ip=None):
     """Applique `geste` au dossier de `partenaire` et ecrit la decision.
 
     Renvoie le couple (statut avant, statut apres), en chaines, pour que
@@ -58,7 +68,15 @@ def instruire(partenaire, geste, motif, agent_id=AGENT_DEMONSTRATION):
     un message a l'ecran en ligne de commande).
 
     N'emet pas le commit : l'appelant le fait, ce qui lui laisse la possibilite
-    de grouper plusieurs decisions dans une seule transaction.
+    de grouper plusieurs decisions dans une seule transaction — la decision
+    d'instruction et l'ecriture d'audit y compris : soit les trois s'ecrivent,
+    soit aucune.
+
+    C'est ici, et non dans `routes/admin.py` ni `instruire.py`, que l'ecriture
+    d'audit se fait : ce module est le seul point de passage des deux
+    appelants, donc c'est le seul endroit ou l'ecrire une fois suffit a
+    couvrir une approbation faite depuis l'ecran et une approbation faite au
+    clavier.
     """
     if geste not in GESTES:
         raise ValueError(f"Geste inconnu : {geste!r}. Attendu : {', '.join(GESTES)}.")
@@ -78,5 +96,14 @@ def instruire(partenaire, geste, motif, agent_id=AGENT_DEMONSTRATION):
             motif_ecrit=propre,
             horodatage=datetime.now(timezone.utc),
         )
+    )
+    record_event(
+        action=ACTIONS_AUDIT[geste],
+        actor_role="admin",
+        actor_id=f"admin:{agent_id}" if agent_id is not None else None,
+        target_type="partenaire",
+        target_id=partenaire.slug,
+        payload={"avant": avant, "apres": statut.value, "motif": propre},
+        ip=ip,
     )
     return avant, statut.value
