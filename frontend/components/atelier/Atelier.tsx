@@ -71,6 +71,8 @@ export default function Atelier() {
     amountCents: 1200,
     official: true,
     real: false,
+    likes: 0,
+    likedByUser: false,
   };
 
   const GROUPS: { title: string; specimens: Specimen[] }[] = [

@@ -150,17 +150,17 @@ export default function PresentationForm({
     <form onSubmit={handleSubmit} className="mt-7">
       <TextField
         id="presentation-titre"
-        label="Titre de la section"
+        label="Phrase d'accroche ou devise"
         value={presentationTitre}
         onChange={(value) => setPartner("presentationTitre", value)}
-        placeholder="Ce que nous faisons"
+        placeholder="Ex: Le goût de l'authenticité"
         maxLength={PRESENTATION_LIMITS.titre}
         error={
           tropLong.titre
             ? `Titre trop long : ${PRESENTATION_LIMITS.titre} caractères au maximum.`
             : undefined
         }
-        hint="Le titre affiché au-dessus de votre texte sur votre fiche."
+        hint="La devise qui vous représente, affichée sur votre fiche et sur le tableau de bord des employés si vous êtes leur coup de cœur !"
       />
 
       <TextArea

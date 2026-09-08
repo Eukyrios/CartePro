@@ -57,6 +57,8 @@ export type Partner = {
    * goût de l'administrateur, l'autre un constat sur la donnée.
    */
   real: boolean;
+  likes: number;
+  likedByUser: boolean;
 };
 
 /**
@@ -78,6 +80,8 @@ export function fromApi(entry: ApiPartner): Partner {
     amountCents: entry.amountCents,
     official: entry.officiel,
     real: entry.donneesReelles,
+    likes: entry.likes,
+    likedByUser: entry.liked_by_user,
   };
 }
 

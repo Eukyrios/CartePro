@@ -55,11 +55,15 @@ export default function AdminPickSection({
           ait à se replacer. */}
       <div className="mx-auto grid w-full max-w-[1400px] items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,52%)] lg:gap-[56px]">
         <div>
-          <Chip tone="official" className="inline-block">
-            Choisi par l&apos;administration
+          <Chip tone="official" className="inline-flex items-center gap-2">
+            Choisi par les utilisateurs 
+            <span className="flex items-center text-red-500 gap-1">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="currentColor" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+              {pick.likes}
+            </span>
           </Chip>
 
-          <Display level={2} accent="de l'administrateur." className="mt-6">
+          <Display level={2} accent="des utilisateurs." className="mt-6">
             Coup de cœur
           </Display>
 
