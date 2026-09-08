@@ -1,3 +1,4 @@
+import { ecrireSession, effacerSession, lireSession } from "@/lib/session";
 import type { CardStyle, Profile } from "@/components/account/AccountProvider";
 import { EMPTY_PARTNER, toHoraires } from "@/components/forms/partnerFields";
 import type { Horaires, PartnerFields } from "@/components/forms/partnerFields";
@@ -76,14 +77,27 @@ export type ApiPartner = {
   horaires: Horaires;
 };
 
-const TOKEN_KEY = "access_token";
+/**
+ * Le jeton de session.
+ *
+ * Il passe par `lib/session`, qui choisit entre `localStorage` et
+ * `sessionStorage` selon la case « Se souvenir de moi ». C'est aussi lui qui
+ * sert de repère : `sessionPersistante` regarde où le jeton se trouve pour
+ * savoir où écrire la suite.
+ */
+export const TOKEN_KEY = "access_token";
 
 export function accessToken() {
-  return window.localStorage.getItem(TOKEN_KEY);
+  return lireSession(TOKEN_KEY);
+}
+
+/** `remember` faux : le jeton part dans le magasin que l'onglet vide en se fermant. */
+export function setAccessToken(token: string, remember: boolean) {
+  ecrireSession(TOKEN_KEY, token, remember);
 }
 
 export function clearAccessToken() {
-  window.localStorage.removeItem(TOKEN_KEY);
+  effacerSession(TOKEN_KEY);
 }
 
 /**

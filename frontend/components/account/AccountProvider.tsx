@@ -13,7 +13,19 @@ import type {
   AuthSubmitPayload,
 } from "@/components/auth/AuthModal";
 import type { PartnerFields } from "@/components/forms/partnerFields";
-import { api, clearAccessToken, accessToken, userProfile } from "@/lib/api";
+import {
+  api,
+  clearAccessToken,
+  accessToken,
+  setAccessToken,
+  TOKEN_KEY,
+  userProfile,
+} from "@/lib/api";
+import {
+  ecrireSession,
+  effacerSession,
+  sessionPersistante,
+} from "@/lib/session";
 
 /** Background texture printed on the card. */
 export type CardPattern =
@@ -97,19 +109,33 @@ const AccountContext = createContext<Account | null>(null);
  * Where the signed-in profile is kept across page loads. Stands in for the
  * session the backend will own, so that /parametres survives a reload and a
  * direct visit. Only profile fields are stored, never the password.
+ *
+ * Le magasin — persistant ou vidé à la fermeture de l'onglet — est celui de la
+ * session, et il est choisi une fois pour toutes à la connexion par la case
+ * « Se souvenir de moi ». Voir `lib/session`.
  */
 const STORAGE_KEY = "cartepro.profile";
 
-function writeStored(profile: Profile | null) {
-  try {
-    if (profile) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
-  } catch {
-    // Losing the mock session on reload beats breaking the page.
+/**
+ * Écrit le profil là où vit la session.
+ *
+ * `remember` n'est passé qu'à la connexion, qui décide. Les écritures qui
+ * suivent — un profil rafraîchi, un style de carte enregistré — n'ont pas à
+ * reposer la question : elles suivent l'emplacement du jeton, sans quoi un
+ * profil non mémorisé se serait retrouvé recopié dans `localStorage` au premier
+ * rafraîchissement, et aurait survécu à la fermeture que l'utilisateur avait
+ * demandée.
+ */
+function writeStored(profile: Profile | null, remember?: boolean) {
+  if (!profile) {
+    effacerSession(STORAGE_KEY);
+    return;
   }
+  ecrireSession(
+    STORAGE_KEY,
+    JSON.stringify(profile),
+    remember ?? sessionPersistante(TOKEN_KEY),
+  );
 }
 
 /**
@@ -133,9 +159,9 @@ export default function AccountProvider({
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ready, setReady] = useState(false);
 
-  const persist = useCallback((next: Profile | null) => {
+  const persist = useCallback((next: Profile | null, remember?: boolean) => {
     setProfile(next);
-    writeStored(next);
+    writeStored(next, remember);
   }, []);
 
   const refreshAccount = useCallback(async () => {
@@ -180,7 +206,8 @@ export default function AccountProvider({
    */
   const signIn = useCallback(
     async (payload: AuthSubmitPayload) => {
-      const { audience, mode, username, email, password, partner } = payload;
+      const { audience, mode, username, email, password, remember, partner } =
+        payload;
       const data = await api<{
         access_token: string;
         user: Parameters<typeof userProfile>[0];
@@ -194,12 +221,14 @@ export default function AccountProvider({
             : {}),
         }),
       });
-      window.localStorage.setItem("access_token", data.access_token);
+      /* Le jeton d'abord : c'est son magasin qui dira, aux écritures
+         suivantes, où vit la session. */
+      setAccessToken(data.access_token, remember);
       const next = userProfile(data.user);
-      persist({
-        ...next,
-        cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle },
-      });
+      persist(
+        { ...next, cardStyle: { ...DEFAULT_CARD_STYLE, ...next.cardStyle } },
+        remember,
+      );
     },
     [persist],
   );

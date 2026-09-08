@@ -126,7 +126,18 @@ export default function AuthForm({
         </Note>
       )}
 
-      <div className="my-6 flex items-start">
+      {/* « Mot de passe oublié ? » a été retiré : le lien pointait sur `#`, donc
+          il ne menait nulle part, et il n'y a pas de route de réinitialisation
+          derrière. Une porte peinte sur un mur coûte plus qu'elle ne rapporte à
+          qui a vraiment perdu son mot de passe.
+
+          Reste la case, qui décide maintenant de quelque chose — voir
+          `lib/session` : cochée, la session tient dans `localStorage` et
+          survit à la fermeture du navigateur ; décochée, elle vit dans
+          `sessionStorage` et l'onglet l'emporte en se fermant. L'indication
+          sous la case le dit, parce que « Se souvenir de moi » ne dit pas
+          jusqu'à quand. */}
+      <div className="my-6">
         <div className="flex items-center">
           <input
             id="checkbox-remember"
@@ -142,12 +153,11 @@ export default function AuthForm({
             Se souvenir de moi
           </label>
         </div>
-        <a
-          href="#"
-          className={`text-cp-accent ms-auto hover:underline ${MICRO}`}
-        >
-          Mot de passe oublié&nbsp;?
-        </a>
+        <p className="text-cp-muted mt-2 text-[12px] leading-[1.5]">
+          {values.remember
+            ? "Vous resterez connecté après la fermeture du navigateur."
+            : "Vous serez déconnecté en fermant cet onglet."}
+        </p>
       </div>
 
       {/* Le refus du serveur, juste au-dessus du bouton qui l'a provoqué —
