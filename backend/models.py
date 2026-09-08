@@ -41,10 +41,6 @@ class MotifCarte(enum.Enum):
     damier = "damier"
     aucun = "aucun"
 
-class CoupDeCoeurStatut(enum.Enum):
-    actif = "actif"
-    suspendu = "suspendu"
-
 # -----------------------------------------------------------------------------
 # Employeur
 # -----------------------------------------------------------------------------
@@ -151,7 +147,6 @@ class Partenaire(db.Model):
     # Relations
     categorie = db.relationship("Categorie")
     transactions = db.relationship("Transaction", back_populates="partenaire", cascade="all, delete-orphan")
-    coups_de_coeur = db.relationship("CoupDeCoeur", back_populates="partenaire", cascade="all, delete-orphan")
     decisions = db.relationship("Decision", back_populates="partenaire", cascade="all, delete-orphan")
 
     def set_password(self, password):
@@ -241,17 +236,17 @@ class Abondement(db.Model):
 # -----------------------------------------------------------------------------
 # Coup de cœur de l'administrateur
 # -----------------------------------------------------------------------------
-class CoupDeCoeur(db.Model):
-    __tablename__ = "coups_de_coeur"
-    id = db.Column(db.Integer, primary_key=True)
-    partenaire_id = db.Column(db.Integer, db.ForeignKey("partenaires.id"), nullable=False)
-    mot_administrateur = db.Column(db.Text, nullable=False)
-    horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    statut = db.Column(SQLEnum(CoupDeCoeurStatut), nullable=False, default=CoupDeCoeurStatut.actif)
-    nombre_clicks = db.Column(db.Integer, nullable=False, default=0)
+# class CoupDeCoeur(db.Model):
+#     __tablename__ = "coups_de_coeur"
+#     id = db.Column(db.Integer, primary_key=True)
+#     partenaire_id = db.Column(db.Integer, db.ForeignKey("partenaires.id"), nullable=False)
+#     mot_administrateur = db.Column(db.Text, nullable=False)
+#     horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+#     statut = db.Column(SQLEnum(CoupDeCoeurStatut), nullable=False, default=CoupDeCoeurStatut.actif)
+#     nombre_clicks = db.Column(db.Integer, nullable=False, default=0)
 
-    # Relation
-    partenaire = db.relationship("Partenaire", back_populates="coups_de_coeur")
+#     # Relation
+#     partenaire = db.relationship("Partenaire", back_populates="coups_de_coeur")
 
 # -----------------------------------------------------------------------------
 # Table de décision / traçabilité (exigée par Pontaillac)
