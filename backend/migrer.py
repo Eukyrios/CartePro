@@ -76,7 +76,15 @@ def manquants(inspecteur):
         index = [nom for nom in INDEX if nom not in poses]
 
     return {
-        "tables": [t for t in ("mesures_compte",) if t not in tables],
+        # Les tables ajoutées au schéma après la mise en service. `create_all`
+        # les crée de toute façon au démarrage ; ce qui compte ici, c'est que
+        # `--controle` les **nomme** — un contrôle qui n'en parle pas laisse
+        # croire qu'une base est à niveau quand elle ne l'est pas.
+        "tables": [
+            t
+            for t in ("mesures_compte", "partenaire_likes", "audit_log")
+            if t not in tables
+        ],
         "colonnes": colonnes,
         "index": index,
     }

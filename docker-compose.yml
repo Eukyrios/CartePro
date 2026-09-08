@@ -13,10 +13,18 @@ services:
       # connecte jamais avec ce compte-là ; elle se connecte avec
       # cartepro_app, provisionné par backend/provision_postgres.py.
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres-superuser-dev-only
+      # Surchargeable par un `.env` **a la racine du depot** — c'est de la que
+      # Docker Compose interpole, et non depuis backend/.env. Le defaut est
+      # inchange, donc `docker compose up -d postgres` marche sans preparation.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres-superuser-dev-only}
       POSTGRES_DB: cartepro
     ports:
-      - "5432:5432"
+      # Boucle locale seulement. Tout ce qui se connecte a cette base — l'app,
+      # provision_postgres.py, migrate_sqlite_to_postgres.py, la demonstration
+      # — passe par localhost ; l'exposer sur toutes les interfaces publierait
+      # un superutilisateur Postgres, avec un mot de passe de developpement
+      # ecrit juste au-dessus, a tout le reseau du poste.
+      - "127.0.0.1:5432:5432"
     volumes:
       - cartepro_pgdata:/var/lib/postgresql/data
     healthcheck:

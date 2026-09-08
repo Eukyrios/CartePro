@@ -16,3 +16,8 @@ env/
 instance/
 *.db
 *.sqlite3
+
+# Sorties de la démonstration d'altération (backend/demo_audit_tamper.sh)
+# Exports d'audit signés et verdicts de vérification : des pièces de dossier,
+# produites à la demande, pas des sources.
+backend/demo_output/

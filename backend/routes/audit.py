@@ -19,6 +19,14 @@ from models import AuditLog
 
 audit_bp = Blueprint('audit', __name__)
 
+#: Le nombre maximal d'enregistrements dans un export.
+#:
+#: Au-dela, la route refuse et demande une periode. Elle ne tronque pas, et
+#: c'est le point : un export tronque porterait quand meme une signature valide
+#: et un `chainDigest` coherent, donc il se verifierait sans erreur tout en
+#: taisant des lignes. Refuser dit la verite ; tronquer mentirait bien.
+PLAFOND_EXPORT = 50_000
+
 
 def _parse_dt(brut):
     """Une date ISO 8601 (« 2026-09-08 » ou « 2026-09-08T10:00:00+00:00 »), ou None si absente/invalide."""
@@ -138,6 +146,20 @@ def exporter_audit():
     est soupconnee en cas d'alteration.
     """
     query, depuis, jusque = _filtrer(AuditLog.query)
+
+    combien = query.count()
+    if combien > PLAFOND_EXPORT:
+        # 422 : la requete est bien formee, c'est son contenu qui ne permet pas
+        # de repondre — la convention du depot pour ce cas.
+        return jsonify({
+            "error": (
+                f"{combien} enregistrements demandes, au-dela du plafond de "
+                f"{PLAFOND_EXPORT} par export. Restreignez la periode avec "
+                "« depuis » et « jusque » : un export tronque porterait une "
+                "signature valide en taisant des lignes."
+            )
+        }), 422
+
     lignes = query.order_by(AuditLog.id.asc()).all()
     entries = [_serialiser(e) for e in lignes]
 

@@ -29,6 +29,11 @@ set +a
 CONTAINER=cartepro-postgres
 # Doit correspondre a POSTGRES_PASSWORD dans docker-compose.yml.
 PGSUPERPW="${DEMO_SUPERUSER_PASSWORD:-postgres-superuser-dev-only}"
+# Le compte d'administration seme par `seed.py` (DEMO_ADMIN_EMAIL,
+# DEMO_PASSWORD) — celui-la meme que le README publie en clair. Ce n'est donc
+# pas un secret qu'on expose ici, c'est la valeur qui rend la demonstration
+# executable en une commande. Les deux se surchargent si la base demontree
+# n'est pas celle du seed.
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@administration.example}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-CartePro2026}"
 APP_PORT=5099

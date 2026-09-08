@@ -259,14 +259,25 @@ class Transaction(db.Model):
         CheckConstraint("montant > 0", name="ck_transaction_montant_positive"),
     )
 
+class EcritureImmuable(Exception):
+    """Levée quand du code tente de modifier ou de supprimer une écriture.
+
+    Une classe nommée, et non `Exception` nu : un appelant qui veut distinguer
+    « la règle comptable a refusé » d'une panne ne peut rien faire d'un
+    `except Exception`, et une route qui remonte l'un ou l'autre rend le même
+    500 indistinct. `instruction.MotifManquant` fait le même travail pour le
+    motif écrit.
+    """
+
+
 @event.listens_for(Transaction, 'before_update')
 def block_transaction_update(mapper, connection, target):
     # On autorise uniquement les corrections via une nouvelle transaction, pas de modification directe
-    raise Exception("Règle comptable : Une transaction validée est immuable. Les UPDATE sont interdits.")
+    raise EcritureImmuable("Règle comptable : Une transaction validée est immuable. Les UPDATE sont interdits.")
 
 @event.listens_for(Transaction, 'before_delete')
 def block_transaction_delete(mapper, connection, target):
-    raise Exception("Règle comptable : Une transaction validée est immuable. Les DELETE sont interdits.")
+    raise EcritureImmuable("Règle comptable : Une transaction validée est immuable. Les DELETE sont interdits.")
 
 # -----------------------------------------------------------------------------
 # Abondement (crédit employeur → salarié)
@@ -397,9 +408,9 @@ class AuditLog(db.Model):
 
 @event.listens_for(AuditLog, 'before_update')
 def block_audit_log_update(mapper, connection, target):
-    raise Exception("Journal d'audit : ajout seul. Les UPDATE sont interdits.")
+    raise EcritureImmuable("Journal d'audit : ajout seul. Les UPDATE sont interdits.")
 
 @event.listens_for(AuditLog, 'before_delete')
 def block_audit_log_delete(mapper, connection, target):
-    raise Exception("Journal d'audit : ajout seul. Les DELETE sont interdits.")
+    raise EcritureImmuable("Journal d'audit : ajout seul. Les DELETE sont interdits.")
     
