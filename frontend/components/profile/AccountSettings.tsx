@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import AvatarColorForm from "./AvatarColorForm";
 import CardStyleForm from "./CardStyleForm";
 import ThemeForm from "./ThemeForm";
 import DeleteAccountCard from "./DeleteAccountCard";
@@ -325,6 +326,24 @@ export default function AccountSettings() {
                 <CardStyleForm profile={profile} onSave={updateProfile} />
               </Panel>
             ))}
+
+          {/* La vignette du compte, dans le même onglet que la carte : les
+              deux répondent à « à quoi ressemble mon compte ». Deux panneaux
+              et non un seul formulaire, parce que les deux s'enregistrent
+              séparément — changer sa couleur d'avatar n'a pas à faire repartir
+              le style de carte au serveur. */}
+          {shown === "style" && (
+            <Panel as="section" className="mt-8">
+              <Display level={2} scale="panel">
+                Vignette du compte
+              </Display>
+              <Panel.Lead>
+                La couleur de l&apos;aplat sur lequel se pose votre initiale.
+                Elle a été tirée au hasard à la création du compte.
+              </Panel.Lead>
+              <AvatarColorForm profile={profile} onSave={updateProfile} />
+            </Panel>
+          )}
 
           {shown === "securite" && (
             <Panel as="section">

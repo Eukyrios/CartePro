@@ -13,6 +13,7 @@ Le jeton porte l'identité sous la forme « genre:id » — « salarie:3 »,
 identifiants se répètent d'une table à l'autre, et le salarié n° 3 n'est pas le
 partenaire n° 3.
 """
+import hashlib
 import re
 import unicodedata
 
@@ -185,6 +186,45 @@ def nom_affiche(compte):
     return compte.nom
 
 
+#: Les aplats possibles pour la vignette d'un compte.
+#:
+#: Choisis pour porter du blanc : tous depassent 4,5:1 sur blanc, verifie par
+#: `tools/contrast.py`. Un tirage libre sur la roue des teintes aurait sorti
+#: des jaunes et des cyans clairs sur lesquels l'initiale blanche disparait.
+#: Le violet de la marque ouvre la liste, pour qu'un compte tire au hasard
+#: puisse tomber sur la couleur du dispositif comme sur une autre.
+COULEURS_AVATAR = (
+    "#4a1b6b",  # le violet de la marque
+    "#1b3a6b",  # bleu profond
+    "#1b6b67",  # teal
+    "#17402a",  # vert sombre
+    "#6b3a1b",  # terre
+    "#7c1d54",  # prune
+    "#3a1b6b",  # indigo
+    "#6b1b1b",  # brique
+    "#2f2f38",  # ardoise
+)
+
+
+def couleur_tiree(graine):
+    """Une couleur d'avatar, tiree de `graine` et toujours la meme pour elle.
+
+    Deterministe a dessein : un compte garde sa couleur d'un rendu a l'autre et
+    d'une machine a l'autre, sans qu'on ait besoin de l'avoir enregistree. C'est
+    ce qui permet a un compte cree avant la colonne d'en avoir une quand meme.
+    """
+    empreinte = hashlib.sha1(str(graine).encode("utf-8")).hexdigest()
+    return COULEURS_AVATAR[int(empreinte, 16) % len(COULEURS_AVATAR)]
+
+
+def avatar_ou_defaut(compte):
+    """La couleur enregistree du compte, ou celle que son nom lui donne."""
+    enregistree = getattr(compte, "couleur_avatar", None)
+    if enregistree:
+        return enregistree
+    return couleur_tiree(email_de(compte) or nom_affiche(compte) or "")
+
+
 def style_carte(compte):
     """Le style de carte, reconstitué depuis ses quatre colonnes."""
     if not isinstance(compte, Salaries):
@@ -251,6 +291,9 @@ def profil(compte):
         "email": email_de(compte),
         "partner": fiche_partenaire(compte) if isinstance(compte, Partenaire) else {},
         "cardStyle": style_carte(compte),
+        # L'aplat de la vignette du compte. Toujours renseigne, meme pour un
+        # compte cree avant la colonne : `avatar_ou_defaut` le tire du nom.
+        "avatarColor": avatar_ou_defaut(compte),
         # En dehors de `partner`, et à dessein : c'est une décision du
         # administration, pas un champ que le partenaire déclare. Le formulaire de
         # profil renvoie `partner` entier ; il n'a pas à pouvoir réécrire ça.

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getTableauDeBord, type TableauDeBord } from "./api";
-import { BarList, StatTile, TrendChart, euros, moisLisible } from "./Charts";
+import { StatTile, TrendChart, euros } from "./Charts";
+import FranceMap from "./FranceMap";
 import Display from "@/components/ui/Display";
 import EmptyState from "@/components/ui/EmptyState";
 import Micro from "@/components/ui/Micro";
@@ -48,10 +49,15 @@ const MESURES: readonly { id: Mesure; label: string; aide: string }[] = [
  *   plus vite qu'un graphique à une barre ;
  * - **une courbe** pour le volume, parce que la question est « est-ce que ça
  *   monte » et qu'aucun tableau ne répond à celle-là d'un coup d'œil ;
- * - **des barres horizontales** pour la géographie, et pas une carte. Le
- *   réseau n'a pas de coordonnées — il a une adresse, une ville et un code
- *   postal, et l'application le dit depuis le début. Une carte demanderait de
- *   géocoder, donc d'inventer une précision que la donnée n'a pas.
+ * - **une carte de France** pour la géographie, en aplats par département, en
+ *   regard de la courbe : « est-ce que ça monte » et « où », les deux
+ *   questions qu'on pose devant un tableau de bord, côte à côte. La carte ne
+ *   contredit pas la règle qui en interdisait une au catalogue : ce qui manque
+ *   au réseau, ce sont des **coordonnées**, et une épingle en demanderait. Un
+ *   aplat de département n'en demande aucune — il se déduit du code postal,
+ *   que la fiche porte déjà. Elle est donc exacte au département près et ne
+ *   prétend à rien de plus fin. Le classement chiffré, lui, est replié sous
+ *   elle : un aplat dit *où* et non *combien*, et un chiffre exact se copie.
  *
  * Le sélecteur de mesure ne relance rien : les trois classements sont dans la
  * même réponse, parce que ce sont trois lectures des mêmes lignes.
@@ -94,176 +100,256 @@ export default function DashboardSection() {
             ? d.villes.join(", ")
             : `${d.partenaires} établissement${d.partenaires > 1 ? "s" : ""} · ${d.villes.join(", ")}`,
       }))
-      .filter((b) => b.valeur > 0)
       .sort((a, b) => b.valeur - a.valeur);
   }, [data, mesure]);
 
-  const periode = useMemo(() => {
-    if (!data?.periode.debut || !data.periode.fin) return "";
-    const debut = data.periode.debut.slice(0, 7);
-    const fin = data.periode.fin.slice(0, 7);
-    return debut === fin
-      ? moisLisible(debut)
-      : `${moisLisible(debut)} – ${moisLisible(fin)}`;
-  }, [data]);
+  /* La hauteur de la courbe : ce qui reste du premier écran.
+   *
+   * C'est ce qui reste de la fenêtre sous tout ce qui la précède — barre
+   * haute, titre, chiffres de tête, en-tête de colonne et rang de commandes.
+   * La constante est mesurée, pas devinée : c'est la hauteur cumulée de ces
+   * blocs. Les bornes tiennent les extrêmes — une France de 150 px ne se lit
+   * plus, et au-delà de 480 px il n'y a rien de plus à voir, le découpage
+   * s'arrêtant au département.
+   *
+   * La carte n'y est plus : elle a son écran et sa propre hauteur. */
+  const hauteurTrace = "clamp(200px, calc(100dvh - 500px), 460px)";
+
+  /* Le même formateur des deux côtés : la carte et le classement affichent la
+     même mesure, et deux copies finiraient par ne plus dire pareil. */
+  const formatteMesure = (v: number) =>
+    mesure === "montant" ? `${euros(v, 0)} €` : v.toLocaleString("fr-FR");
 
   return (
-    <Screen
-      id="tableau-de-bord"
-      /* Premier écran de la page : il commence sous la barre haute et ne
+    <>
+      <Screen
+        id="tableau-de-bord"
+        /* Premier écran de la page : il commence sous la barre haute et ne
          s'accroche pas — l'en-tête lui appartient, donc le rail y ramène en
          haut du document plutôt que sur une ancre. */
+        height="below-bar"
+        snap={false}
+        rule={false}
+        align="start"
+        /* `tight` et non `offset`, parce que c'est le seul écran qui vit sous
+           la barre haute : les autres ouvrent sur du vide, lui ouvre sur 76 px
+           de barre, et l'offset de 12vh venait s'y ajouter — d'où deux fois
+           plus de blanc au-dessus de son titre qu'au-dessus des autres. C'est
+           le cas que `tight` décrit. Il rend aussi la centaine de pixels qui
+           manquait pour que l'écran tienne dans la fenêtre. */
+        density="tight"
+        aria-labelledby="tableau-titre"
+      >
+        <div>
+          <Micro as="p" tone="accent">
+            Administration
+            <Slash />
+            Tableau de bord national
+          </Micro>
+
+          <Display
+            level={1}
+            id="tableau-titre"
+            accent="en chiffres."
+            /* Assez pour que la jambe du « f » de « chiffres » ne touche pas le
+             filet des chiffres de tête, pas plus : sur cet écran, chaque pixel
+             repris au blanc va à la carte. */
+            className="mt-4 mb-6"
+          >
+            Le dispositif
+          </Display>
+
+          {state === "loading" ? (
+            <EmptyState>Chargement des chiffres…</EmptyState>
+          ) : state === "error" || !data ? (
+            <Note tone="danger" role="alert" className="mt-3">
+              Les chiffres n&apos;ont pas pu être chargés. Rechargez la page ;
+              si cela persiste, le serveur ne répond pas.
+            </Note>
+          ) : (
+            <>
+              {/* Les chiffres de tête. Quatre, pas douze : un tableau de bord
+                qui met tout au même niveau ne hiérarchise rien. */}
+              <div className="grid grid-cols-2 gap-x-8 gap-y-6 lg:grid-cols-4">
+                <StatTile
+                  label="Paiements validés"
+                  value={data.volume.nombre.toLocaleString("fr-FR")}
+                  detail={`${euros(data.volume.moyenneCents)} € en moyenne`}
+                />
+                <StatTile
+                  label="Volume encaissé"
+                  value={`${euros(data.volume.montantCents, 0)} €`}
+                  detail="Crédit employeur dépensé chez les partenaires"
+                />
+                <StatTile
+                  label="Partenaires actifs"
+                  value={`${data.partenaires.actifs}`}
+                  detail={`sur ${data.partenaires.conventionnes} conventionnés — un conventionné qui n’a jamais encaissé n’est pas actif`}
+                />
+                <StatTile
+                  label="Comptes salariés"
+                  value={`${data.comptes.parStatut["actif"] ?? 0}`}
+                  detail={`actifs sur ${data.comptes.total} — ${data.comptes.parStatut["suspendu"] ?? 0} suspendu(s), ${data.comptes.parStatut["clôturé"] ?? 0} clôturé(s)`}
+                />
+              </div>
+
+              {/* --- Le volume dans le temps ---
+
+                Toute la largeur : douze mois dans une demi-colonne se
+                touchaient, et une série annuelle se lit d'abord en longueur.
+                La géographie a repris son écran, elle ne la partage plus. */}
+              <div className="mt-8">
+                <section aria-labelledby="volume-titre">
+                  <h3
+                    id="volume-titre"
+                    className="text-cp-fg text-[20px] font-black tracking-[-0.04em]"
+                  >
+                    Volume mois par mois
+                  </h3>
+                  <p className="text-cp-muted mt-1 text-[13px]">
+                    Nombre de paiements validés sur l’année. Le montant du mois
+                    apparaît au survol du point.
+                  </p>
+                  <TrendChart
+                    legende="Paiements validés par mois"
+                    hauteur={hauteurTrace}
+                    points={data.volume.serie.map((m) => ({
+                      cle: m.mois,
+                      valeur: m.nombre,
+                      secondaire: m.montantCents,
+                    }))}
+                  />
+                </section>
+              </div>
+            </>
+          )}
+        </div>
+      </Screen>
+
+      {state === "ready" && data && (
+        <GeoScreen
+          mesure={mesure}
+          setMesure={setMesure}
+          barres={barres}
+          formatteMesure={formatteMesure}
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * La répartition géographique, sur son propre écran.
+ *
+ * Deux écrans plutôt qu'un, et c'est mesuré : le titre, les quatre chiffres de
+ * tête et la courbe occupent 618 px avant elle, quelle que soit la fenêtre.
+ * Partagée avec eux dans une fenêtre de 800 px, la carte tombait à 228 px de
+ * haut — une France de la taille d'une vignette — et la courbe, réduite à une
+ * demi-largeur, ne tenait plus ses douze mois. Chacune a la place qu'il lui
+ * faut ; l'écran suivant est à un cran de défilement.
+ *
+ * Montée seulement une fois les chiffres là : elle n'a rien à peindre avant,
+ * et un écran vide qui s'accroche au défilement est un écran qu'on traverse
+ * sans savoir pourquoi.
+ */
+function GeoScreen({
+  mesure,
+  setMesure,
+  barres,
+  formatteMesure,
+}: {
+  mesure: Mesure;
+  setMesure: (m: Mesure) => void;
+  barres: readonly {
+    cle: string;
+    libelle: string;
+    detail?: string;
+    valeur: number;
+    appoint?: string;
+  }[];
+  formatteMesure: (valeur: number) => string;
+}) {
+  return (
+    <Screen
+      id="carte"
       height="below-bar"
-      snap={false}
-      rule={false}
       align="start"
       density="offset"
-      long
-      aria-labelledby="tableau-titre"
+      aria-labelledby="geo-titre"
     >
       <div>
-        <Micro as="p" tone="accent">
-          Administration
-          <Slash />
-          Tableau de bord national
-        </Micro>
+        {/* Tout l'appareil de l'écran — surtitre, titre, phrase, commandes —
+            tient dans une gouttière à gauche, et la carte prend la hauteur
+            entière à droite.
 
-        <Display
-          level={1}
-          id="tableau-titre"
-          accent="en chiffres."
-          className="mt-4 mb-2"
-        >
-          Le dispositif
-        </Display>
+            Posé au-dessus d'elle comme sur les autres écrans, le titre coûtait
+            170 px sur toute la largeur : de la hauteur prise à la carte pour
+            une bande de texte qui n'en avait pas besoin. Or c'est la hauteur
+            qui manque à une France — son tracé est plus haut que large, donc
+            la largeur, elle, restait inemployée. Descendu dans la gouttière,
+            il ne coûte plus rien à personne. */}
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+          <div>
+            <Micro as="p" tone="accent">
+              Administration
+              <Slash />
+              Tableau de bord national
+            </Micro>
 
-        {state === "loading" ? (
-          <EmptyState>Chargement des chiffres…</EmptyState>
-        ) : state === "error" || !data ? (
-          <Note tone="danger" role="alert" className="mt-3">
-            Les chiffres n&apos;ont pas pu être chargés. Rechargez la page ; si
-            cela persiste, le serveur ne répond pas.
-          </Note>
-        ) : (
-          <>
-            <p className="text-cp-muted mb-8 text-[13px]">
-              {/* La période est dite, et elle est celle des écritures. Un
-                  tableau de bord qui ne dit pas sur quoi il porte laisse
-                  croire qu'il porte sur aujourd'hui. */}
-              Sur la période observée
-              {periode && <> : {periode}</>}. Les montants sont ceux des
-              paiements <strong className="font-black">validés</strong> — un
-              paiement refusé n’a pas eu lieu et n’est écrit nulle part.
+            <Display
+              level={2}
+              id="geo-titre"
+              accent="géographique."
+              className="mt-4 mb-5"
+            >
+              Répartition
+            </Display>
+
+            <p className="text-cp-muted text-[13px]">
+              Par département, depuis le code postal des établissements.
             </p>
-
-            {/* Les chiffres de tête. Quatre, pas douze : un tableau de bord
-                qui met tout au même niveau ne hiérarchise rien. */}
-            <div className="grid grid-cols-2 gap-x-8 gap-y-6 lg:grid-cols-4">
-              <StatTile
-                label="Paiements validés"
-                value={data.volume.nombre.toLocaleString("fr-FR")}
-                detail={`${euros(data.volume.moyenneCents)} € en moyenne`}
-              />
-              <StatTile
-                label="Volume encaissé"
-                value={`${euros(data.volume.montantCents, 0)} €`}
-                detail="Crédit employeur dépensé chez les partenaires"
-              />
-              <StatTile
-                label="Partenaires actifs"
-                value={`${data.partenaires.actifs}`}
-                detail={`sur ${data.partenaires.conventionnes} conventionnés — un conventionné qui n’a jamais encaissé n’est pas actif`}
-              />
-              <StatTile
-                label="Comptes salariés"
-                value={`${data.comptes.parStatut["actif"] ?? 0}`}
-                detail={`actifs sur ${data.comptes.total} — ${data.comptes.parStatut["suspendu"] ?? 0} suspendu(s), ${data.comptes.parStatut["clôturé"] ?? 0} clôturé(s)`}
-              />
+            <div
+              className="mt-4 flex flex-col items-stretch gap-2"
+              role="group"
+              aria-label="Classer la répartition par"
+            >
+              {MESURES.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setMesure(option.id)}
+                  aria-pressed={mesure === option.id}
+                  title={option.aide}
+                  className={`${MICRO} border-2 px-3 py-2 text-left transition-colors ${
+                    mesure === option.id
+                      ? "border-cp-fg bg-cp-fg text-cp-page"
+                      : "border-cp-border text-cp-muted hover:border-cp-fg hover:text-cp-fg"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="mt-12 grid gap-12 lg:grid-cols-2">
-              {/* --- Le volume dans le temps --- */}
-              <section aria-labelledby="volume-titre">
-                <h3
-                  id="volume-titre"
-                  className="text-cp-fg text-[20px] font-black tracking-[-0.04em]"
-                >
-                  Volume mois par mois
-                </h3>
-                <p className="text-cp-muted mt-1 text-[13px]">
-                  Nombre de paiements validés. Le montant du mois apparaît au
-                  survol et dans le tableau.
-                </p>
-                <TrendChart
-                  legende="Paiements validés par mois"
-                  points={data.volume.serie.map((m) => ({
-                    cle: m.mois,
-                    valeur: m.nombre,
-                    secondaire: m.montantCents,
-                  }))}
-                />
-              </section>
-
-              {/* --- La répartition géographique --- */}
-              <section aria-labelledby="geo-titre">
-                <h3
-                  id="geo-titre"
-                  className="text-cp-fg text-[20px] font-black tracking-[-0.04em]"
-                >
-                  Répartition géographique
-                </h3>
-                <p className="text-cp-muted mt-1 text-[13px]">
-                  Par département, agrégé depuis le code postal des
-                  établissements. Pas de carte : le réseau porte une adresse,
-                  pas des coordonnées.
-                </p>
-
-                {/* Un seul rang de commandes au-dessus du tracé, et il ne
-                    relance rien : les trois mesures sont déjà chargées. */}
-                <div
-                  className="mt-4 flex flex-wrap gap-2"
-                  role="group"
-                  aria-label="Classer la répartition par"
-                >
-                  {MESURES.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => setMesure(option.id)}
-                      aria-pressed={mesure === option.id}
-                      title={option.aide}
-                      className={`${MICRO} border-2 px-3 py-2 transition-colors ${
-                        mesure === option.id
-                          ? "border-cp-fg bg-cp-fg text-cp-page"
-                          : "border-cp-border text-cp-muted hover:border-cp-fg hover:text-cp-fg"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-
-                <BarList
-                  legende={`Répartition par département — ${MESURES.find((m) => m.id === mesure)?.label}`}
-                  barres={barres}
-                  /* Six départements en regard du tracé, le reste d'un clic :
-                     la colonne de droite tenait dix-huit lignes de trois
-                     lignes chacune, soit quatre fois la hauteur de la courbe
-                     d'à côté — la grille finissait en une colonne interminable
-                     et un trou de la même taille. Six, parce que c'est ce
-                     qu'un classement dit vraiment : où le dispositif sert le
-                     plus. */
-                  plafond={6}
-                  formatte={(v) =>
-                    mesure === "montant"
-                      ? `${euros(v, 0)} €`
-                      : v.toLocaleString("fr-FR")
-                  }
-                />
-              </section>
-            </div>
-          </>
-        )}
+          <FranceMap
+            legende={`Répartition par département — ${MESURES.find((m) => m.id === mesure)?.label}`}
+            valeurs={barres.map((barre) => ({
+              code: barre.cle,
+              nom: barre.libelle,
+              valeur: barre.valeur,
+              appoint: barre.appoint,
+            }))}
+            formatte={formatteMesure}
+            /* La hauteur entière de l'écran, une fois ses marges retirées :
+               plus rien ne la précède, le titre étant passé à gauche. La
+               constante est mesurée — barre haute, plus les marges hautes et
+               basses de l'écran. Les bornes tiennent les extrêmes : sous
+               340 px la France ne se lit plus, et au-delà de 760 px il n'y a
+               rien de plus à voir, le découpage s'arrêtant au département. */
+            hauteur="clamp(340px, calc(100dvh - 250px), 760px)"
+          />
+        </div>
       </div>
     </Screen>
   );

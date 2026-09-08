@@ -205,6 +205,16 @@ export type Compte = {
   id: number;
   /** Présent pour un partenaire : ses gestes s'adressent par slug. */
   slug?: string;
+  /**
+   * L'aplat de la vignette du compte, en hexadécimal.
+   *
+   * Une couleur et non une image : le dispositif ne collectionne pas les
+   * visages de ses bénéficiaires. Tirée au hasard à la création, puis
+   * modifiable par le titulaire depuis ses réglages — donc jamais vide.
+   */
+  avatarColor: string;
+  /** La photographie de fiche d'un partenaire, s'il en a une. */
+  photo?: string;
   nom: string;
   email: string;
   /**

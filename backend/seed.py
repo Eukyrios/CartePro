@@ -31,7 +31,7 @@ from datetime import datetime, timedelta, timezone
 from faker import Faker
 
 from app import create_app
-from accounts import PATTERNS
+from accounts import PATTERNS, couleur_tiree
 from models import (
     Abondement,
     Admin,
@@ -750,6 +750,9 @@ def make_salarie(email, prenom, nom, employeur):
         couleur_texte=DEFAULT_CARD_STYLE["text"],
         motif=MotifCarte(PATTERNS[DEFAULT_CARD_STYLE["pattern"]]),
         effet_metallise=DEFAULT_CARD_STYLE["metalness"],
+        # Tiree de l'email, donc la meme d'un seed a l'autre : une capture
+        # d'ecran refaite montre les memes vignettes.
+        couleur_avatar=couleur_tiree(email),
     )
     salarie.set_password(DEMO_PASSWORD)
     return salarie

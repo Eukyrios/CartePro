@@ -205,6 +205,46 @@ def test_une_base_sans_paiement_ne_casse_pas_le_tableau(app, agent):
     assert corps["periode"] == {"debut": None, "fin": None}
 
 
+def test_la_serie_couvre_l_annee_entiere(app, agent):
+    """Douze mois, meme quand le dispositif n'a tourne qu'un seul.
+
+    Une serie qui saute les mois vides ment sur la forme de la courbe : deux
+    mois cote a cote se lisent comme deux mois consecutifs, meme separes par un
+    trou de six mois. Et un mois sans paiement est un zero, pas une absence de
+    mesure.
+    """
+    from datetime import datetime, timezone
+
+    from models import Transaction, TransactionStatut
+
+    client, entetes = agent
+    with app.app_context():
+        salarie = _salarie()
+        partenaire = _partenaire("un-partenaire")
+        db.session.add(Transaction(
+            salarie_id=salarie.id,
+            partenaire_id=partenaire.id,
+            montant=10.0,
+            horodatage=datetime(2026, 7, 15, tzinfo=timezone.utc),
+            statut=TransactionStatut.validee,
+            reference_qr="ESSAI-SERIE",
+            idempotency_key="ESSAI-SERIE",
+            sens_ecriture="debit",
+        ))
+        db.session.commit()
+
+    serie = client.get("/api/admin/tableau-de-bord", headers=entetes).get_json()[
+        "volume"
+    ]["serie"]
+    assert [ligne["mois"] for ligne in serie] == [
+        f"2026-{mois:02d}" for mois in range(1, 13)
+    ]
+    # Le seul mois qui porte quelque chose le porte, les onze autres sont a zero.
+    assert sum(ligne["nombre"] for ligne in serie) == 1
+    assert next(l for l in serie if l["mois"] == "2026-07")["nombre"] == 1
+    assert next(l for l in serie if l["mois"] == "2026-01")["nombre"] == 0
+
+
 def test_le_departement_se_lit_du_code_postal(app):
     """Deux chiffres, sauf outre-mer, ou il en faut trois."""
     from routes.admin_tableau import departement

@@ -98,6 +98,17 @@ class Salaries(db.Model):
     couleur_texte = db.Column(db.String(7), nullable=False)  # HEX
     motif = db.Column(SQLEnum(MotifCarte), nullable=False, default=MotifCarte.aucun)
     effet_metallise = db.Column(db.Integer, nullable=False, default=0)  # 0–100
+    # La couleur de la vignette du compte : l'aplat sur lequel se pose
+    # l'initiale, dans les listes de l'administration comme dans la barre
+    # haute. Une couleur et non une image : le dispositif ne collectionne pas
+    # les visages de ses beneficiaires, et une initiale sur un aplat distingue
+    # deux comptes homonymes sans rien apprendre sur personne.
+    #
+    # Tiree au hasard a la creation du compte — voir `accounts.couleur_tiree` —
+    # puis modifiable par le titulaire depuis ses reglages. Nullable pour que
+    # les comptes crees avant cette colonne restent lisibles : `avatar_ou_defaut`
+    # rend alors la couleur tiree du nom, donc stable et jamais vide.
+    couleur_avatar = db.Column(db.String(7), nullable=True)
     # L'état du compte. Par défaut actif : une inscription n'a pas à être
     # activée à la main, c'est la suspension et la clôture qui sont des gestes.
     statut = db.Column(SQLEnum(CompteStatut), nullable=False, default=CompteStatut.actif)

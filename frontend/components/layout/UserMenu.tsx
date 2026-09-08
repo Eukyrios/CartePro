@@ -8,6 +8,8 @@ import { MICRO } from "@/components/ui/surfaces";
 export type AuthUser = {
   name: string;
   email: string;
+  /** L'aplat du disque : la couleur que le compte s'est choisie. */
+  color?: string;
 };
 
 type Props = {
@@ -60,7 +62,7 @@ export default function UserMenu({ user, onSignOut }: Props) {
         onClick={() => setDropdownOpen((s) => !s)}
         className="focus-visible:outline-cp-fg relative cursor-pointer rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
       >
-        <Avatar name={user.name} size="sm" />
+        <Avatar name={user.name} size="sm" color={user.color} />
         <span className="sr-only">Menu utilisateur</span>
       </button>
 

@@ -107,7 +107,11 @@ export default function TopBar({ onLogin, onLogout }: Props) {
               visitor never sees the auth buttons flash first. */}
           {!ready ? null : profile ? (
             <UserMenu
-              user={{ name: displayNameOf(profile), email: profile.email }}
+              user={{
+                name: displayNameOf(profile),
+                email: profile.email,
+                color: profile.avatarColor,
+              }}
               onSignOut={handleSignOut}
             />
           ) : (

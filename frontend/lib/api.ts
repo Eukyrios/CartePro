@@ -16,6 +16,8 @@ export type ApiUser = {
     email: string;
     partner: PartnerFields;
     cardStyle: CardStyle;
+    /** L'aplat de la vignette du compte, toujours renseigné par le serveur. */
+    avatarColor: string;
     /** « validé », « en_attente », « refusé », « suspendu ». `null` pour un salarié. */
     statut: string | null;
     /**

@@ -12,10 +12,17 @@ import type { ReactNode } from "react";
  * tuile de partenaire. Les deux rangs se lisent donc du même rythme : un pavé
  * qui nomme, un pied qui précise.
  *
- * L'aplat est `--cp-fg` et le texte `--cp-page` : les deux jetons sont un
- * couple contrasté par construction, dans le thème clair comme dans le sombre.
- * Un aplat d'accent aurait demandé de vérifier le contraste du blanc dessus
- * dans chaque thème que l'administration peut enregistrer.
+ * L'aplat est la couleur du compte — tirée au hasard à sa création, puis
+ * modifiable par son titulaire dans ses réglages — et le texte est blanc. Les
+ * neuf teintes possibles sont choisies pour porter du blanc : toutes dépassent
+ * 4,5:1 dessus (voir `accounts.COULEURS_AVATAR`), donc l'initiale et le nom
+ * restent lisibles sans que l'écran ait à mesurer quoi que ce soit. Un tirage
+ * libre sur la roue des teintes aurait sorti des jaunes sur lesquels le blanc
+ * disparaît.
+ *
+ * L'aplat était `--cp-fg` — le même presque-noir pour tous les comptes. Deux
+ * homonymes se ressemblaient alors trait pour trait, et un rang de vingt
+ * vignettes ne se parcourait qu'en lisant chaque nom.
  *
  * Le pied est laissé à l'appelant, comme pour `PartnerTile` : le rang des
  * comptes y met l'état et le solde, et rien ne dit qu'un autre écran voudra
@@ -42,16 +49,24 @@ export default function CompteTile({
       tabIndex={tabIndex}
       className="border-cp-border group hover:border-cp-fg focus-visible:outline-cp-accent flex h-full w-full cursor-pointer flex-col overflow-hidden border text-left focus-visible:outline-2 focus-visible:outline-offset-2"
     >
-      <div className="bg-cp-fg relative aspect-[4/3] min-h-[150px] shrink-0 overflow-hidden">
+      {/* La couleur vient de la base, donc d'une valeur qui n'est pas dans la
+          feuille de style : elle se pose en `style`, pas en classe. Le serveur
+          la valide comme hexadécimal avant de l'enregistrer — voir
+          `_ecrire_couleur_avatar` — et la renseigne toujours, y compris pour un
+          compte plus ancien que la colonne. */}
+      <div
+        style={{ backgroundColor: compte.avatarColor }}
+        className="relative aspect-[4/3] min-h-[150px] shrink-0 overflow-hidden"
+      >
         {/* L'initiale, décorative : le nom est écrit juste en dessous en vrai
             texte, donc la lire deux fois n'apprendrait rien. */}
         <span
           aria-hidden="true"
-          className="text-cp-page/15 absolute inset-0 flex items-center justify-center text-[150px] leading-none font-black tracking-[-0.06em] transition-transform duration-500 group-hover:scale-[1.04]"
+          className="absolute inset-0 flex items-center justify-center text-[150px] leading-none font-black tracking-[-0.06em] text-white/20 transition-transform duration-500 group-hover:scale-[1.04]"
         >
           {compte.nom.charAt(0).toUpperCase()}
         </span>
-        <h4 className="text-cp-page absolute inset-x-0 bottom-0 p-4 text-[17px] leading-[1.05] font-black tracking-[-0.03em]">
+        <h4 className="absolute inset-x-0 bottom-0 p-4 text-[17px] leading-[1.05] font-black tracking-[-0.03em] text-white">
           {compte.nom}
         </h4>
       </div>

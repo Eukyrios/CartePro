@@ -80,6 +80,15 @@ export type Profile = {
   partner: PartnerFields;
   cardStyle: CardStyle;
   /**
+   * L'aplat de la vignette du compte, en hexadécimal.
+   *
+   * Tiré au hasard à la création — le serveur le fait, pas l'écran — puis
+   * modifiable dans les réglages. Le serveur le renseigne toujours, y compris
+   * pour un compte créé avant la colonne, en le tirant de son adresse : une
+   * vignette sans couleur n'existe pas.
+   */
+  avatarColor: string;
+  /**
    * Le statut administratif d'un partenaire, et la décision qui l'écarte.
    *
    * En lecture seule : c'est l'administration qui décide, pas le titulaire du

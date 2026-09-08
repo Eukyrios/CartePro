@@ -20,9 +20,12 @@ import type { RailSection } from "@/components/layout/SectionNav";
  */
 const SECTIONS: readonly RailSection[] = [
   { id: "tableau-de-bord", index: "", label: "Le dispositif" },
-  { id: "demandes", index: "01", label: "Demandes" },
-  { id: "comptes", index: "02", label: "Les comptes" },
-  { id: "abondements", index: "03", label: "Créditer" },
+  /* La carte a son écran, et donc son entrée : partagée avec les chiffres de
+     tête et la courbe, elle tombait à 228 px de haut dans une fenêtre de 800. */
+  { id: "carte", index: "01", label: "La carte" },
+  { id: "demandes", index: "02", label: "Demandes" },
+  { id: "comptes", index: "03", label: "Les comptes" },
+  { id: "abondements", index: "04", label: "Créditer" },
 ];
 
 /**

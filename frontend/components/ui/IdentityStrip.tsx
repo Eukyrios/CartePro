@@ -33,17 +33,31 @@ type Size = keyof typeof SIZES;
 export function Avatar({
   name,
   size = "md",
+  color,
   className,
 }: {
   name: string;
   size?: Size;
+  /**
+   * L'aplat du disque. Absent, c'est l'accent de la marque.
+   *
+   * Le compte connecté passe sa propre couleur — celle de sa vignette, qu'il
+   * choisit dans ses réglages — pour que le disque de la barre haute et la
+   * vignette des listes soient le même objet. Les endroits qui nomment
+   * quelqu'un d'autre que le compte connecté n'en ont pas et gardent l'accent.
+   */
+  color?: string;
   className?: string;
 }) {
   return (
     <span
       aria-hidden="true"
+      style={color ? { backgroundColor: color } : undefined}
       className={cx(
-        "bg-cp-accent flex shrink-0 items-center justify-center rounded-full font-black text-white",
+        "flex shrink-0 items-center justify-center rounded-full font-black text-white",
+        // Sans couleur passée, l'accent de la marque : la classe reste, et une
+        // couleur en ligne la recouvre quand il y en a une.
+        !color && "bg-cp-accent",
         SIZES[size].disc,
         className,
       )}

@@ -78,7 +78,7 @@ function SettingBlock({
   );
 }
 
-function SwatchGrid({
+export function SwatchGrid({
   name,
   value,
   presets,

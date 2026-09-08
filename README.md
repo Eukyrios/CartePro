@@ -160,6 +160,14 @@ Trois règles y sont tenues par le serveur, pas par l'écran :
 - **une clôture ne se lève pas.** La route d'activation répond 409. Clôturer ne
   supprime rien non plus — les transactions d'un salarié sont immuables, et son
   solde reste calculable après coup ;
+- **la carte est exacte au département, jamais à l'adresse.** L'écran dessine
+  une carte de France en aplats, agrégés depuis le code postal. C'est ce que la
+  donnée permet : le réseau porte une adresse, pas des coordonnées, donc une
+  épingle demanderait de géocoder — d'inventer une précision qui n'existe pas.
+  Le fond de carte est fabriqué une fois par `python3 tools/build-carte.py`
+  dans `frontend/public/carte/`, et servi comme un fichier statique : aucune
+  bibliothèque de cartographie, aucun appel réseau à un tiers, et rien dans le
+  paquet de la page d'accueil ;
 - **créditer exige une clé d'idempotence.** C'est la seule route qui crée de
   l'argent sur un compte : `reference` est obligatoire (422 sans elle), et
   renvoyer la même clé rend la **même** réponse avec `rejoue: true` au lieu de

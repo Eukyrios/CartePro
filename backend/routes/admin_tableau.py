@@ -102,9 +102,25 @@ def tableau_de_bord():
         seau["nombre"] += 1
         seau["montantCents"] += round(t.montant * 100)
 
-    serie = [
-        {"mois": mois, **valeurs} for mois, valeurs in sorted(par_mois.items())
-    ]
+    # L'annee entiere, et non les seuls mois qui portent une ecriture.
+    #
+    # Une serie qui saute les mois vides ment sur la forme de la courbe : trois
+    # mois cote a cote se lisent comme trois mois consecutifs, meme s'il y a un
+    # trou de six mois entre deux. Et un mois sans paiement est une information
+    # — c'est un zero, pas une absence de mesure.
+    #
+    # De janvier a decembre des annees couvertes : le tableau de bord est
+    # annuel, on le lit en cherchant la saison, donc il montre les douze mois
+    # meme quand le dispositif n'a tourne qu'un trimestre.
+    serie = []
+    if paiements:
+        premiere = paiements[0].horodatage.year
+        derniere = paiements[-1].horodatage.year
+        for annee in range(premiere, derniere + 1):
+            for mois in range(1, 13):
+                cle = f"{annee:04d}-{mois:02d}"
+                seau = par_mois.get(cle, {"nombre": 0, "montantCents": 0})
+                serie.append({"mois": cle, **seau})
 
     # --- 2. Les partenaires ------------------------------------------------
     encaisse = defaultdict(lambda: {"nombre": 0, "montantCents": 0})

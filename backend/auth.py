@@ -5,6 +5,8 @@ poste et lit exactement les mêmes objets. Ce qui a changé est dessous : il n'y
 a plus une table d'utilisateurs mais trois tables d'identifiants, et la
 traduction vit dans `accounts.py`. Ce fichier ne parle que de règles.
 """
+import re
+
 from flask import jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from sqlalchemy.exc import IntegrityError
@@ -186,6 +188,24 @@ def _ecrire_style_carte(salarie, style):
         salarie.motif = MotifCarte(valeur)
 
 
+#: Une couleur hexadecimale a six chiffres, et rien d'autre.
+_HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def _ecrire_couleur_avatar(salarie, valeur):
+    """L'aplat de la vignette, si la valeur en est une.
+
+    Valide avant d'ecrire, comme le thème du site : la couleur finit dans un
+    attribut `style`, donc une chaine libre y entrerait telle quelle. Une
+    valeur absente ou mal formee laisse la couleur en place au lieu de la
+    vider — un formulaire qui renvoie le profil entier ne doit pas pouvoir
+    effacer un champ qu'il n'a pas touche.
+    """
+    if not isinstance(valeur, str) or not _HEX.match(valeur.strip()):
+        return
+    salarie.couleur_avatar = valeur.strip().lower()
+
+
 def _ecrire_fiche_partenaire(partenaire, fiche):
     """La fiche déclarée par le partenaire, champ par champ.
 
@@ -242,6 +262,7 @@ def api_update_profile():
         compte.nom = nom.strip() or prenom
         compte.email = email
         _ecrire_style_carte(compte, profile.get("cardStyle"))
+        _ecrire_couleur_avatar(compte, profile.get("avatarColor"))
 
     try:
         db.session.commit()

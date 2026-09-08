@@ -17,7 +17,7 @@ dans un seul fichier de neuf cents lignes ne s'y retrouvent plus.
 
 from flask import Blueprint, jsonify, request
 
-from accounts import nom_affiche
+from accounts import avatar_ou_defaut, nom_affiche
 from decorators import admin_required
 from flask_jwt_extended import get_jwt_identity
 from instruction import MotifManquant
@@ -63,6 +63,8 @@ def _compte(salarie):
     return {
         "genre": "salarie",
         "id": salarie.id,
+        # L'aplat de sa vignette, tel que le titulaire l'a choisi.
+        "avatarColor": avatar_ou_defaut(salarie),
         "nom": nom_affiche(salarie),
         "email": salarie.email,
         "statut": salarie.statut.value,
@@ -125,6 +127,10 @@ def _compte_partenaire(partenaire):
     return {
         "genre": "partenaire",
         "id": partenaire.id,
+        # Un partenaire a une photographie de fiche ; l'aplat lui sert de
+        # repli, tire de son email comme pour un salarie sans couleur.
+        "avatarColor": avatar_ou_defaut(partenaire),
+        "photo": partenaire.image_partenaire or "",
         "slug": partenaire.slug,
         "nom": partenaire.raison_sociale,
         "email": partenaire.email_contact or "",

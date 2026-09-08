@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { MICRO } from "@/components/ui/surfaces";
 
 /**
@@ -22,8 +22,10 @@ import { MICRO } from "@/components/ui/surfaces";
  *   filets de 2px — et une barre au bout arrondi y serait le seul objet mou ;
  * - **on n'étiquette pas tous les points.** Le dernier et le plus haut, et
  *   l'axe porte le reste. Une valeur sur chaque point ne se lit plus ;
- * - **un tableau accompagne chaque tracé**, replié. Ce qu'une courbe montre,
- *   un lecteur d'écran doit pouvoir le lire, et un chiffre exact se copie.
+ * - **chaque point et chaque aplat porte un `<title>`**, le nom accessible
+ *   natif d'une forme SVG : un lecteur d'écran l'annonce, un navigateur
+ *   l'affiche au repos du pointeur. Aucune valeur n'est enfermée dans
+ *   l'infobulle dessinée, qui n'est qu'un confort de lecture par-dessus.
  */
 
 /** Une valeur monétaire en centimes, telle que l'écran l'imprime. */
@@ -91,29 +93,57 @@ export type PointTendance = { cle: string; valeur: number; secondaire: number };
  * ---------------------------------------------------------------------- */
 
 const L = { g: 52, d: 16, h: 24, b: 34 };
-const W = 720;
-const H = 224;
+/** Sous cette largeur les mois se chevauchent : la boîte défile plutôt. */
+const LARGEUR_MINIMALE = 560;
 
 /**
  * Le volume dans le temps, une série, en aire lavée sous une ligne de 2px.
  *
- * Le repère est dessiné en unités de `viewBox` et la boîte se redimensionne
- * autour ; `vector-effect` garde les filets à leur épaisseur réelle quelle que
- * soit l'échelle. En dessous de 640px la boîte défile horizontalement plutôt
- * que d'écraser les mois les uns sur les autres.
+ * **Le repère est en pixels, pas en unités abstraites.** La boîte est mesurée,
+ * et le `viewBox` reçoit sa taille exacte : une unité vaut un pixel. C'est ce
+ * qui permet de commander la hauteur du tracé — un `viewBox` fixe imposait son
+ * rapport, donc la hauteur découlait de la largeur de la colonne et on ne
+ * pouvait pas la choisir. Au passage, les libellés ne grandissent plus avec le
+ * tracé : ils gardent leur corps, comme le reste de l'interface.
  */
 export function TrendChart({
   points,
   legende,
   formatte = (v: number) => String(v),
+  hauteur = "260px",
 }: {
   points: readonly PointTendance[];
   /** Ce que la série mesure : le titre du tracé, puisqu'il n'y a pas de légende. */
   legende: string;
   formatte?: (valeur: number) => string;
+  /**
+   * La hauteur du tracé, en CSS. Même raison que pour la carte : sur un écran
+   * qui doit tenir dans la fenêtre, c'est l'appelant qui sait ce qui reste.
+   */
+  hauteur?: string;
 }) {
   const [survol, setSurvol] = useState<number | null>(null);
   const gradient = useId().replace(/:/g, "");
+  const boite = useRef<HTMLDivElement>(null);
+  /* Une taille de départ crédible : le premier rendu, côté serveur comme au
+     montage, se fait avant toute mesure. Sans elle le tracé naîtrait plat. */
+  const [taille, setTaille] = useState({ w: 720, h: 260 });
+
+  useEffect(() => {
+    const element = boite.current;
+    if (!element) return;
+    const observateur = new ResizeObserver(([entree]) => {
+      const cadre = entree.contentRect;
+      setTaille({
+        w: Math.max(Math.round(cadre.width), LARGEUR_MINIMALE),
+        h: Math.max(Math.round(cadre.height), 140),
+      });
+    });
+    observateur.observe(element);
+    return () => observateur.disconnect();
+  }, []);
+
+  const { w: W, h: H } = taille;
 
   if (points.length === 0) {
     return (
@@ -144,17 +174,29 @@ export function TrendChart({
     0,
   );
   /* Le dernier point et le plus haut — et un seul si c'est le même. L'axe
-     porte les autres : une étiquette par point ne se lit plus. */
-  const etiquetes = [...new Set([sommet, dernier])];
+     porte les autres : une étiquette par point ne se lit plus.
+
+     Sauf un dernier point à zéro : depuis que la série couvre l'année entière,
+     elle finit en décembre, et étiqueter « 0 » sur l'axe des zéros n'apprend
+     rien qu'on n'y lise déjà. */
+  const etiquetes = [...new Set([sommet, dernier])].filter(
+    (i) => points[i].valeur > 0,
+  );
 
   return (
     <figure className="mt-5">
-      <div className="relative overflow-x-auto">
+      <div
+        ref={boite}
+        className="relative overflow-x-auto"
+        style={{ height: hauteur }}
+      >
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="block h-auto w-full min-w-[560px]"
+          className="block"
+          width={W}
+          height={H}
           role="img"
-          aria-label={`${legende}, de ${moisLisible(points[0].cle)} à ${moisLisible(points[dernier].cle)}. Le tableau sous le graphique donne les valeurs exactes.`}
+          aria-label={`${legende}, de ${moisLisible(points[0].cle)} à ${moisLisible(points[dernier].cle)}. Chaque point porte son mois et sa valeur.`}
         >
           <defs>
             {/* Le lavis sous la ligne : la teinte de la série à 10 %, jamais un
@@ -220,7 +262,16 @@ export function TrendChart({
                 fill="var(--cp-accent)"
                 stroke="var(--cp-page)"
                 strokeWidth="2"
-              />
+              >
+                {/* Le nom accessible du point : c'est lui qui remplace le
+                    tableau replié qui accompagnait le tracé. Un lecteur
+                    d'écran l'annonce, un navigateur l'affiche au repos du
+                    pointeur, et la valeur n'est donc pas réservée au survol
+                    dessiné. */}
+                <title>
+                  {`${moisLisible(p.cle)} — ${formatte(p.valeur)} · ${euros(p.secondaire)} €`}
+                </title>
+              </circle>
               <text
                 x={x(i)}
                 y={H - 12}
@@ -288,45 +339,6 @@ export function TrendChart({
           </div>
         )}
       </div>
-
-      <details className="mt-4">
-        <summary
-          className={`${MICRO} text-cp-muted hover:text-cp-fg cursor-pointer`}
-        >
-          Voir les valeurs en tableau
-        </summary>
-        <table className="border-t-cp-border mt-3 w-full border-t text-left">
-          <caption className="sr-only">{legende}, mois par mois.</caption>
-          <thead>
-            <tr className={`border-cp-border border-b ${MICRO}`}>
-              <th scope="col" className="py-2 font-black">
-                Mois
-              </th>
-              <th scope="col" className="py-2 text-right font-black">
-                Paiements
-              </th>
-              <th scope="col" className="py-2 text-right font-black">
-                Montant
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {points.map((p) => (
-              <tr key={p.cle} className="border-cp-border border-b">
-                <td className="text-cp-fg py-2 text-[13px]">
-                  {moisLisible(p.cle)}
-                </td>
-                <td className="text-cp-fg py-2 text-right text-[13px] tabular-nums">
-                  {p.valeur}
-                </td>
-                <td className="text-cp-muted py-2 text-right text-[13px] tabular-nums">
-                  {euros(p.secondaire)} €
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
     </figure>
   );
 }
