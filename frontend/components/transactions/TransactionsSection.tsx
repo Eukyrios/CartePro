@@ -47,6 +47,7 @@ export type TransactionRow = {
   amountCents: number;
   label: string;
   partner?: string;
+  kind?: "credit" | "debit";
 };
 
 /**
@@ -180,11 +181,11 @@ export default function TransactionsSection({
   }, [entries, filters]);
 
   const total = useMemo(
-    () => matches.reduce((sum, entry) => sum + entry.amountCents, 0),
+    () => matches.reduce((sum, entry) => sum + (entry.kind === "debit" ? -entry.amountCents : entry.amountCents), 0),
     [matches],
   );
   const grandTotal = useMemo(
-    () => entries.reduce((sum, entry) => sum + entry.amountCents, 0),
+    () => entries.reduce((sum, entry) => sum + (entry.kind === "debit" ? -entry.amountCents : entry.amountCents), 0),
     [entries],
   );
 
@@ -415,8 +416,8 @@ export default function TransactionsSection({
                       </button>
                     </td>
                   )}
-                  <td className="text-cp-positive py-4 text-right text-[15px] font-black tabular-nums">
-                    +{formatEuros(entry.amountCents)}
+                  <td className={`${entry.kind === "debit" ? "text-cp-alert" : "text-cp-positive"} py-4 text-right text-[15px] font-black tabular-nums`}>
+                    {entry.kind === "debit" ? "-" : "+"}{formatEuros(entry.amountCents)}
                   </td>
                 </tr>
               ))}

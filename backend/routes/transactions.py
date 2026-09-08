@@ -180,7 +180,11 @@ def mes_transactions():
         {
             "id": str(t.id),
             "at": t.horodatage.isoformat(),
-            "kind": "credit" if est_partenaire else "debit",
+            "kind": (
+                ("debit" if t.sens_ecriture == "contre-ecriture" else "credit")
+                if est_partenaire
+                else ("credit" if t.sens_ecriture == "contre-ecriture" else "debit")
+            ),
             "amountCents": round(t.montant * 100),
             "label": (
                 _libelle_salarie(t.salarie)

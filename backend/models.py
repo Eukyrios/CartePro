@@ -92,8 +92,9 @@ class Salaries(db.Model):
     def solde(self):
         from sqlalchemy import func
         total_credits = db.session.query(func.sum(Abondement.montant)).filter_by(salarie_id=self.id).scalar() or 0
-        total_debits = db.session.query(func.sum(Transaction.montant)).filter_by(salarie_id=self.id, statut=TransactionStatut.validee).scalar() or 0
-        return total_credits - total_debits
+        total_debits = db.session.query(func.sum(Transaction.montant)).filter_by(salarie_id=self.id, statut=TransactionStatut.validee, sens_ecriture="debit").scalar() or 0
+        total_contres = db.session.query(func.sum(Transaction.montant)).filter_by(salarie_id=self.id, statut=TransactionStatut.validee, sens_ecriture="contre-ecriture").scalar() or 0
+        return total_credits - total_debits + total_contres
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -200,6 +201,7 @@ class Transaction(db.Model):
     idempotency_key = db.Column(db.String(512), unique=True, nullable=True)
     sens_ecriture = db.Column(db.String(20), nullable=False, default="debit")  # "debit" ou "contre-ecriture"
     transaction_originale_id = db.Column(db.Integer, db.ForeignKey("transactions.id"), nullable=True)  # pour correction
+    motif = db.Column(db.String(512), nullable=True)
 
     # Relations
     salarie = db.relationship("Salaries", foreign_keys=[salarie_id], back_populates="transactions")

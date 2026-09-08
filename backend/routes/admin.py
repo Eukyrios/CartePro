@@ -275,7 +275,7 @@ def lister_transactions():
         {
             "id": str(t.id),
             "at": t.horodatage.isoformat(),
-            "kind": "credit",
+            "kind": "debit" if t.sens_ecriture == "contre-ecriture" else "credit",
             "amountCents": round(t.montant * 100),
             "label": _libelle_salarie(t.salarie),
             "partnerLabel": (
@@ -317,27 +317,40 @@ def export_transactions_csv():
 @admin_bp.route('/transactions/<int:transaction_id>/annuler', methods=['POST'])
 @admin_required
 def annuler_transaction_forcee(transaction_id):
-    """Annuler une transaction validee. **Non implemente.**
+    """Annule une transaction en insérant une contre-écriture."""
+    tx = Transaction.query.get(transaction_id)
+    if not tx:
+        return jsonify({"error": "Transaction introuvable."}), 404
+        
+    if tx.statut != TransactionStatut.validee:
+        return jsonify({"error": "Seules les transactions validées peuvent être annulées."}), 400
+        
+    if tx.sens_ecriture == "contre-ecriture":
+        return jsonify({"error": "Cette transaction est déjà une annulation (contre-écriture)."}), 400
+        
+    correction_existante = Transaction.query.filter_by(transaction_originale_id=tx.id).first()
+    if correction_existante:
+        return jsonify({"error": "Cette transaction a déjà été annulée."}), 400
+        
+    data = request.get_json(silent=True) or {}
+    motif = (data.get("motif") or "").strip()
+    if not motif:
+        return jsonify({"error": "Le motif de l'annulation est obligatoire."}), 400
 
-    Cette route existait, sans aucun garde — ni jeton, ni role — et renvoyait
-    « success » sans rien faire. Deux defauts distincts : elle etait ouverte, et
-    elle mentait. Le garde est pose ; le mensonge est remplace par un 501, qui
-    est la reponse honnete pour une route dont le corps n'est pas ecrit.
-
-    Ce qu'il faudra faire, et pourquoi ce n'est pas trois lignes : une
-    transaction validee est immuable — `models.py` pose des ecouteurs qui
-    bloquent tout UPDATE et tout DELETE dessus. Annuler ne peut donc pas
-    modifier la ligne ; il faut en inserer une seconde, inverse, qui recredite
-    le salarie et reference l'originale. La branche `front-homepage-admin` le
-    faisait avec une colonne `reverses_transaction_id` que ce schema n'a pas
-    encore : c'est une migration, pas un correctif.
-    """
-    return jsonify({
-        "error": (
-            "L'annulation d'une transaction n'est pas encore implémentée. "
-            "Une transaction validée est immuable : la corriger demande une "
-            "écriture inverse, et la colonne qui la relie à l'originale reste "
-            "à ajouter au schéma."
-        ),
-        "transactionId": transaction_id,
-    }), 501
+    import uuid
+    nouvelle_tx = Transaction(
+        salarie_id=tx.salarie_id,
+        partenaire_id=tx.partenaire_id,
+        montant=tx.montant,
+        statut=TransactionStatut.validee,
+        reference_qr=f"cancel-{uuid.uuid4().hex[:8]}-{tx.reference_qr}",
+        idempotency_key=f"cancel-{tx.idempotency_key}" if tx.idempotency_key else None,
+        sens_ecriture="contre-ecriture",
+        transaction_originale_id=tx.id,
+        motif=motif
+    )
+    
+    db.session.add(nouvelle_tx)
+    db.session.commit()
+    
+    return jsonify({"message": "La transaction a été annulée avec succès et les fonds ont été restitués au salarié."}), 200
