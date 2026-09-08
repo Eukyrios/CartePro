@@ -9,7 +9,7 @@ def generate_ephemeral_qr(user_id: int):
     # Logique JWT avec expiration à 30 minutes[cite: 1]
     payload = {
         "user_id": user_id,
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=30)
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=5)
     }
     token = jwt.encode(payload, Config.SECRET_KEY, algorithm="HS256")
     # Génération de l'image (doit s'effectuer en moins de 2 secondes)[cite: 1]

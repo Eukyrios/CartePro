@@ -73,9 +73,17 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    app.config["SESSION_COOKIE_SECURE"] = False
+    app.config["SESSION_COOKIE_SECURE"] = True
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False
     JWTManager(app)
+    
+    # 🔒 Sécurisation avec HTTPS obligatoire
+    from flask_talisman import Talisman
+    is_testing = app.config.get("TESTING") or os.environ.get("TESTING") == "true" or os.environ.get("FLASK_ENV") == "testing"
+    is_pytest = "PYTEST_CURRENT_TEST" in os.environ
+    disable_force_https = os.environ.get("DISABLE_FORCE_HTTPS") == "true"
+    # Talisman force HTTPS en production, sauf si on l'explicite (ex: local make prod sans Nginx)
+    Talisman(app, content_security_policy=None, force_https=not (app.debug or is_testing or is_pytest or disable_force_https))
     
     # Force Flask à indenter le JSON pour tes tests dans le terminal
     app.json.compact = False
