@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
+from sqlalchemy import func
 
 from accounts import compte_depuis_identite
 from models import (
@@ -9,27 +10,14 @@ from models import (
     Decision,
     DecisionSens,
     Partenaire,
+    PartenaireLike,
     PartnerStatus,
     db,
 )
 
 partenaires_bp = Blueprint('partenaires', __name__)
 
-
-def _est_coup_de_coeur(partenaire):
-    """Le coup de coeur de l'administrateur est une entree active, pas un booleen.
-
-    Le schema en fait une table a part — avec le mot de l'administrateur et un
-    horodatage — parce que c'est une decision editoriale qui se date et se
-    retire. L'API, elle, expose toujours un booleen : le front n'a pas a
-    connaitre cette histoire pour poser un badge.
-    """
-    return any(
-        cdc.statut == CoupDeCoeurStatut.actif for cdc in partenaire.coups_de_coeur
-    )
-
-
-def _entree(partenaire):
+def _entree(partenaire, compte_id=None):
     return {
         # Le slug, pas la cle primaire : c'est lui qui tient dans une URL et
         # qui survit a un nouveau seed, et c'est par lui que la page de
@@ -43,100 +31,122 @@ def _entree(partenaire):
         "amountCents": round((partenaire.tarif or 0) * 100),
         "photo": partenaire.image_partenaire or "",
         # Le conventionnement « Partenaire Officiel de l'administration » : un statut
-        # administratif, distinct du coup de coeur, qui est un gout.
+        # administratif, distinct du coup de coeur communautaire.
         "officiel": partenaire.statut == PartnerStatus.valide,
-        # Le statut administratif en clair, et non plus seulement le booleen du
-        # conventionnement : « en attente » et « refuse » ne sont pas la meme
-        # chose, et un ecran qui les confond ne peut pas expliquer l'un.
-        # Le statut, oui ; le motif d'un refus, non. Cette route est publique,
-        # et la raison pour laquelle un etablissement a ete ecarte est un
-        # dossier administratif adresse a lui seul. Il la lit dans son espace,
-        # par `/api/auth/me`.
         "statut": partenaire.statut.value,
-        "featured": _est_coup_de_coeur(partenaire),
-        # Fiche redigee, ou fiche de remplissage : le lecteur a le droit de
-        # savoir ce qu'il regarde dans un demonstrateur.
+        # On détermine si c'est le coup de cœur de la communauté pour le badge featured
+        "featured": False, 
         "donneesReelles": partenaire.donnees_reelles,
-        # La presentation que le partenaire ecrit lui-meme, depuis ses
-        # parametres. Elle sort ici parce que sa fiche est publique : le profil
-        # complet, lui, demande le jeton de son proprietaire.
         "siteWeb": partenaire.site_web or "",
         "presentationTitre": partenaire.presentation_titre or "",
         "presentationTexte": partenaire.presentation_texte or "",
         "horaires": partenaire.horaires or {},
+        "likes": len(partenaire.likes),
+        "liked_by_user": any(l.salarie_id == compte_id for l in partenaire.likes) if compte_id else False,
     }
 
-
 @partenaires_bp.route('/catalogue', methods=['GET'])
+@jwt_required(optional=True)
 def catalogue():
-    return jsonify([_entree(p) for p in Partenaire.query.all()]), 200
+    current_identity = get_jwt_identity()
+    # Détermination du partenaire le plus liké pour l'attribut 'featured'
+    top_id_query = db.session.query(
+        PartenaireLike.partenaire_id
+    ).group_by(PartenaireLike.partenaire_id).order_by(db.text('count(id) DESC')).first()
+    
+    top_id = top_id_query[0] if top_id_query else None
 
+    catalogue_json = []
+    for p in Partenaire.query.all():
+        # The identity could be 'salarie:ID' or 'partenaire:ID', we only care about salarie ID for likes
+        compte_id = None
+        if current_identity and current_identity.startswith('salarie:'):
+            compte_id = int(current_identity.split(':')[1])
+        entree = _entree(p, compte_id)
+        if top_id and p.id == top_id:
+            entree["featured"] = True
+        catalogue_json.append(entree)
+
+    return jsonify(catalogue_json), 200
 
 @partenaires_bp.route('/categories', methods=['GET'])
 def categories():
-    """Les categories du reseau, telles que la base les porte.
-
-    Le front en avait une liste ecrite en dur, avec ses libelles. Deux listes
-    pour un meme referentiel : une categorie ajoutee en base n'apparaissait pas
-    dans le formulaire d'inscription, et un partenaire pouvait etre range dans
-    une categorie que l'interface ne savait pas nommer.
-
-    `id` est ce qu'un profil stocke, `label` ce qu'un ecran affiche. Ils sont
-    derives du meme nom, donc renommer une categorie ne casse pas les fiches
-    qui la citent : elles pointent sur l'identifiant.
-    """
     return jsonify([
         {"id": c.nom, "label": c.nom[:1].upper() + c.nom[1:]}
         for c in Categorie.query.order_by(Categorie.nom).all()
     ]), 200
 
-
 @partenaires_bp.route('/coup-de-coeur', methods=['GET'])
-def get_coup_de_coeur():
-    """Le coup de coeur actif le plus recent, avec le mot de l'administrateur."""
-    choix = (
-        CoupDeCoeur.query.filter_by(statut=CoupDeCoeurStatut.actif)
-        .order_by(CoupDeCoeur.horodatage.desc())
-        .first()
-    )
-    retour = None
-    if choix and choix.partenaire:
-        # L'entree complete, plus les mots : la section d'accueil affiche une
-        # tuile de partenaire — photographie, adresse, categorie — et la phrase
-        # de l'administrateur. Deux requetes pour une seule section n'apprendraient
-        # rien de plus.
-        retour = {**_entree(choix.partenaire), "mot": choix.mot_administrateur}
+def get_top_partenaire():
+    """Récupère le partenaire le plus liké par les salariés de la communauté."""
+    # 1. On compte les likes en groupant par partenaire
+    top_id_query = db.session.query(
+        PartenaireLike.partenaire_id,
+        func.count(PartenaireLike.id).label('total_likes')
+    ).group_by(PartenaireLike.partenaire_id).order_by(db.text('total_likes DESC')).first()
+
+    # 2. Si personne n'a encore voté, on prend un partenaire valide au hasard par défaut
+    if not top_id_query:
+        partenaire = Partenaire.query.filter_by(statut=PartnerStatus.valide).first()
+        total_likes = 0
+    else:
+        partenaire = db.session.get(Partenaire, top_id_query.partenaire_id)
+        total_likes = top_id_query.total_likes
+
+    if not partenaire:
+        return jsonify({"status": "success", "coup_de_coeur": None}), 200
+
+    # Le frontend (useAdminPick.ts) s'attend à une structure d'ApiPartner fusionnée avec 'mot'
+    retour = {
+        **_entree(partenaire, None),
+        "mot": partenaire.presentation_titre or "Le préféré de notre communauté !",
+        "likes": total_likes
+    }
     return jsonify({"status": "success", "coup_de_coeur": retour}), 200
+
+@partenaires_bp.route('/<slug>/like', methods=['POST'])
+@jwt_required()
+def toggle_like_partenaire(slug):
+    """Permet à un salarié d'aimer (ou de retirer son like) sur un partenaire."""
+    compte = compte_depuis_identite(get_jwt_identity())
+    
+    # Seuls les salariés peuvent voter (ils ont l'attribut employeur_id)
+    if not hasattr(compte, 'employeur_id'):
+        return jsonify({"error": "Seuls les salariés peuvent voter."}), 403
+
+    partenaire = Partenaire.query.filter_by(slug=slug).first()
+    if not partenaire:
+        return jsonify({"error": "Partenaire introuvable"}), 404
+
+    # On vérifie si le like existe déjà pour faire un "toggle"
+    existing_like = PartenaireLike.query.filter_by(salarie_id=compte.id, partenaire_id=partenaire.id).first()
+    
+    if existing_like:
+        db.session.delete(existing_like)
+        action = "unliked"
+    else:
+        new_like = PartenaireLike(salarie_id=compte.id, partenaire_id=partenaire.id)
+        db.session.add(new_like)
+        action = "liked"
+
+    db.session.commit()
+    return jsonify({"status": "success", "action": action}), 200
 
 
 @partenaires_bp.route('/reexamen', methods=['POST'])
 @jwt_required()
 def demander_reexamen():
-    """Le partenaire ecarte redepose son dossier.
-
-    Son etablissement repasse « en attente », et la demande s'ecrit dans la
-    table des decisions : un dossier qui rouvre laisse une trace, comme celui
-    qui se ferme. Rien n'est efface — le refus precedent reste, avec son motif
-    et sa date, parce que c'est l'historique de l'instruction.
-
-    Reserve au titulaire du compte, et au seul cas ou il y a quelque chose a
-    reexaminer : un partenaire deja conventionne ou deja en attente n'a rien a
-    redeposer.
-    """
     compte = compte_depuis_identite(get_jwt_identity())
     if not isinstance(compte, Partenaire):
         return jsonify({"error": "Reserve aux comptes partenaires."}), 403
     if compte.statut != PartnerStatus.refuse:
         return jsonify({
-            "error": "Votre dossier n'est pas en etat de refus : il n'y a rien "
-                     "a reexaminer."
+            "error": "Votre dossier n'est pas en etat de refus : il n'y a rien a reexaminer."
         }), 409
 
     compte.statut = PartnerStatus.en_attente
     db.session.add(Decision(
         partenaire_id=compte.id,
-        # L'agent n'est pas connu : c'est le partenaire qui demande, pas
-        # l'administration qui tranche. Zero marque « a instruire ».
         agent_id=0,
         sens=DecisionSens.reexamen,
         motif_ecrit="Reexamen demande par l'etablissement.",
@@ -144,17 +154,14 @@ def demander_reexamen():
     ))
     db.session.commit()
     return jsonify({
-        "message": "Votre demande de reexamen est enregistree. Votre dossier "
-                   "repasse en attente d'instruction.",
+        "message": "Votre demande de reexamen est enregistree. Votre dossier repasse en attente d'instruction.",
         "statut": compte.statut.value,
     }), 200
-
 
 @partenaires_bp.route('/admin/supprimer/<int:partenaire_id>', methods=['DELETE'])
 @jwt_required()
 def supprimer_partenaire(partenaire_id):
     claims = get_jwt()
-
     if claims.get("role") != "admin":
         return jsonify({"error": "Acces refuse. Reserve aux administrateurs."}), 403
 
@@ -162,10 +169,6 @@ def supprimer_partenaire(partenaire_id):
     if not partenaire:
         return jsonify({"error": "Partenaire introuvable dans la base de donnees."}), 404
 
-    # Un partenaire qui a encaisse porte une comptabilite immuable : la
-    # supprimer essaierait d'effacer ses transactions, ce que le modele
-    # interdit. On le suspend plutot que de le detruire — et c'est aussi ce
-    # qu'une administration fait d'un partenaire ecarte.
     if partenaire.transactions:
         partenaire.statut = PartnerStatus.suspendu
         db.session.commit()

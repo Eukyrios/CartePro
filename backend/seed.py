@@ -41,6 +41,7 @@ from models import (
     Employeur,
     MotifCarte,
     Partenaire,
+    PartenaireLike,
     PartnerStatus,
     Salaries,
     Transaction,
@@ -614,17 +615,6 @@ def run_seed():
         # # 4. Le coup de coeur de l'administrateur : une entree datee, avec ses mots.
         # # C'est une table a part et non un booleen, parce qu'une decision
         # # editoriale se date et se retire.
-        # for entry, partenaire in zip(NETWORK, partenaires):
-        #     if entry["featured"]:
-        #         db.session.add(CoupDeCoeur(
-        #             partenaire_id=partenaire.id,
-        #             mot_administrateur=MOTS_ADMINISTRATEUR.get(
-        #                 entry["slug"], f"Un choix de l'administrateur : {entry['nom']}."
-        #             ),
-        #             statut=CoupDeCoeurStatut.actif,
-        #             horodatage=REFERENCE_DATE,
-        #         ))
-
         # 4. Les cinquante salaries du panel, et leur dotation.
         # Salaries 0 a 2 : cibles a solde nul. Salaries 3 et 4 : sous 5 euros.
         dotations_ciblees = [50.0, 12.5, 100.0, 50.0, 20.0]
