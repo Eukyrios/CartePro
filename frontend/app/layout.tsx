@@ -53,7 +53,19 @@ export default function RootLayout({
         {/* Les deux familles sont déclarées dans globals.css et servies
             depuis public/fonts : Archivo et Spectral, toutes deux sous licence
             ouverte. */}
-        <ThemeModeScript />
+        {/* Le thème par défaut est le clair, et non celui du système.
+
+            `defaultMode` vaut « auto » chez Flowbite : sans réglage enregistré,
+            l'interface suivait `prefers-color-scheme`, si bien qu'un visiteur
+            dont le système est en sombre découvrait le démonstrateur en sombre.
+            Or c'est le thème clair qui fait foi — c'est celui du brand book,
+            celui des captures, et celui sur lequel les contrastes sont mesurés.
+
+            Ce n'est qu'un **défaut** : le choix du visiteur, lui, est gardé en
+            `localStorage` et gagne sur cette valeur. Basculer en sombre reste
+            un clic sur la bascule de la barre haute, et le réglage survit au
+            rechargement. */}
+        <ThemeModeScript defaultMode="light" />
       </head>
       {/* The column layout keeps the bottom bar at the foot of short pages,
           and the background is painted here rather than per page: left to the
