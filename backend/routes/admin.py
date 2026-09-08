@@ -358,12 +358,24 @@ def export_transactions_csv():
     )
 
 
-# --- Contre-passation : pas encore ecrite, et qui le dit --------------------
+# --- Contre-passation ------------------------------------------------------
 
 @admin_bp.route('/transactions/<int:transaction_id>/annuler', methods=['POST'])
 @admin_required
 def annuler_transaction_forcee(transaction_id):
-    """Annule une transaction en insérant une contre-écriture."""
+    """Annule un paiement valide en inserant une contre-ecriture.
+
+    Une transaction validee est immuable — `models.py` pose des ecouteurs qui
+    bloquent tout UPDATE et tout DELETE dessus — donc annuler ne peut pas
+    modifier la ligne. Cela en insere une seconde, inverse, qui reference
+    l'originale (`transaction_originale_id`) et porte son motif. Les deux
+    restent lisibles dans les deux historiques, et le solde du salarie, qui est
+    derive, remonte de lui-meme.
+
+    Le motif est obligatoire, comme pour toute mesure : « annule » sans raison
+    n'explique rien a qui relira l'historique. Et une transaction deja corrigee
+    ne se corrige pas deux fois.
+    """
     tx = Transaction.query.get(transaction_id)
     if not tx:
         return jsonify({"error": "Transaction introuvable."}), 404
@@ -397,6 +409,33 @@ def annuler_transaction_forcee(transaction_id):
     )
     
     db.session.add(nouvelle_tx)
+    db.session.flush()  # assigne l'id de la contre-ecriture avant l'ecriture d'audit
+
+    # La cible est la transaction *d'origine*, pas la contre-ecriture : la
+    # question qu'un controleur pose est « qu'est-il arrive au paiement n 412 »,
+    # et la contre-ecriture est la reponse, pas la question. Le lien inverse est
+    # dans le payload.
+    #
+    # Ni `reference_qr` ni `idempotency_key` n'y figurent : c'est le jeton signe
+    # que le salarie a presente, il porte son identifiant, et un export d'audit
+    # part chez un tiers. `salarie_id` et `partenaire_id` suffisent a designer
+    # les parties, et ils pointent vers des tables effacables — la seule facon
+    # de tenir un journal impurgeable a cote d'un droit a l'effacement.
+    record_event(
+        action="transaction_annulee",
+        actor_role="admin",
+        actor_id=get_jwt_identity(),
+        target_type="transaction",
+        target_id=tx.id,
+        payload={
+            "contre_ecriture_id": nouvelle_tx.id,
+            "montant_cents": round(tx.montant * 100),
+            "motif": motif,
+            "salarie_id": tx.salarie_id,
+            "partenaire_id": tx.partenaire_id,
+        },
+        ip=request.remote_addr,
+    )
     db.session.commit()
-    
+
     return jsonify({"message": "La transaction a été annulée avec succès et les fonds ont été restitués au salarié."}), 200

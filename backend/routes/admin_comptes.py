@@ -297,7 +297,16 @@ def _mesurer_par_id(salarie_id, geste, motif):
         }), 409
 
     try:
-        avant, nouveau = mesurer(salarie, geste, motif, agent_id=_agent_courant())
+        avant, nouveau = mesurer(
+            salarie,
+            geste,
+            motif,
+            agent_id=_agent_courant(),
+            # D'où l'appel est entré dans le dispositif. `mesurer` écrit la
+            # ligne du journal et ne connaît pas Flask : c'est donc la route qui
+            # la lui donne.
+            ip=request.remote_addr,
+        )
     except MotifManquant as manque:
         # 422 comme pour une décision d'instruction : la requête est bien
         # formée, c'est son contenu qui ne permet pas de décider.

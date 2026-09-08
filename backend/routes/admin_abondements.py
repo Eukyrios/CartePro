@@ -33,6 +33,7 @@ from accounts import nom_affiche
 from decorators import admin_required
 from flask_jwt_extended import get_jwt_identity
 from models import Abondement, CompteStatut, Salaries, db
+from services.audit_service import record_event
 
 admin_abondements_bp = Blueprint('admin_abondements', __name__)
 
@@ -155,6 +156,10 @@ def crediter():
         .all()
     )
     if deja:
+        # Aucune ligne d'audit ici, et c'est la règle : un rejeu n'est pas un
+        # acte. Le journal est la source où l'on compte les euros créés — une
+        # ligne de plus ferait dire que l'argent a été versé deux fois, ce qui
+        # est exactement l'affirmation que cette branche existe pour empêcher.
         return jsonify({
             "message": (
                 f"Saisie déjà enregistrée : {len(deja)} compte(s) crédité(s)."
@@ -219,6 +224,40 @@ def crediter():
         )
         db.session.add(abondement)
         ecrits.append(abondement)
+
+    db.session.flush()  # assigne les id avant les ecritures d'audit
+
+    # Une ligne de journal par compte crédité, et non une pour le lot :
+    # l'unité de l'acte est la ligne d'argent. `abondements.reference` est
+    # unique par ligne, donc une ligne unique pour le lot ne pourrait viser
+    # aucun `abondement.id` ; et le comptage devient une vérification — autant
+    # de lignes `abondement_credite` de préfixe `<clé>` que d'`Abondement`
+    # portant ce préfixe. Un bénéficiaire glissé dans un lot après coup se voit.
+    #
+    # `occurred_at` est l'instant du lot, déjà calculé : sans lui, les lignes
+    # s'étalent sur quelques microsecondes et un filtre `depuis`/`jusque` serré
+    # couperait un versement groupé en deux.
+    #
+    # Ni le nom du salarié, ni son adresse, ni la raison sociale de l'employeur :
+    # les identifiants désignent les parties et pointent vers des tables
+    # effaçables, ce que la ligne d'audit, elle, n'est pas.
+    for abondement in ecrits:
+        record_event(
+            action="abondement_credite",
+            actor_role="admin",
+            actor_id=get_jwt_identity(),
+            target_type="abondement",
+            target_id=abondement.id,
+            payload={
+                "salarie_id": abondement.salarie_id,
+                "employeur_id": abondement.employeur_id,
+                "montant_cents": montant_cents,
+                "reference": abondement.reference,
+                "lot_taille": len(ecrits),
+            },
+            ip=request.remote_addr,
+            occurred_at=horodatage,
+        )
 
     db.session.commit()
 
