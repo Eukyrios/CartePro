@@ -14,6 +14,17 @@ class PartnerStatus(enum.Enum):
     valide = "validé"
     refuse = "refusé"
     suspendu = "suspendu"
+    # La cloture, pendant de `CompteStatut.cloture` du cote des salaries : la
+    # fin definitive d'un compte, par opposition au refus, qui est une decision
+    # sur un dossier et se reexamine. Un etablissement qui ferme boutique n'est
+    # pas un etablissement ecarte, et l'ecrire « refuse » raconterait de lui
+    # quelque chose de faux.
+    #
+    # Rien n'est efface pour autant : ses encaissements passes restent, comme
+    # restent les paiements d'un salarie clos. Le nom stocke — « cloture », 7
+    # caracteres — tient dans le VARCHAR(10) de la colonne, donc l'ajout ne
+    # demande aucune migration.
+    cloture = "clôturé"
 
 class DecisionSens(enum.Enum):
     accepte = "accepté"
@@ -25,6 +36,9 @@ class DecisionSens(enum.Enum):
     # laisser une trace comme celui qui se ferme. La noter « suspendu », faute
     # de mieux, rendait l'historique illisible : « refuse → suspendu → refuse ».
     reexamen = "réexamen demandé"
+    # Le sens de la cloture d'un etablissement. « cloture » fait 7 caracteres,
+    # la colonne en accepte 8 : pas de migration non plus.
+    cloture = "clôturé"
 
 class CompteStatut(enum.Enum):
     """L'état d'un compte salarié, décidé par l'administration.

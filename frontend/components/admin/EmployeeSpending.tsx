@@ -6,11 +6,12 @@ import { useAccount } from "@/components/account/AccountProvider";
 import HistorySection from "@/components/espace/HistorySection";
 import type { Movement } from "@/components/espace/movements";
 import { getCompte, getMouvementsCompte, type Compte } from "./api";
-import CompteMesures from "./CompteMesures";
+import CompteSection from "./CompteSection";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import EmptyState from "@/components/ui/EmptyState";
 import Note from "@/components/ui/Note";
 import PageMain from "@/components/ui/PageMain";
+import SectionNav, { type RailSection } from "@/components/layout/SectionNav";
 
 /**
  * Les dépenses d'un salarié, vues par l'administration.
@@ -26,14 +27,27 @@ import PageMain from "@/components/ui/PageMain";
  * eux la colonne « solde après » ne voudrait rien dire, et la question « d'où
  * vient cet argent » resterait sans réponse au-dessus d'une liste de débits.
  *
- * À côté du titre, l'état du compte et les mesures qu'on peut prendre — voir
- * `CompteMesures`. Un agent qui vient lire un historique est souvent celui qui
- * doit décider quelque chose : la décision se prend donc là où sont les
- * chiffres, et non sur un écran de gestion séparé.
+ * En tête de page, la gestion du compte — voir `CompteSection` : son état, ce
+ * qu'il porte, les mesures qu'on peut prendre et l'écrit de celles déjà
+ * prises. Un agent qui vient lire un historique est souvent celui qui doit
+ * décider quelque chose, et la décision se prend au vu des chiffres, qui sont
+ * juste en dessous — plutôt que sur un écran de gestion séparé.
  *
  * Le garde ci-dessous n'est qu'un confort d'affichage : la vraie protection est
  * côté serveur, où chaque route porte `@admin_required`.
  */
+/**
+ * Les deux écrans de la page, pour le rail latéral.
+ *
+ * Le premier ne porte pas de numéro : l'en-tête lui appartient, et le rail y
+ * ramène en haut du document plutôt que sur une ancre — même convention que
+ * l'accueil et que l'espace d'administration.
+ */
+const SECTIONS: readonly RailSection[] = [
+  { id: "compte", index: "", label: "Le compte" },
+  { id: "historique", index: "01", label: "Les dépenses" },
+];
+
 export default function EmployeeSpending({ id }: { id: number }) {
   const { profile, ready } = useAccount();
   const [compte, setCompte] = useState<Compte | null>(null);
@@ -95,29 +109,41 @@ export default function EmployeeSpending({ id }: { id: number }) {
   const nom = compte ? compte.nom : "ce compte";
 
   return (
-    <PageMain>
-      <HistorySection
-        rows={rows}
-        state={state}
-        /* L'état du compte et ses mesures, à côté du titre qui le nomme : un
-           agent qui vient lire un historique est souvent celui qui doit
-           décider quelque chose, et la décision se prend là où sont les
-           chiffres. */
-        aside={
-          <CompteMesures
-            compte={compte}
-            state={etatCompte}
-            onMesure={charger}
-          />
-        }
-        /* Le même en-tête que les recettes d'un partenaire : les deux écrans
-           s'ouvrent depuis une liste, et on en repart par le même geste — une
-           entrée du fil d'Ariane, qui nomme sa destination. */
+    <PageMain snap>
+      {/* La gestion du compte ouvre la page, l'historique la suit : on vient
+          souvent ici pour décider — suspendre, clôturer, lire le motif de la
+          mesure en cours — et la décision se prend au vu de ce que le compte a
+          dépensé, qui est juste en dessous. */}
+      <CompteSection
+        compte={compte}
+        state={etatCompte}
+        titre="Le compte de"
         eyebrow={
           <Breadcrumb
             trail={[
               { label: "Administration", href: "/espace" },
               { label: "Les comptes", href: "/espace#comptes" },
+              { label: "Le compte" },
+            ]}
+          />
+        }
+        onMesure={charger}
+      />
+
+      <HistorySection
+        rows={rows}
+        state={state}
+        /* Plus de fil d'Ariane ici : la section du compte ouvre la page et le
+           porte. Deux fils sur un même document désigneraient deux origines. */
+        eyebrow={
+          <Breadcrumb
+            /* Le même fil que celui de la page, dans les mêmes couleurs, mais
+               en surtitre : il situe le bloc sans être une seconde navigation.
+               Voir `as` dans `ui/Breadcrumb`. */
+            as="p"
+            trail={[
+              { label: "Administration" },
+              { label: "Les comptes" },
               { label: "Historique des dépenses" },
             ]}
           />
@@ -128,6 +154,10 @@ export default function EmployeeSpending({ id }: { id: number }) {
         errorMessage="Les opérations n’ont pas pu être chargées. Rechargez la page ; si cela persiste, le serveur ne répond pas."
         emptyMessage="Aucune opération sur ce compte. Son premier crédit et ses paiements apparaîtront ici."
       />
+
+      {/* Le rail, comme sur l'accueil et dans les espaces : deux traits
+          qui disent où l'on est et mènent à l'autre écran. */}
+      <SectionNav sections={SECTIONS} />
     </PageMain>
   );
 }

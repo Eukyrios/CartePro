@@ -139,6 +139,7 @@ ROUTES = [
     ("POST", "/api/admin/partenaires/un-slug/approuver"),
     ("POST", "/api/admin/partenaires/un-slug/refuser"),
     ("POST", "/api/admin/partenaires/un-slug/suspendre"),
+    ("POST", "/api/admin/partenaires/un-slug/cloturer"),
     ("POST", "/api/admin/transactions/1/annuler"),
     # Les trois domaines ajoutes a l'espace : comptes, tableau de bord,
     # abondements. Ils portent le meme decorateur et doivent donc echouer de la
@@ -355,6 +356,53 @@ def test_instruire_deux_fois_dans_le_meme_sens_est_un_conflit(app):
     assert reponse.status_code == 409
     with app.app_context():
         assert Decision.query.count() == 0
+
+
+def test_cloturer_un_etablissement_est_definitif(app):
+    """La cloture d'un partenaire n'est ni un refus, ni une suspension.
+
+    Un refus se reexamine et une suspension se leve ; une cloture ne se defait
+    pas. Elle s'ecrit dans les decisions comme les autres, avec son motif, et
+    le titulaire ne se connecte plus.
+    """
+    client = app.test_client()
+    with app.app_context():
+        _admin()
+        _partenaire("qui-ferme", statut=PartnerStatus.valide)
+    entetes = _entetes(_jeton(client, "agent@administration.example"))
+
+    # Sans motif, rien : une decision se motive.
+    assert client.post(
+        "/api/admin/partenaires/qui-ferme/cloturer", headers=entetes, json={}
+    ).status_code == 422
+
+    reponse = client.post(
+        "/api/admin/partenaires/qui-ferme/cloturer",
+        headers=entetes,
+        json={"motif": "Cessation d'activite constatee au registre."},
+    )
+    assert reponse.status_code == 200
+    assert reponse.get_json()["dossier"]["statut"] == "clôturé"
+
+    with app.app_context():
+        partenaire = Partenaire.query.filter_by(slug="qui-ferme").first()
+        assert partenaire.statut == PartnerStatus.cloture
+        decisions = Decision.query.filter_by(partenaire_id=partenaire.id).all()
+        assert len(decisions) == 1
+        assert decisions[0].sens == DecisionSens.cloture
+        # La porte est fermee, comme pour un suspendu.
+        from accounts import actif
+
+        assert actif(partenaire) is False
+
+    # Et elle ne se leve pas.
+    for geste in ("approuver", "suspendre"):
+        rouvrir = client.post(
+            f"/api/admin/partenaires/qui-ferme/{geste}",
+            headers=entetes,
+            json={"motif": "oups"},
+        )
+        assert rouvrir.status_code == 409, geste
 
 
 def test_dossier_introuvable(app):

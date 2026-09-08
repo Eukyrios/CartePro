@@ -171,6 +171,19 @@ def _instruire_par_slug(slug, geste, motif):
             "error": f"Ce dossier est déjà « {apres.value} »."
         }), 409
 
+    # Un etablissement clos ne se rouvre pas d'un clic. La cloture est
+    # presentee comme definitive a l'ecran ; l'accepter puis la defaire par la
+    # route d'approbation rendrait cette phrase fausse. Il reste l'inscription
+    # d'un nouvel etablissement, qui est ce qui se passe reellement quand un
+    # commerce rouvre sous une autre enseigne.
+    if partenaire.statut == PartnerStatus.cloture:
+        return jsonify({
+            "error": (
+                "Cet établissement est clôturé. Une clôture est définitive : "
+                "elle ne se lève pas, un nouveau dossier se dépose."
+            )
+        }), 409
+
     try:
         avant, nouveau = instruire(partenaire, geste, motif, agent_id=_agent_courant())
     except MotifManquant as manque:
@@ -210,6 +223,24 @@ def refuser(slug):
     """
     data = request.get_json(silent=True) or {}
     return _instruire_par_slug(slug, "refuser", data.get("motif"))
+
+
+@admin_bp.route('/partenaires/<slug>/cloturer', methods=['POST'])
+@admin_required
+def cloturer(slug):
+    """Clore le compte d'un etablissement. Definitif, et distinct du refus.
+
+    Le refus est une decision sur un dossier : il se motive, se lit par le
+    titulaire, et se reexamine. La cloture est la fin du compte — l'etablissement
+    a ferme, changé de main, quitté le dispositif — et elle ne se reexamine pas.
+    Les confondre ferait porter à un commerce qui ferme la mention d'un dossier
+    écarté.
+
+    Rien n'est efface : les encaissements passes restent, et l'historique des
+    decisions garde la ligne, avec son motif.
+    """
+    data = request.get_json(silent=True) or {}
+    return _instruire_par_slug(slug, "cloturer", data.get("motif"))
 
 
 @admin_bp.route('/partenaires/<slug>/suspendre', methods=['POST'])

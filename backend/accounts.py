@@ -334,7 +334,9 @@ def actif(compte):
     et le geste dans `mesures.py`.
     """
     if isinstance(compte, Partenaire):
-        return compte.statut != PartnerStatus.suspendu
+        # Suspendu ou clôturé : dans les deux cas la porte est fermée. Le
+        # refusé, lui, entre — c'est chez lui qu'il lit sa décision.
+        return compte.statut not in (PartnerStatus.suspendu, PartnerStatus.cloture)
     if isinstance(compte, Salaries):
         return compte.statut == CompteStatut.actif
     return True

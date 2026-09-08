@@ -58,7 +58,7 @@ const SOLDES = [
  *
  * Ni les mesures ni le motif de la dernière ne sont ici. Une tuile est une
  * porte : elle nomme un compte, son état et son solde, et suspendre se décide
- * derrière, à côté des chiffres — voir `CompteMesures` sur `/depenses/<id>`.
+ * derrière, au-dessus des chiffres — voir `CompteSection` sur `/depenses/<id>`.
  */
 export default function AccountsCatalogue({
   id = "comptes-salaries",

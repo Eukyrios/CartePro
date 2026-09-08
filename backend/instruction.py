@@ -30,6 +30,11 @@ GESTES = {
     "accepter": (DecisionSens.accepte, PartnerStatus.valide),
     "refuser": (DecisionSens.refuse, PartnerStatus.refuse),
     "suspendre": (DecisionSens.suspendu, PartnerStatus.suspendu),
+    # Clore un etablissement, et non l'ecarter : le refus est une decision sur
+    # un dossier, qui se reexamine ; la cloture est la fin du compte, et elle
+    # ne se leve pas. La route qui l'applique refuse de la defaire, comme du
+    # cote des salaries.
+    "cloturer": (DecisionSens.cloture, PartnerStatus.cloture),
 }
 
 #: L'agent par defaut : le compte admin du seed.

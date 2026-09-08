@@ -131,6 +131,7 @@ jeton c'est 401, avec un jeton de salarié ou de partenaire c'est 403.
 | `POST /api/admin/partenaires/<slug>/approuver` | `{ motif }` — conventionne                                     |
 | `POST /api/admin/partenaires/<slug>/refuser`   | `{ motif }` — écarte, et c'est ce motif que le titulaire lira  |
 | `POST /api/admin/partenaires/<slug>/suspendre` | `{ motif }` — suspend, et le compte ne peut plus se connecter  |
+| `POST /api/admin/partenaires/<slug>/cloturer`  | `{ motif }` — **définitif** : l'établissement quitte le dispositif |
 | `PUT /api/theme`                               | L'identité visuelle, enregistrée — écran Style de /parametres  |
 | `GET /api/admin/transactions`                  | Tous les paiements validés, en JSON — l'écran « Les comptes »  |
 | `GET /api/admin/transactions.csv`              | Les mêmes, en CSV, pour l'emporter                             |
@@ -157,9 +158,11 @@ Trois règles y sont tenues par le serveur, pas par l'écran :
   dossier. L'état change **et** la ligne s'écrit dans `mesures_compte`, jamais
   l'un sans l'autre, et rien ne s'efface : un compte suspendu puis réactivé
   puis clôturé garde ses trois lignes ;
-- **une clôture ne se lève pas.** La route d'activation répond 409. Clôturer ne
-  supprime rien non plus — les transactions d'un salarié sont immuables, et son
-  solde reste calculable après coup ;
+- **une clôture ne se lève pas**, des deux côtés du comptoir. La route qui
+  rouvrirait répond 409. Clôturer ne supprime rien non plus — les transactions
+  sont immuables, un solde reste calculable et les encaissements d'un
+  établissement restent lisibles après coup. Ce n'est pas un refus : un dossier
+  écarté se réexamine, un compte clôturé se redépose ;
 - **la carte est exacte au département, jamais à l'adresse.** L'écran dessine
   une carte de France en aplats, agrégés depuis le code postal. C'est ce que la
   donnée permet : le réseau porte une adresse, pas des coordonnées, donc une

@@ -127,7 +127,7 @@ type Instruction = { message: string; dossier: Dossier };
  */
 export async function instruire(
   slug: string,
-  geste: "approuver" | "refuser" | "suspendre",
+  geste: "approuver" | "refuser" | "suspendre" | "cloturer",
   motif: string,
 ): Promise<string> {
   const data = await api<Instruction>(
@@ -340,7 +340,8 @@ export type GesteCompte = "activer" | "suspendre" | "cloturer";
  *
  * Pour un partenaire, « rétablir » veut dire conventionner : c'est le geste
  * qui le remet dans le réseau, et il s'écrit dans la table des décisions comme
- * n'importe quelle acceptation.
+ * n'importe quelle acceptation. « Clôturer » a sa propre route des deux côtés :
+ * ce n'est ni un refus, qui se réexamine, ni une suspension, qui se lève.
  */
 export async function mesurer(
   compte: Compte,
@@ -349,8 +350,13 @@ export async function mesurer(
 ): Promise<string> {
   if (compte.genre === "partenaire") {
     if (!compte.slug) throw new Error("Ce dossier n'a pas de slug.");
-    const route = geste === "suspendre" ? "suspendre" : "approuver";
-    return instruire(compte.slug, route as "approuver" | "suspendre", motif);
+    const route =
+      geste === "suspendre"
+        ? "suspendre"
+        : geste === "cloturer"
+          ? "cloturer"
+          : "approuver";
+    return instruire(compte.slug, route, motif);
   }
   const data = await mesurerCompte(
     compte.id,

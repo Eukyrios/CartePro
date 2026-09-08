@@ -59,20 +59,24 @@ export const GESTES: Record<
 /**
  * Les gestes qu'un compte accepte, selon son genre et son état.
  *
- * Un partenaire n'offre ici que la suspension et son inverse. Accepter ou
- * refuser un dossier ne s'y fait **pas** : cela se décide sur l'écran du
- * dossier, où les pièces se lisent avant qu'on tranche. Offrir le même geste
- * aux deux endroits ferait deux chemins vers la même décision, et l'un des
- * deux se prendrait sans avoir rien lu.
+ * **Accepter ou refuser un dossier ne s'y fait pas** : cela se décide sur
+ * l'écran du dossier, où les pièces se lisent avant qu'on tranche. Offrir le
+ * même geste aux deux endroits ferait deux chemins vers la même décision, et
+ * l'un des deux se prendrait sans avoir rien lu.
  *
- * D'où l'absence de « clôturer » côté partenaire : un établissement n'a pas de
- * solde à solder, et sa mise à l'écart est un refus motivé, pas une clôture.
+ * La clôture, elle, vaut des deux côtés — et elle n'est pas un refus. Le refus
+ * est une décision sur un dossier : il se motive, son titulaire le lit, et il
+ * se réexamine. La clôture est la fin du compte — l'établissement a fermé,
+ * changé de main, quitté le dispositif — et elle ne se réexamine pas. Les
+ * confondre ferait porter à un commerce qui ferme la mention d'un dossier
+ * écarté.
  */
 export function gestesPour(compte: Compte): (GesteCompte | "retablir")[] {
   if (compte.genre === "partenaire") {
-    if (compte.statut === "suspendu") return ["retablir"];
-    if (compte.statut === "validé") return ["suspendre"];
-    return []; // en attente ou refusé : cela se décide sur le dossier.
+    if (compte.statut === "validé") return ["suspendre", "cloturer"];
+    if (compte.statut === "suspendu") return ["retablir", "cloturer"];
+    // Clôturé : plus rien. En attente ou refusé : cela se décide sur le dossier.
+    return [];
   }
   if (compte.statut === "actif") return ["suspendre", "cloturer"];
   if (compte.statut === "suspendu") return ["activer", "cloturer"];
@@ -98,4 +102,39 @@ export const LIBELLE_STATUT: Record<string, string> = {
 /** Ce que le chiffre d'un compte veut dire : un salarié détient, un partenaire a reçu. */
 export function sensDuChiffre(compte: Compte): string {
   return compte.genre === "partenaire" ? "encaissé" : "de solde";
+}
+
+/** Le même fait, en libellé de colonne : « Solde », « Total encaissé ». */
+export function libelleDuChiffre(compte: Compte): string {
+  return compte.genre === "partenaire" ? "Total encaissé" : "Solde";
+}
+
+/**
+ * Ce qu'un geste emporte, dit pour le genre de compte auquel il s'applique.
+ *
+ * `GESTES[…].portee` est écrit du point de vue d'un salarié, parce que c'est de
+ * là que ces gestes viennent. Suspendre un établissement n'emporte pas la même
+ * chose : il n'a pas de solde qui lui reste, il a un encaissement qui s'arrête.
+ * Servir la phrase du salarié à un partenaire lui promettrait un solde qu'il
+ * n'a pas.
+ */
+export function porteeDe(
+  compte: Compte,
+  geste: GesteCompte | "retablir",
+): string {
+  if (compte.genre === "partenaire" && geste === "suspendre") {
+    return (
+      "L’établissement sort du réseau : il ne peut plus encaisser, et son " +
+      "compte ne se connecte plus. Ses recettes passées restent lisibles, et " +
+      "la mesure se lève."
+    );
+  }
+  if (compte.genre === "partenaire" && geste === "cloturer") {
+    return (
+      "Définitif, et ce n’est pas un refus : le dossier écarté se réexamine, " +
+      "un établissement clôturé ne rouvre pas — il redépose. Rien n’est " +
+      "supprimé : ses encaissements restent, et la décision garde son motif."
+    );
+  }
+  return GESTES[geste].portee;
 }

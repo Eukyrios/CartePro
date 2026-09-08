@@ -8,7 +8,7 @@ import TransactionsSection, {
   type TransactionRow,
 } from "@/components/transactions/TransactionsSection";
 import { annulerPaiement, getComptePartenaire, type Compte } from "./api";
-import CompteMesures from "./CompteMesures";
+import CompteSection from "./CompteSection";
 import { formatEuros } from "@/components/data/ledger";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import Button from "@/components/ui/Button";
@@ -18,6 +18,7 @@ import TextArea from "@/components/ui/TextArea";
 import EmptyState from "@/components/ui/EmptyState";
 import Note from "@/components/ui/Note";
 import PageMain from "@/components/ui/PageMain";
+import SectionNav, { type RailSection } from "@/components/layout/SectionNav";
 import { api } from "@/lib/api";
 
 /** Une ligne telle que `GET /api/admin/transactions` la rend. */
@@ -49,6 +50,18 @@ type AdminTransaction = {
  * Le garde ci-dessous n'est qu'un confort d'affichage — la vraie protection est
  * côté serveur, donc appeler l'API sans le rôle échoue, garde ou pas.
  */
+/**
+ * Les deux écrans de la page, pour le rail latéral.
+ *
+ * Le premier ne porte pas de numéro : l'en-tête lui appartient, et le rail y
+ * ramène en haut du document plutôt que sur une ancre — même convention que
+ * l'accueil et que l'espace d'administration.
+ */
+const SECTIONS: readonly RailSection[] = [
+  { id: "compte", index: "", label: "Le compte" },
+  { id: "recettes", index: "01", label: "Les recettes" },
+];
+
 export default function PartnerReceipts({ slug }: { slug: string }) {
   const { profile, ready } = useAccount();
   const { entry, loaded } = useCataloguePartner(slug);
@@ -172,35 +185,48 @@ export default function PartnerReceipts({ slug }: { slug: string }) {
      la colonne se pose au-dessus de lui — sinon le tableau saigne jusqu'au bord
      de la fenêtre. */
   return (
-    <PageMain>
-      <TransactionsSection
-        id="recettes"
-        title="Les recettes de"
-        accent={`${nom}.`}
-        br
-        /* Le même en-tête que la fiche d'un partenaire : les deux écrans sont
-           ouverts depuis une tuile d'une liste, et on en repart par le même
-           geste — une entrée du fil d'Ariane, qui nomme sa destination. */
+    <PageMain snap>
+      {/* La gestion du compte ouvre la page, l'historique la suit : on vient
+          souvent ici pour décider — suspendre un établissement, lire le motif
+          de la mesure en cours — et la décision se prend au vu de ce que le
+          compte a produit, qui est juste en dessous. */}
+      <CompteSection
+        compte={compte}
+        state={etatCompte}
+        titre="L’établissement"
         eyebrow={
           <Breadcrumb
             trail={[
               { label: "Administration", href: "/espace" },
               { label: "Les comptes", href: "/espace#comptes" },
-              { label: "Historique des paiements" },
+              { label: "Le compte" },
             ]}
           />
         }
-        /* L'état de l'établissement et la mesure qu'on peut prendre, à côté du
-           titre qui le nomme. Une suspension change les deux — l'état affiché
-           et ce que la liste montrera — donc les deux se relisent ensemble. */
-        aside={
-          <CompteMesures
-            compte={compte}
-            state={etatCompte}
-            onMesure={() => {
-              chargerCompte();
-              charger();
-            }}
+        onMesure={() => {
+          chargerCompte();
+          charger();
+        }}
+      />
+
+      <TransactionsSection
+        id="recettes"
+        title="Les recettes de"
+        accent={`${nom}.`}
+        br
+        /* Plus de fil d'Ariane ici : la section du compte ouvre la page et le
+           porte. Deux fils sur un même document désigneraient deux origines. */
+        eyebrow={
+          <Breadcrumb
+            /* Le même fil que celui de la page, dans les mêmes couleurs, mais
+               en surtitre : il situe le bloc sans être une seconde navigation.
+               Voir `as` dans `ui/Breadcrumb`. */
+            as="p"
+            trail={[
+              { label: "Administration" },
+              { label: "Les comptes" },
+              { label: "Historique des paiements" },
+            ]}
           />
         }
         rows={rows}
@@ -290,6 +316,10 @@ export default function PartnerReceipts({ slug }: { slug: string }) {
           Cette opération est tracée et ne peut pas être défaite.
         </Micro>
       </Modal>
+
+      {/* Le rail, comme sur l'accueil et dans les espaces : deux traits
+          qui disent où l'on est et mènent à l'autre écran. */}
+      <SectionNav sections={SECTIONS} />
     </PageMain>
   );
 }

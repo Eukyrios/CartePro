@@ -55,7 +55,7 @@ const SECTIONS: readonly RailSection[] = [
  *
  * Les mesures — suspendre, réactiver, clôturer — ne sont plus un écran de
  * l'espace : elles se prennent là où sont les chiffres du compte, à côté du
- * titre de son historique. Voir `CompteMesures`, sur `/recettes/<slug>` et
+ * titre de son historique. Voir `CompteSection`, sur `/recettes/<slug>` et
  * `/depenses/<id>`.
  *
  * Le garde ci-dessous n'est qu'un confort d'affichage : il évite qu'un compte
