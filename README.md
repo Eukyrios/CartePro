@@ -40,14 +40,14 @@ Un compte par situation à montrer — chacun ouvre sur un écran différent.
 
 | Identifiant                    | Ce qu'il montre                                                                                                                                                                                                                                         |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `admin@administration.example` | L'espace d'administration, qui **est** sa page d'accueil : les trois dossiers en attente à instruire, puis les onze conventionnés. Un dossier s'ouvre à `/dossier/<slug>`. Plus l'export CSV de toutes les transactions (`/api/admin/transactions.csv`) |
+| `admin@administration.example` | L'espace d'administration, qui **est** sa page d'accueil : les trois dossiers en attente à instruire, puis les treize conventionnés. Un dossier s'ouvre à `/dossier/<slug>`. Plus l'export CSV de toutes les transactions (`/api/admin/transactions.csv`) |
 
 **Partenaires** — `contact@<slug>.fr`
 
 | Identifiant                     | Statut         | Ce qu'il montre                                                                                                                                               |
 | ------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `contact@poney-dream-78.fr`     | conventionné   | L'espace complet : encaisser, réseau, recettes. Coup de cœur de l'administrateur, fiche rédigée, horaires                                                     |
-| `contact@kostumparty.fr`        | **en attente** | Encaissement et recettes **barrés** — l'accès dépend du conventionnement, pas de la connexion                                                                 |
+| `contact@comptoir-du-midi.fr`   | conventionné   | L'espace complet : encaisser, réseau, recettes. Coup de cœur de l'administrateur, fiche rédigée, horaires                                                     |
+| `contact@sport-loisirs-aubagne.fr` | **en attente** | Encaissement et recettes **barrés** — l'accès dépend du conventionnement, pas de la connexion                                                              |
 | `contact@spa-vosges.fr`         | **refusé**     | Son espace ouvre sur la décision, son motif et le bouton de réexamen. Refusé deux fois : l'historique de l'instruction est visible avec `python instruire.py` |
 | `contact@camping-etang-bleu.fr` | **refusé**     | Un refus simple, jamais réexaminé                                                                                                                             |
 | `contact@cinema-rex-lille.fr`   | conventionné   | Une fiche de **démonstration** : présentation en latin, pastille « Fiche de démonstration »                                                                   |
@@ -104,9 +104,9 @@ l'espace du compte. En ligne de commande, sans passer par le navigateur :
 
 ```bash
 cd backend
-python instruire.py                                  # l'état des seize dossiers
+python instruire.py                                  # l'état des dix-huit dossiers
 python instruire.py refuser  spa-vosges  "motif écrit"
-python instruire.py accepter kostumparty "motif écrit"
+python instruire.py accepter sport-loisirs-aubagne "motif écrit"
 ```
 
 Les deux appellent le même code — `backend/instruction.py` — précisément pour
@@ -142,7 +142,7 @@ route refuse ce qu'elle doit refuser, et qu'une décision change le statut **et*
 
 ### Ce que le seed contient
 
-Seize partenaires, dans les trois statuts que le dispositif connaît : **11
+Dix-huit partenaires, dans les trois statuts que le dispositif connaît : **13
 conventionnés**, 3 en attente d'examen, 2 refusés. Un refus porte son motif
 écrit, que **seul l'établissement concerné** lit — la fiche publique n'en dit
 rien : le statut est un fait, le motif est un dossier.
@@ -150,7 +150,7 @@ rien : le statut est un fait, le motif est un dossier.
 Puis 51 salariés et 200 opérations planifiées, dont 161 écrites et 39 refusées,
 avec les cas limites exigés : trois soldes à zéro, sept sous cinq euros.
 
-Les seize fiches ont une présentation, des horaires et un site. **Quatre** sont
+Les dix-huit fiches ont une présentation, des horaires et un site. **Six** sont
 écrites en français et font foi — exactement celles que l'administrateur
 distingue par un coup de cœur ; les douze autres sont remplies avec la légende
 de Romulus et Remus, en latin. C'est

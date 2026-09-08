@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
  * A display heading: the heavy sans line, and the accent line in the serif.
  *
  * The two-part shape is the design's signature — "Dépenser / *autrement.*",
- * "Payer chez / *Poney Dream 78.*", "Le réseau*.*" — and it was written by hand
+ * "Payer chez / *Le Comptoir du Midi.*", "Le réseau*.*" — and it was written by hand
  * twelve times, eleven with an `<em>` and once with a `<span>` carrying the
  * same classes. It is an `<em>`: the accent line is where the sentence turns.
  *

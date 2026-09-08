@@ -25,7 +25,7 @@ def trouver_partenaire(identifiant):
     Le catalogue expose le slug, parce que c'est lui qui tient dans une URL et
     qui survit à un nouveau seed. Une API qui donne un identifiant doit
     l'accepter en retour : sans ce détour, valider un paiement sur
-    « poney-dream-78 » cherchait une clé primaire de ce nom et répondait
+    « pharmacie-du-parc » cherchait une clé primaire de ce nom et répondait
     « partenaire introuvable ».
     """
     partenaire = Partenaire.query.filter_by(slug=str(identifiant)).first()
@@ -74,7 +74,7 @@ def valider_transaction():
         # 2. Résolution de l'identifiant du partenaire — slug ou clé primaire —
         # avant tout verrou et avant le contrôle d'autorisation : le catalogue
         # expose le slug, donc `int(partenaire_id)` échouerait sur
-        # « poney-dream-78 » et la comparaison ci-dessous n'aurait jamais lieu.
+        # « pharmacie-du-parc » et la comparaison ci-dessous n'aurait jamais lieu.
         partenaire_ref = trouver_partenaire(partenaire_id)
         if not partenaire_ref:
             return jsonify({"status": "error", "message": "Salarié ou partenaire introuvable."}), 404

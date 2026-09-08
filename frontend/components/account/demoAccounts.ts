@@ -47,7 +47,7 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     role: "partner",
     label: "Partenaire conventionné",
     hint: "Encaisser, le réseau, les recettes",
-    email: "contact@poney-dream-78.fr",
+    email: "contact@comptoir-du-midi.fr",
     password: DEMO_PASSWORD,
   },
   {

@@ -108,7 +108,7 @@ export default function TransactionsSection({
    * Par défaut le seul point final, sur la même ligne. Un écran qui nomme un
    * établissement passe ce nom ici avec `br`, pour que le nom tombe à la ligne
    * en italique plutôt que d'allonger le titre : « Les recettes de » /
-   * *« Poney Dream 78. »*
+   * *« Le Comptoir du Midi. »*
    */
   accent?: ReactNode;
   /** Vrai pour que l'accent passe à la ligne. */

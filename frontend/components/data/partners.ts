@@ -26,7 +26,7 @@ export type Partner = {
   postcode: string;
   /**
    * The partner's photograph. Currently placeholder artwork generated into
-   * public/partenaires — sixteen rotations of a cool hue inside a
+   * public/partenaires — eighteen rotations of a cool hue inside a
    * narrow cool band, so the grid reads as one family. Real photography drops
    * in by changing this one field per partner; nothing in the interface knows
    * the difference.

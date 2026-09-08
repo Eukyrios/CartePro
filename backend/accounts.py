@@ -50,7 +50,7 @@ CATEGORIE_DEFAUT = "autres"
 
 
 def slugify(valeur):
-    """« Poney Dream 78 » → « poney-dream-78 ». Jamais vide."""
+    """« Pharmacie du Parc » → « pharmacie-du-parc ». Jamais vide."""
     sans_accent = (
         unicodedata.normalize("NFKD", valeur or "")
         .encode("ascii", "ignore")

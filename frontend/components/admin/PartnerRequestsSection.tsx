@@ -150,7 +150,7 @@ export default function PartnerRequestsSection({
             label="Établissement, contact ou SIREN"
             value={filters.search}
             onChange={(value) => setFilter("search", value)}
-            placeholder="KostumParty, 900000001…"
+            placeholder="Sport Loisirs Aubagne, 900000005…"
             type="search"
           />
           <SelectField

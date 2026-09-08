@@ -204,7 +204,7 @@ export function hasHoraires(horaires: Horaires): boolean {
  * L'adresse d'un site, telle qu'un partenaire l'écrit.
  *
  * Vide est valide — tout le monde n'a pas de site. On accepte une adresse sans
- * protocole (« poney-dream-78.fr »), qu'il faudra préfixer à l'affichage : la
+ * protocole (« pharmacie-du-parc.fr »), qu'il faudra préfixer à l'affichage : la
  * refuser serait pinailler sur ce que l'auteur voulait manifestement dire.
  */
 export function isValidSiteWeb(siteWeb: string): boolean {

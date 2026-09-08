@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice">
 <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
-<stop offset="0" stop-color="#1b2646"/><stop offset="1" stop-color="#394b7f"/></linearGradient></defs>
+<stop offset="0" stop-color="#241b46"/><stop offset="1" stop-color="#4a3a80"/></linearGradient></defs>
 <rect width="120" height="90" fill="url(#s)"/>
-<circle cx="59" cy="36" r="9" fill="#a6b9d3" opacity=".34"/>
-<path d="M0 58 L120 60 L120 90 L0 90 Z" fill="#a6b9d3" opacity=".14"/>
-<path d="M0 70 L120 66 L120 90 L0 90 Z" fill="#1b2646" opacity=".45"/>
-<g fill="#a6b9d3" opacity=".09"><rect x="6" y="52" width="7" height="30"/><rect x="20" y="52" width="7" height="30"/><rect x="34" y="46" width="7" height="30"/><rect x="48" y="49" width="7" height="30"/><rect x="62" y="51" width="7" height="30"/><rect x="76" y="52" width="7" height="30"/><rect x="90" y="52" width="7" height="30"/><rect x="104" y="46" width="7" height="30"/></g>
+<circle cx="52" cy="34" r="14" fill="#b9aede" opacity=".34"/>
+<path d="M0 59 L120 72 L120 90 L0 90 Z" fill="#b9aede" opacity=".14"/>
+<path d="M0 76 L120 83 L120 90 L0 90 Z" fill="#241b46" opacity=".45"/>
+<g fill="#b9aede" opacity=".09"><rect x="6" y="54" width="7" height="30"/><rect x="20" y="56" width="7" height="30"/><rect x="34" y="46" width="7" height="30"/><rect x="48" y="57" width="7" height="30"/><rect x="62" y="49" width="7" height="30"/><rect x="76" y="60" width="7" height="30"/><rect x="90" y="65" width="7" height="30"/><rect x="104" y="41" width="7" height="30"/></g>
 </svg>

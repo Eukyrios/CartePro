@@ -50,11 +50,11 @@ export default function Atelier() {
   const [open, setOpen] = useState(false);
   const [markdown, setMarkdown] = useState(
     "# Ce que nous faisons\n\n" +
-      "Un manège **couvert**, ouvert *toute l'année*, à vingt minutes de la gare.\n\n" +
-      "- baptêmes à poney pour les plus jeunes\n" +
-      "- balades encadrées en forêt\n\n" +
+      "Une crêperie **de port**, ouverte *toute l'année*, à deux pas des remparts.\n\n" +
+      "- galettes de blé noir, farine du moulin voisin\n" +
+      "- cidre fermier à la bolée\n\n" +
       "> Fermé le lundi.\n\n" +
-      "Réservations sur [notre site](https://poney-dream-78.fr) ou au `01 34 xx xx xx`.",
+      "Réservations sur [notre site](https://creperie-armor.fr) ou au `02 97 xx xx xx`.",
   );
   /* Un spécimen écrit ici, et non pris dans le réseau : l'atelier montre des
      composants, pas des données. Il ne doit rien demander au serveur pour
@@ -381,7 +381,7 @@ export default function Atelier() {
                 onClose={() => setOpen(false)}
                 title="Votre QR"
                 accent="de paiement."
-                meta="Poney Dream 78 / 25,00 €"
+                meta="Le Comptoir du Midi / 16,50 €"
               >
                 <UI.Note className="mt-6">
                   Le contenu de la modale. Échap ferme, le fond aussi.

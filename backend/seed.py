@@ -2,7 +2,7 @@
 
 Ce que ce script garantit, et pourquoi :
 
-1. Le réseau. Les seize partenaires du démonstrateur, avec leur adresse, leur
+1. Le réseau. Les dix-huit partenaires du démonstrateur, avec leur adresse, leur
    ville, leur code postal, leur tarif et leur conventionnement. Ils sont le
    miroir de frontend/components/data/partners.ts : les identifiants sont les
    mêmes de part et d'autre (le slug, porté par `username`), de sorte qu'une
@@ -67,168 +67,250 @@ DEMO_PASSWORD = "CartePro2026"
 # La presentation que quelques partenaires ont deja ecrite, par slug.
 #
 # C'est du contenu d'auteur, pas une donnee du reseau : un partenaire la saisit
-# dans ses parametres, et la plupart n'en ont pas. La semer pour trois d'entre
+# dans ses parametres, et la plupart n'en ont pas. La semer pour six d'entre
 # eux suffit a montrer la section remplie, la section absente, et le rendu de
 # chaque marque du Markdown accepte.
 PRESENTATIONS = {
-    "poney-dream-78": {
-        "presentationTitre": "Ce que nous faisons",
+    "comptoir-du-midi": {
+        "presentationTitre": "Le plat du jour, tous les midis",
         "presentationTexte": (
-            "Un manege **couvert**, ouvert *toute l'annee*, a vingt minutes de la gare "
-            "de Rambouillet.\n"
+            "Bistrot de quartier, **cuisine du marché**, ardoise renouvelée "
+            "*chaque matin*. Trente couverts, pas un de plus.\n"
             "\n"
-            "- baptemes a poney des trois ans\n"
-            "- balades encadrees en foret, groupes de six\n"
-            "- goutez d'anniversaire sur reservation\n"
+            "- entrée, plat, dessert à prix fixe le midi\n"
+            "- une ardoise végétarienne tous les jours\n"
+            "- service continu le vendredi et le samedi\n"
             "\n"
-            "> Ouvert aussi le lundi pendant les vacances scolaires.\n"
-            "\n"
-            "# Venir nous voir\n"
-            "\n"
-            "Le `312` s'arrete devant le portail. Reservations par telephone ou sur "
-            "[notre site](https://poney-dream-78.fr)."
-        ),
-        "siteWeb": "poney-dream-78.fr",
-        # Format fixe : deux heures par jour, « HH:MM ». Un jour sans
-        # heures est ferme.
-        "horaires": {
-            "lundi": {"ouvre": "", "ferme": ""},
-            "mardi": {"ouvre": "09:00", "ferme": "18:00"},
-            "mercredi": {"ouvre": "09:00", "ferme": "18:00"},
-            "jeudi": {"ouvre": "09:00", "ferme": "18:00"},
-            "vendredi": {"ouvre": "09:00", "ferme": "18:00"},
-            "samedi": {"ouvre": "09:00", "ferme": "19:00"},
-            "dimanche": {"ouvre": "10:00", "ferme": "17:00"},
-        },
-    },
-    "glaces-correze": {
-        "presentationTitre": "Trente-deux parfums, tous d'ici",
-        "presentationTexte": (
-            "Le lait vient de la ferme d'a cote et les fruits du marche du samedi. "
-            "Rien de surgele, rien d'aromatise.\n"
-            "\n"
-            "Les parfums tournent avec les saisons : chataigne a l'automne, "
-            "__myrtille en juillet__.\n"
-            "\n"
-            "1. choisissez votre cornet\n"
-            "2. deux boules maximum, c'est plus sage\n"
-            "3. mangez vite"
-        ),
-        "siteWeb": "https://glaces-correze.fr",
-        # Le mercredi portait « 10:00 - 12:30 / 14:00 - 19:00 » : la coupure
-        # de midi ne s'exprime plus, le format fixe ne retient qu'une plage par
-        # jour. C'est l'amplitude qui reste, et le texte de presentation est la
-        # ou une exception se raconte.
-        "horaires": {
-            "lundi": {"ouvre": "14:00", "ferme": "19:00"},
-            "mardi": {"ouvre": "14:00", "ferme": "19:00"},
-            "mercredi": {"ouvre": "10:00", "ferme": "19:00"},
-            "jeudi": {"ouvre": "14:00", "ferme": "19:00"},
-            "vendredi": {"ouvre": "14:00", "ferme": "19:00"},
-            "samedi": {"ouvre": "10:00", "ferme": "19:30"},
-            "dimanche": {"ouvre": "10:00", "ferme": "13:00"},
-        },
-    },
-    "kostumparty": {
-        "presentationTitre": "Costumes et deguisements",
-        "presentationTexte": (
-            "Location **et** vente, du *XVIIIe siecle* au disco. Deux mille "
-            "pieces en rayon, tailles enfant comprises.\n"
-            "\n"
-            "- essayage sur rendez-vous, comptez une heure\n"
-            "- retouches offertes sur les locations\n"
-            "- caution restituee au retour de la piece\n"
-            "\n"
-            "> Les costumes de scene ne sortent pas de l'atelier.\n"
+            "> Réservation conseillée entre midi et quatorze heures.\n"
             "\n"
             "# Nous trouver\n"
             "\n"
-            "Metro `Voltaire`, sortie rue de la Roquette."
+            "En bas du `cours Julien`, côté place Notre-Dame-du-Mont. Le menu "
+            "du jour paraît la veille au soir sur "
+            "[notre page](https://comptoir-du-midi.fr)."
         ),
-        "siteWeb": "kostumparty.fr",
+        "siteWeb": "comptoir-du-midi.fr",
+        # Format fixe : deux heures par jour, « HH:MM ». Un jour sans
+        # heures est ferme.
         "horaires": {
-            "lundi": {"ouvre": "", "ferme": ""},
-            "mardi": {"ouvre": "11:00", "ferme": "19:00"},
-            "mercredi": {"ouvre": "11:00", "ferme": "19:00"},
-            "jeudi": {"ouvre": "11:00", "ferme": "19:00"},
-            "vendredi": {"ouvre": "11:00", "ferme": "20:00"},
-            "samedi": {"ouvre": "10:00", "ferme": "20:00"},
+            "lundi": {"ouvre": "11:30", "ferme": "15:00"},
+            "mardi": {"ouvre": "11:30", "ferme": "15:00"},
+            "mercredi": {"ouvre": "11:30", "ferme": "15:00"},
+            "jeudi": {"ouvre": "11:30", "ferme": "15:00"},
+            "vendredi": {"ouvre": "11:30", "ferme": "23:00"},
+            "samedi": {"ouvre": "11:30", "ferme": "23:00"},
             "dimanche": {"ouvre": "", "ferme": ""},
         },
     },
-    "chapelier-fontaine": {
-        "presentationTitre": "Chapeaux faits main",
+    "epicerie-sainte-claire": {
+        "presentationTitre": "L'épicerie de la halle",
         "presentationTexte": (
-            "Feutre, paille, casquettes de ville. Chaque piece est **mise en "
-            "forme sur bois**, a la main, dans l'atelier du fond.\n"
+            "Fruits et légumes de la vallée, fromages d'alpage, vrac et "
+            "conserves. Ce qui pousse ici, quand ça pousse.\n"
             "\n"
-            "- prise de mesure et conformateur\n"
-            "- remise en forme des chapeaux anciens\n"
+            "1. le panier de saison, composé le matin\n"
+            "2. la coupe à la demande, fromage et charcuterie\n"
+            "3. le vrac : apportez vos bocaux\n"
             "\n"
-            "> Comptez trois semaines pour une commande sur mesure.\n"
+            "*Rien ne vient de plus loin que le département voisin.*\n"
             "\n"
-            "*L'elegance n'a pas besoin d'etre voyante.*"
+            "> Le panier du vendredi part vite : réservez-le la veille."
         ),
-        "siteWeb": "chapelier-fontaine.fr",
+        "siteWeb": "https://epicerie-sainte-claire.fr",
         "horaires": {
             "lundi": {"ouvre": "", "ferme": ""},
-            "mardi": {"ouvre": "10:00", "ferme": "18:30"},
-            "mercredi": {"ouvre": "10:00", "ferme": "18:30"},
-            "jeudi": {"ouvre": "10:00", "ferme": "18:30"},
-            "vendredi": {"ouvre": "10:00", "ferme": "18:30"},
-            "samedi": {"ouvre": "10:00", "ferme": "19:00"},
+            "mardi": {"ouvre": "07:30", "ferme": "19:30"},
+            "mercredi": {"ouvre": "07:30", "ferme": "19:30"},
+            "jeudi": {"ouvre": "07:30", "ferme": "19:30"},
+            "vendredi": {"ouvre": "07:30", "ferme": "19:30"},
+            "samedi": {"ouvre": "07:00", "ferme": "19:30"},
+            "dimanche": {"ouvre": "08:00", "ferme": "13:00"},
+        },
+    },
+    "librairie-vasseur": {
+        "presentationTitre": "Librairie générale, depuis 1931",
+        "presentationTexte": (
+            "Littérature, sciences humaines, jeunesse. **Quinze mille titres** "
+            "en rayon, et le reste commandé sous quarante-huit heures.\n"
+            "\n"
+            "- commande sans frais, retrait au comptoir\n"
+            "- rencontres d'auteurs le jeudi soir\n"
+            "- *carte de fidélité* : un livre offert tous les dix\n"
+            "\n"
+            "> Le fonds ancien se consulte sur place, sur demande.\n"
+            "\n"
+            "# Le rendez-vous du jeudi\n"
+            "\n"
+            "Le programme du trimestre est affiché en vitrine, et le fichier "
+            "`programme.pdf` le reprend sur "
+            "[notre site](https://librairie-vasseur.fr)."
+        ),
+        "siteWeb": "librairie-vasseur.fr",
+        "horaires": {
+            "lundi": {"ouvre": "14:00", "ferme": "19:00"},
+            "mardi": {"ouvre": "09:30", "ferme": "19:00"},
+            "mercredi": {"ouvre": "09:30", "ferme": "19:00"},
+            "jeudi": {"ouvre": "09:30", "ferme": "20:30"},
+            "vendredi": {"ouvre": "09:30", "ferme": "19:00"},
+            "samedi": {"ouvre": "09:30", "ferme": "19:30"},
             "dimanche": {"ouvre": "", "ferme": ""},
+        },
+    },
+    "pharmacie-du-parc": {
+        "presentationTitre": "Officine de quartier",
+        "presentationTexte": (
+            "Ordonnances, conseil, matériel médical à la location. Une équipe "
+            "de **quatre pharmaciens**, dont un orthopédiste.\n"
+            "\n"
+            "- préparation des piluliers à la semaine\n"
+            "- location de tire-lait, tensiomètre, béquilles\n"
+            "- tests rapides sans rendez-vous\n"
+            "\n"
+            "> Garde de nuit : le tableau est affiché sur la porte et vaut "
+            "pour tout le secteur.\n"
+            "\n"
+            "*Le conseil est gratuit ; il ne remplace pas une consultation.*"
+        ),
+        "siteWeb": "pharmacie-du-parc.fr",
+        "horaires": {
+            "lundi": {"ouvre": "08:30", "ferme": "19:30"},
+            "mardi": {"ouvre": "08:30", "ferme": "19:30"},
+            "mercredi": {"ouvre": "08:30", "ferme": "19:30"},
+            "jeudi": {"ouvre": "08:30", "ferme": "19:30"},
+            "vendredi": {"ouvre": "08:30", "ferme": "19:30"},
+            "samedi": {"ouvre": "09:00", "ferme": "19:00"},
+            "dimanche": {"ouvre": "", "ferme": ""},
+        },
+    },
+    "transports-regionaux-unifies": {
+        "presentationTitre": "Se déplacer dans toute la région",
+        "presentationTexte": (
+            "Cars interurbains, navettes d'aéroport et trains régionaux, sur "
+            "un **titre unique**. Le réseau dessert *quatre cent douze "
+            "communes*.\n"
+            "\n"
+            "1. l'abonnement mensuel, tous modes\n"
+            "2. le carnet de dix trajets\n"
+            "3. le billet à l'unité, acheté à bord\n"
+            "\n"
+            "> L'abonnement se suspend un mois par an, sans frais, pendant "
+            "les congés.\n"
+            "\n"
+            "# Aux guichets\n"
+            "\n"
+            "Le guichet de la gare centrale délivre le titre à la minute ; "
+            "ailleurs, le code `TRU` sur l'automate ouvre le même catalogue."
+        ),
+        "siteWeb": "transports-regionaux-unifies.fr",
+        "horaires": {
+            "lundi": {"ouvre": "06:30", "ferme": "20:00"},
+            "mardi": {"ouvre": "06:30", "ferme": "20:00"},
+            "mercredi": {"ouvre": "06:30", "ferme": "20:00"},
+            "jeudi": {"ouvre": "06:30", "ferme": "20:00"},
+            "vendredi": {"ouvre": "06:30", "ferme": "20:00"},
+            "samedi": {"ouvre": "08:00", "ferme": "19:00"},
+            "dimanche": {"ouvre": "09:00", "ferme": "13:00"},
+        },
+    },
+    "sport-loisirs-aubagne": {
+        "presentationTitre": "Le club, toute l'année",
+        "presentationTexte": (
+            "Salle, cours collectifs et sorties en garrigue. **Association "
+            "loi 1901**, encadrement diplômé, licence comprise dans "
+            "l'adhésion.\n"
+            "\n"
+            "- musculation et cardio en accès libre\n"
+            "- douze cours collectifs par semaine\n"
+            "- randonnée le dimanche matin, d'octobre à mai\n"
+            "\n"
+            "> Certificat médical demandé à l'inscription, valable trois ans.\n"
+            "\n"
+            "*Le premier cours est un essai : on ne s'inscrit qu'après.*"
+        ),
+        "siteWeb": "sport-loisirs-aubagne.fr",
+        "horaires": {
+            "lundi": {"ouvre": "07:00", "ferme": "22:00"},
+            "mardi": {"ouvre": "07:00", "ferme": "22:00"},
+            "mercredi": {"ouvre": "07:00", "ferme": "22:00"},
+            "jeudi": {"ouvre": "07:00", "ferme": "22:00"},
+            "vendredi": {"ouvre": "07:00", "ferme": "22:00"},
+            "samedi": {"ouvre": "09:00", "ferme": "19:00"},
+            "dimanche": {"ouvre": "09:00", "ferme": "12:30"},
         },
     },
 }
 
 NETWORK = [
     {
-        "slug": "poney-dream-78",
-        "nom": "Poney Dream 78",
-        "secteur": "loisirs",
-        "adresse": "12 chemin des Écuries",
-        "ville": "Rambouillet",
-        "codePostal": "78120",
-        "photo": "/partenaires/poney-dream-78.svg",
-        "amountCents": 2500,
-        "official": True,
-        "featured": True,
-    },
-    {
-        "slug": "kostumparty",
-        "nom": "KostumParty",
-        "secteur": "culture",
-        "adresse": "23 rue de la Roquette",
-        "ville": "Paris",
-        "codePostal": "75011",
-        "photo": "/partenaires/kostumparty.svg",
-        "amountCents": 1800,
-        "official": False,
-        "featured": True,
-    },
-    {
-        "slug": "glaces-correze",
-        "nom": "Glaces Artisanales Corrèze",
+        "slug": "comptoir-du-midi",
+        "nom": "Le Comptoir du Midi",
         "secteur": "restauration",
-        "adresse": "3 place de la Halle",
-        "ville": "Brive-la-Gaillarde",
-        "codePostal": "19100",
-        "photo": "/partenaires/glaces-correze.svg",
-        "amountCents": 450,
-        "official": False,
+        "adresse": "18 cours Julien",
+        "ville": "Marseille",
+        "codePostal": "13006",
+        "photo": "/partenaires/comptoir-du-midi.svg",
+        "amountCents": 1650,
+        "official": True,
         "featured": True,
     },
     {
-        "slug": "chapelier-fontaine",
-        "nom": "Chapelier Fontaine",
-        "secteur": "culture",
-        "adresse": "9 rue des Filatiers",
-        "ville": "Toulouse",
-        "codePostal": "31000",
-        "photo": "/partenaires/chapelier-fontaine.svg",
-        "amountCents": 2900,
+        "slug": "epicerie-sainte-claire",
+        "nom": "Épicerie Sainte-Claire",
+        "secteur": "alimentation",
+        "adresse": "4 place Sainte-Claire",
+        "ville": "Grenoble",
+        "codePostal": "38000",
+        "photo": "/partenaires/epicerie-sainte-claire.svg",
+        "amountCents": 450,
         "official": True,
+        "featured": True,
+    },
+    {
+        "slug": "librairie-vasseur",
+        "nom": "Librairie Vasseur",
+        "secteur": "culture",
+        "adresse": "12 rue des Trois-Cailloux",
+        "ville": "Amiens",
+        "codePostal": "80000",
+        "photo": "/partenaires/librairie-vasseur.svg",
+        "amountCents": 2200,
+        "official": True,
+        "featured": True,
+    },
+    {
+        "slug": "pharmacie-du-parc",
+        "nom": "Pharmacie du Parc",
+        "secteur": "sante",
+        "adresse": "5 avenue du Parc",
+        "ville": "Vincennes",
+        "codePostal": "94300",
+        "photo": "/partenaires/pharmacie-du-parc.svg",
+        "amountCents": 1380,
+        "official": True,
+        "featured": True,
+    },
+    {
+        "slug": "transports-regionaux-unifies",
+        "nom": "Transports Régionaux Unifiés",
+        "secteur": "mobilite",
+        "adresse": "26 rue de la Villette",
+        "ville": "Lyon",
+        "codePostal": "69003",
+        "photo": "/partenaires/transports-regionaux-unifies.svg",
+        "amountCents": 4200,
+        "official": True,
+        "featured": True,
+    },
+    {
+        "slug": "sport-loisirs-aubagne",
+        "nom": "Sport Loisirs Aubagne",
+        "secteur": "sport",
+        "adresse": "9 avenue des Goums",
+        "ville": "Aubagne",
+        "codePostal": "13400",
+        "photo": "/partenaires/sport-loisirs-aubagne.svg",
+        "amountCents": 1900,
+        "official": False,
         "featured": True,
     },
     {
@@ -387,7 +469,7 @@ DEMO_EMPLOYEE_EMAIL = "camille.durand@administration.example"
 DEMO_EMPLOYEE_CREDIT = 50.00
 DEMO_EMPLOYEE_PAIEMENTS = [
     {"slug": "creperie-armor", "montant": 5.00, "jour": 95},
-    {"slug": "chapelier-fontaine", "montant": 12.50, "jour": 89},
+    {"slug": "comptoir-du-midi", "montant": 12.50, "jour": 89},
 ]
 DEMO_EMPLOYEE_BALANCE = DEMO_EMPLOYEE_CREDIT - sum(
     p["montant"] for p in DEMO_EMPLOYEE_PAIEMENTS
@@ -405,7 +487,7 @@ DEFAULT_CARD_STYLE = {
 # Le remplissage : la legende de Romulus et Remus, en latin.
 #
 # Du faux texte, et qui s'assume comme tel — c'est le lorem ipsum de ce
-# demonstrateur. Il sert a ce que les seize fiches du reseau aient une
+# demonstrateur. Il sert a ce que les dix-huit fiches du reseau aient une
 # presentation a montrer, sans qu'on prete aux commerces fictifs des mots
 # francais qu'on pourrait prendre pour vrais. Une phrase latine sur la louve du
 # Tibre ne trompe personne.
@@ -511,7 +593,7 @@ def presentation_de(entry):
     """La presentation d'un partenaire : la vraie si elle existe, sinon du faux.
 
     `PRESENTATIONS` est ecrite a la main et fait foi. Elle contient exactement
-    les quatre partenaires que l'administrateur distingue — la regle est simple et
+    les six partenaires que l'administrateur distingue — la regle est simple et
     sans exception : redige si et seulement si coup de coeur. Les douze autres
     recoivent le remplissage latin, et leur fiche le dit.
     """
@@ -535,7 +617,7 @@ def donnees_reelles(entry):
 #
 # Ce que le reste du reseau n'enumere pas est conventionne : la majorite.
 EN_ATTENTE = {
-    "kostumparty": None,
+    "sport-loisirs-aubagne": None,
     "gite-monts-dore": None,
     "primeur-victor-hugo": None,
 }
@@ -564,15 +646,17 @@ def statut_de(entry):
 # Les mots de l'administrateur sur ses coups de cœur, par slug.
 #
 # Le schéma leur donne une colonne — `CoupDeCoeur.mot_administrateur` — donc ils
-# vivent en base et non plus seulement dans le front. Les quatre phrases sont
-# celles que portait l'ancien `frontend/components/data/ministerPicks.ts`,
-# supprime depuis : la même sélection,
-# les mêmes mots, jusqu'à ce que l'espace d'administration prenne la main.
+# vivent en base et non plus seulement dans le front, où l'ancien
+# `frontend/components/data/ministerPicks.ts` les portait avant d'être
+# supprimé. Une phrase par fiche rédigée, jusqu'à ce que l'espace
+# d'administration prenne la main.
 MOTS_ADMINISTRATEUR = {
-    "poney-dream-78": "Parfait pour ressouder une équipe et renouer avec la nature.",
-    "kostumparty": "La créativité est la clé du bonheur au travail.",
-    "glaces-correze": "Soutenir l'artisanat français, un parfum à la fois.",
-    "chapelier-fontaine": "L'élégance française.",
+    "comptoir-du-midi": "Le plat du jour à deux pas du bureau, et une addition qui reste sage.",
+    "epicerie-sainte-claire": "Les courses du soir sans quitter le quartier.",
+    "librairie-vasseur": "Une librairie qui commande tout, et qui conseille avant de vendre.",
+    "pharmacie-du-parc": "Ouverte tard, et l'on y est reçu même sans ordonnance.",
+    "transports-regionaux-unifies": "Un seul titre pour toute la région : l'abonnement se rentabilise en dix trajets.",
+    "sport-loisirs-aubagne": "Bouger après le travail, sans y laisser son salaire.",
 }
 
 
@@ -653,7 +737,7 @@ def run_seed():
         db.session.flush()
         categories = _categories(db.session)
 
-        # 2. Le reseau : seize partenaires renseignes.
+        # 2. Le reseau : dix-huit partenaires renseignes.
         partenaires = [make_partner(entry, categories) for entry in NETWORK]
         for partenaire in partenaires:
             db.session.add(partenaire)
