@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { useAccount } from "@/components/account/AccountProvider";
 import SectionNav from "@/components/layout/SectionNav";
-import PartnerCatalogue, {
-  estConventionne,
-} from "@/components/espace/PartnerCatalogue";
 import EmptyState from "@/components/ui/EmptyState";
-import Micro from "@/components/ui/Micro";
 import Note from "@/components/ui/Note";
-import Slash from "@/components/ui/Slash";
+import AbondementsSection from "./AbondementsSection";
+import ComptesSection from "./ComptesSection";
+import DashboardSection from "./DashboardSection";
 import PartnerRequestsSection from "./PartnerRequestsSection";
 import type { RailSection } from "@/components/layout/SectionNav";
 
@@ -21,26 +19,41 @@ import type { RailSection } from "@/components/layout/SectionNav";
  * l'accueil, où « Accueil » est la seule entrée sans chiffre.
  */
 const SECTIONS: readonly RailSection[] = [
-  { id: "demandes", index: "", label: "Demandes" },
-  { id: "recettes", index: "01", label: "Recettes" },
+  { id: "tableau-de-bord", index: "", label: "Le dispositif" },
+  { id: "demandes", index: "01", label: "Demandes" },
+  { id: "comptes", index: "02", label: "Les comptes" },
+  { id: "abondements", index: "03", label: "Créditer" },
 ];
 
 /**
- * L'espace d'administration : instruire les dossiers, puis voir le réseau
- * qu'on a conventionné.
+ * L'espace d'administration : instruire, mesurer, doter, puis regarder ce que
+ * le dispositif produit.
  *
- * Deux écrans pleins qui s'accrochent au défilement, avec le même rail que
+ * Quatre écrans pleins qui s'accrochent au défilement, avec le même rail que
  * l'accueil et que les deux autres espaces. L'en-tête appartient au premier
  * écran — d'où sa hauteur sous la barre — et le pied de page au dernier, d'où
- * `last` sur le catalogue : les deux ensemble font exactement une fenêtre.
+ * la hauteur amputée de l'écran des abondements : les deux ensemble font
+ * exactement une fenêtre.
  *
- * Le second écran **est** celui du réseau, pas une copie : c'est
- * `PartnerCatalogue`, avec un prédicat plus étroit et une autre destination.
- * Un administrateur regarde la même liste qu'un salarié, avec une exigence
- * différente — les conventionnés seulement — et il ne vient pas y chercher la
- * même chose : chaque tuile mène aux **recettes** de l'établissement, quand
- * celle du salarié mène à sa fiche. D'où le titre « Les recettes ». Recopier le
- * composant aurait fait deux réseaux à maintenir.
+ * L'ordre suit la journée d'un agent plutôt que l'ordre où les écrans ont été
+ * écrits : l'état du dispositif d'abord, les dossiers qui attendent une
+ * décision ensuite, les comptes et ce qu'ils ont fait circuler, et pour finir
+ * le geste qui les dote — on ne crédite qu'une fois qu'on sait qui.
+ *
+ * Les trois écrans du milieu portent chacun leur propre appel et leur propre
+ * état de chargement. Aucun ne dépend d'un autre : un serveur muet sur les
+ * chiffres ne doit pas empêcher d'instruire un dossier.
+ *
+ * Le troisième écran, « Les comptes », porte les deux côtés d'un paiement :
+ * un rang d'établissements et un rang de comptes salariés, chacun menant à
+ * l'historique du compte qu'il nomme. Il tient deux fenêtres à lui seul — voir
+ * `ComptesSection`, et le rang du haut **est** le catalogue du réseau, pas une
+ * copie.
+ *
+ * Les mesures — suspendre, réactiver, clôturer — ne sont plus un écran de
+ * l'espace : elles se prennent là où sont les chiffres du compte, à côté du
+ * titre de son historique. Voir `CompteMesures`, sur `/recettes/<slug>` et
+ * `/depenses/<id>`.
  *
  * Le garde ci-dessous n'est qu'un confort d'affichage : il évite qu'un compte
  * non-administrateur voie l'interface avant de comprendre qu'elle lui est
@@ -81,29 +94,22 @@ export default function AdminSpace() {
 
   return (
     <>
-      {/* Aucun compteur de rafraîchissement entre les deux écrans, et il n'en
-          faut pas : la décision se prend sur `/dossier/<slug>`, donc
-          revenir ici est une navigation, qui remonte les deux sections et les
-          fait relire toutes seules. */}
+      {/* L'ordre suit ce qu'un agent fait de sa journée : il regarde où en est
+          le dispositif, instruit ce qui attend une décision, lit les comptes et
+          ce qu'ils ont fait circuler, et ne dote qu'ensuite — créditer est le
+          geste qu'on prend en dernier, quand on sait à qui.
+
+          Aucun compteur de rafraîchissement entre les écrans, et il n'en faut
+          pas : une décision se prend sur `/dossier/<slug>`, donc revenir ici
+          est une navigation, qui remonte les sections et les fait relire
+          toutes seules. */}
+      <DashboardSection />
+
       <PartnerRequestsSection />
 
-      <PartnerCatalogue
-        id="recettes"
-        heading="Les recettes"
-        eyebrow={
-          <Micro as="p" tone="accent">
-            Administration
-            <Slash />
-            Historique des paiements
-          </Micro>
-        }
-        keep={estConventionne}
-        /* Une tuile mène aux recettes de l'établissement, pas à sa fiche : la
-           fiche est ce qu'un salarié vient lire, et l'administration vient
-           lire ce qui a été encaissé. */
-        hrefOf={(partner) => `/recettes/${partner.id}`}
-        last
-      />
+      <ComptesSection />
+
+      <AbondementsSection />
 
       <SectionNav sections={SECTIONS} />
     </>

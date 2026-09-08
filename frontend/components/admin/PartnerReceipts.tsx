@@ -7,7 +7,8 @@ import { useCataloguePartner } from "@/components/data/useCataloguePartner";
 import TransactionsSection, {
   type TransactionRow,
 } from "@/components/transactions/TransactionsSection";
-import { annulerPaiement } from "./api";
+import { annulerPaiement, getComptePartenaire, type Compte } from "./api";
+import CompteMesures from "./CompteMesures";
 import { formatEuros } from "@/components/data/ledger";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import Button from "@/components/ui/Button";
@@ -53,6 +54,13 @@ export default function PartnerReceipts({ slug }: { slug: string }) {
   const { entry, loaded } = useCataloguePartner(slug);
   const [rows, setRows] = useState<readonly TransactionRow[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  /* Le compte de l'établissement, pour la bande d'en-tête : son état, ce qu'il
+     a encaissé, et la mesure qu'on peut prendre. Le catalogue ne le dit pas —
+     il décrit une vitrine, pas un compte. */
+  const [compte, setCompte] = useState<Compte | null>(null);
+  const [etatCompte, setEtatCompte] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
   /* Le paiement dont on est en train de décider, et le motif qu'on écrit.
      Un seul à la fois : le dialogue est modal. */
   const [aAnnuler, setAAnnuler] = useState<TransactionRow | null>(null);
@@ -84,6 +92,18 @@ export default function PartnerReceipts({ slug }: { slug: string }) {
   }, [slug, admin]);
 
   useEffect(charger, [charger]);
+
+  const chargerCompte = useCallback(() => {
+    if (!admin) return;
+    getComptePartenaire(slug)
+      .then((lu) => {
+        setCompte(lu);
+        setEtatCompte("ready");
+      })
+      .catch(() => setEtatCompte("error"));
+  }, [slug, admin]);
+
+  useEffect(chargerCompte, [chargerCompte]);
 
   function fermer() {
     setAAnnuler(null);
@@ -165,9 +185,22 @@ export default function PartnerReceipts({ slug }: { slug: string }) {
           <Breadcrumb
             trail={[
               { label: "Administration", href: "/espace" },
-              { label: "Les recettes", href: "/espace#recettes" },
+              { label: "Les comptes", href: "/espace#comptes" },
               { label: "Historique des paiements" },
             ]}
+          />
+        }
+        /* L'état de l'établissement et la mesure qu'on peut prendre, à côté du
+           titre qui le nomme. Une suspension change les deux — l'état affiché
+           et ce que la liste montrera — donc les deux se relisent ensemble. */
+        aside={
+          <CompteMesures
+            compte={compte}
+            state={etatCompte}
+            onMesure={() => {
+              chargerCompte();
+              charger();
+            }}
           />
         }
         rows={rows}

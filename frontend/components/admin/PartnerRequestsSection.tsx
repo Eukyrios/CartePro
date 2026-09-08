@@ -121,9 +121,6 @@ export default function PartnerRequestsSection({
        son sommet suffit. */
     <Screen
       id="demandes"
-      height="below-bar"
-      snap={false}
-      rule={false}
       align="start"
       density="offset"
       aria-labelledby="demandes-titre"
@@ -135,8 +132,11 @@ export default function PartnerRequestsSection({
           Instruction des dossiers
         </Micro>
 
+        {/* `level={2}` : le titre de page est celui du tableau de bord, qui
+            ouvre l'espace. Deux `h1` sur un même document ne disent plus
+            lequel le nomme. */}
         <Display
-          level={1}
+          level={2}
           id="demandes-titre"
           accent="en attente."
           className="mt-4 mb-6"

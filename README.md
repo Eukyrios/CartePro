@@ -40,7 +40,7 @@ Un compte par situation à montrer — chacun ouvre sur un écran différent.
 
 | Identifiant                    | Ce qu'il montre                                                                                                                                                                                                                                         |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `admin@administration.example` | L'espace d'administration, qui **est** sa page d'accueil : les trois dossiers en attente à instruire, puis les treize conventionnés. Un dossier s'ouvre à `/dossier/<slug>`. Plus l'export CSV de toutes les transactions (`/api/admin/transactions.csv`) |
+| `admin@administration.example` | L'espace d'administration, qui **est** sa page d'accueil : les trois dossiers en attente à instruire, puis les treize conventionnés. Un dossier s'ouvre à `/dossier/<slug>`, l'écran « Les comptes » porte un rang d'établissements et un rang de salariés ; les recettes d'un établissement s'ouvrent à `/recettes/<slug>` et l'historique d'un salarié à `/depenses/<id>` — les deux derniers portent l'état du compte et ses mesures à côté de leur titre. Plus l'export CSV de toutes les transactions (`/api/admin/transactions.csv`) |
 
 **Partenaires** — `contact@<slug>.fr`
 
@@ -132,13 +132,64 @@ jeton c'est 401, avec un jeton de salarié ou de partenaire c'est 403.
 | `POST /api/admin/partenaires/<slug>/refuser`   | `{ motif }` — écarte, et c'est ce motif que le titulaire lira  |
 | `POST /api/admin/partenaires/<slug>/suspendre` | `{ motif }` — suspend, et le compte ne peut plus se connecter  |
 | `PUT /api/theme`                               | L'identité visuelle, enregistrée — écran Style de /parametres  |
-| `GET /api/admin/transactions`                  | Tous les paiements validés, en JSON — l'écran « Les recettes » |
+| `GET /api/admin/transactions`                  | Tous les paiements validés, en JSON — l'écran « Les comptes »  |
 | `GET /api/admin/transactions.csv`              | Les mêmes, en CSV, pour l'emporter                             |
 | `POST /api/admin/transactions/<id>/annuler`    | **501** — pas encore écrite, et le dit                         |
 
+Les trois domaines de l'espace, chacun dans son fichier de routes plutôt que
+tous dans `routes/admin.py` :
+
+| Route                                        |                                                                          |
+| -------------------------------------------- | -------------------------------------------------------------------------- |
+| `GET /api/admin/comptes[?statut=…]`          | Les comptes salariés, leur état, leur solde et leurs mesures               |
+| `GET /api/admin/comptes/<id>`                | Un compte, avec l'historique complet de ses mesures                        |
+| `GET /api/admin/comptes/<id>/mouvements`     | Ses crédits et ses paiements — même calcul que `/api/transactions/me`       |
+| `POST /api/admin/comptes/<id>/activer`       | `{ motif }` — lève une suspension                                          |
+| `POST /api/admin/comptes/<id>/suspendre`     | `{ motif }` — le titulaire ne se connecte plus ; réversible                |
+| `POST /api/admin/comptes/<id>/cloturer`      | `{ motif }` — **définitif** ; rend le solde résiduel dans sa réponse       |
+| `GET /api/admin/tableau-de-bord`             | Volume, partenaires actifs, répartition par département — en un seul appel |
+| `GET /api/admin/abondements[?salarie=&limite=]` | Les crédits versés, du plus récent au plus ancien                       |
+| `POST /api/admin/abondements`                | `{ salarieIds, montantCents, reference }` — crédite un lot de comptes      |
+
+Trois règles y sont tenues par le serveur, pas par l'écran :
+
+- **une mesure se motive.** 422 sans motif, pour un compte comme pour un
+  dossier. L'état change **et** la ligne s'écrit dans `mesures_compte`, jamais
+  l'un sans l'autre, et rien ne s'efface : un compte suspendu puis réactivé
+  puis clôturé garde ses trois lignes ;
+- **une clôture ne se lève pas.** La route d'activation répond 409. Clôturer ne
+  supprime rien non plus — les transactions d'un salarié sont immuables, et son
+  solde reste calculable après coup ;
+- **créditer exige une clé d'idempotence.** C'est la seule route qui crée de
+  l'argent sur un compte : `reference` est obligatoire (422 sans elle), et
+  renvoyer la même clé rend la **même** réponse avec `rejoue: true` au lieu de
+  créditer une seconde fois. Le lot est atomique — un seul compte fermé ou
+  inconnu et rien n'est écrit.
+
 `backend/test_admin_api.py` vérifie les deux choses séparément : que chaque
-route refuse ce qu'elle doit refuser, et qu'une décision change le statut **et**
-écrit sa ligne dans `decisions`.
+route refuse ce qu'elle doit refuser — sa liste `ROUTES` couvre les huit routes
+ci-dessus —, et qu'une décision change le statut **et** écrit sa ligne dans
+`decisions`. `backend/test_admin_espace.py` couvre ce que les trois domaines
+font : le motif obligatoire, la clôture définitive, l'historique qui ne
+s'efface pas, et la dotation envoyée deux fois qui ne crédite qu'une fois.
+
+### Faire évoluer une base déjà en service
+
+`make seed` commence par un `db.drop_all()` : il fabrique un jeu de
+démonstration, il ne migre rien. Et le `db.create_all()` du démarrage crée les
+tables qui manquent, jamais une colonne qui manque à une table qui existe.
+
+Pour une base qu'on veut garder — des comptes créés depuis l'interface, des
+paiements réels :
+
+```bash
+cd backend
+python migrer.py --controle   # dit ce qui manque, n'écrit rien
+python migrer.py              # ajoute ce qui manque
+```
+
+Idempotent : le relancer ne fait rien la seconde fois. Il n'efface aucune
+ligne, ne modifie aucune écriture comptable, et ne désactive aucune contrainte.
 
 ### Ce que le seed contient
 

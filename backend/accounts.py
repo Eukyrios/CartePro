@@ -16,7 +16,16 @@ partenaire n° 3.
 import re
 import unicodedata
 
-from models import Admin, Categorie, Employeur, Partenaire, PartnerStatus, Salaries, db
+from models import (
+    Admin,
+    Categorie,
+    CompteStatut,
+    Employeur,
+    Partenaire,
+    PartnerStatus,
+    Salaries,
+    db,
+)
 
 DEFAULT_CARD_STYLE = {
     "color": "#4a1b6b",
@@ -245,7 +254,15 @@ def profil(compte):
         # En dehors de `partner`, et à dessein : c'est une décision du
         # administration, pas un champ que le partenaire déclare. Le formulaire de
         # profil renvoie `partner` entier ; il n'a pas à pouvoir réécrire ça.
-        "statut": compte.statut.value if isinstance(compte, Partenaire) else None,
+        # Le statut, des deux côtés : conventionnement pour un partenaire,
+        # état du compte pour un salarié. Décidé par l'administration dans les
+        # deux cas, donc hors de `partner` — le formulaire de profil renvoie
+        # `partner` entier et n'a pas à pouvoir le réécrire.
+        "statut": (
+            compte.statut.value
+            if isinstance(compte, (Partenaire, Salaries))
+            else None
+        ),
         "refus": refus_de(compte),
     }
 
@@ -267,9 +284,16 @@ def actif(compte):
 
     Un compte **suspendu**, lui, reste dehors : c'est une mesure en cours, pas
     une décision motivée à lire.
+
+    Côté salarié, la règle est la même et elle n'existait pas : cette fonction
+    répondait « oui » pour tout salarié, quoi qu'ait décidé l'administration.
+    Un compte suspendu ou clôturé ne se connecte plus — voir `models.CompteStatut`
+    et le geste dans `mesures.py`.
     """
     if isinstance(compte, Partenaire):
         return compte.statut != PartnerStatus.suspendu
+    if isinstance(compte, Salaries):
+        return compte.statut == CompteStatut.actif
     return True
 
 

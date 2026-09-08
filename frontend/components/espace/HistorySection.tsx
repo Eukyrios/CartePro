@@ -18,6 +18,7 @@ import SimulationNotice from "@/components/ui/SimulationNotice";
 import TextField from "@/components/ui/TextField";
 import Note from "@/components/ui/Note";
 import { LIST_PER_PAGE, LIST_WINDOW, MICRO } from "@/components/ui/surfaces";
+import type { ReactNode } from "react";
 
 const DATE = new Intl.DateTimeFormat("fr-FR", {
   day: "2-digit",
@@ -72,9 +73,54 @@ function categoryOf(entry: Movement) {
   return entry.partnerCategorie || undefined;
 }
 
-export default function HistorySection() {
-  const [entries, setEntries] = useState<readonly Movement[]>([]);
-  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+export default function HistorySection({
+  rows: fournies,
+  state: etatFourni,
+  eyebrow,
+  aside,
+  title = "Historique des",
+  accent = "dépenses.",
+  loadingMessage = "Chargement de vos opérations…",
+  errorMessage = "Vos opérations n’ont pas pu être chargées. Rechargez la page ; si cela persiste, le serveur ne répond pas.",
+  emptyMessage = "Aucune opération pour l'instant. Votre premier crédit et vos paiements apparaîtront ici.",
+}: {
+  /**
+   * Les mouvements, quand l'appelant les a déjà.
+   *
+   * Sans eux la section va chercher ceux du compte connecté, ce qu'elle a
+   * toujours fait : c'est l'écran d'un salarié dans son propre espace.
+   * L'administration, elle, lit l'historique de **quelqu'un d'autre** — une
+   * autre route, réservée au rôle — et un composant qui aurait choisi la route
+   * aurait dû connaître son audience. Même partage que
+   * `transactions/TransactionsSection`.
+   */
+  rows?: readonly Movement[];
+  /** Obligatoire avec `rows` : c'est l'appelant qui sait où en est sa requête. */
+  state?: "loading" | "ready" | "error";
+  /** Le fil d'Ariane, sur une page réservée qui n'est pas l'espace du titulaire. */
+  eyebrow?: ReactNode;
+  /**
+   * Ce qui se lit **à côté** du titre : l'état du compte et ses mesures.
+   *
+   * Même règle que `transactions/TransactionsSection` : le titre nomme un
+   * compte, donc son état et les gestes qui s'y appliquent appartiennent à ce
+   * nom, et non à une bande séparée en tête de page.
+   */
+  aside?: ReactNode;
+  title?: string;
+  accent?: ReactNode;
+  /* Les trois messages parlent au titulaire par défaut — « vos opérations ».
+     Un agent qui lit le compte d'un autre ne s'y reconnaîtrait pas, donc ils
+     se disent autrement plutôt que de tutoyer tout le monde à la troisième
+     personne. */
+  loadingMessage?: string;
+  errorMessage?: string;
+  emptyMessage?: string;
+}) {
+  const [chargees, setChargees] = useState<readonly Movement[]>([]);
+  const [etat, setEtat] = useState<"loading" | "ready" | "error">("loading");
+  const entries = fournies ?? chargees;
+  const state = etatFourni ?? etat;
   const { categories: referentiel } = useCategories();
   const [page, setPage] = useState(1);
   // Toute retouche de filtre ramène à la première page : rester en page 4 d'un
@@ -91,18 +137,19 @@ export default function HistorySection() {
      carte était celui du compte, et l'historique en dessous celui du
      localStorage. Deux vérités pour un même argent. */
   useEffect(() => {
+    if (fournies) return;
     let cancelled = false;
     getMovements()
       .then((rows) => {
         if (cancelled) return;
-        setEntries(rows);
-        setState("ready");
+        setChargees(rows);
+        setEtat("ready");
       })
-      .catch(() => !cancelled && setState("error"));
+      .catch(() => !cancelled && setEtat("error"));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [fournies]);
 
   // Oldest first for the running total, then keyed by id for lookup.
   const running = useMemo(() => {
@@ -165,18 +212,30 @@ export default function HistorySection() {
       density="offset"
       long
     >
-      <Display level={2} accent="dépenses." className="mb-4">
-        Historique des
-      </Display>
-      {/* Plus de « Réinitialiser la démonstration » : ce bouton effaçait un
+      {/* Le titre à gauche, l'état et les mesures à droite, sur la même
+          rangée : ils se replient sous le titre dans une fenêtre étroite. */}
+      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
+        <div className="min-w-0">
+          {eyebrow}
+
+          <Display
+            level={2}
+            accent={accent}
+            className={eyebrow ? "mt-4 mb-4" : "mb-4"}
+          >
+            {title}
+          </Display>
+          {/* Plus de « Réinitialiser la démonstration » : ce bouton effaçait un
           registre tenu dans le navigateur, qui n'existe plus. Le solde et les
           opérations sont ceux du serveur, et les remettre à zéro est un
           `make seed` — pas un clic dans l'interface d'un salarié. */}
-      <div className="mb-8">
-        <SimulationNotice>Simulation — montants fictifs</SimulationNotice>
+          <SimulationNotice>Simulation — montants fictifs</SimulationNotice>
+        </div>
+
+        {aside}
       </div>
 
-      <FilterGrid>
+      <FilterGrid className="mt-8">
         <TextField
           id="historique-recherche"
           label="Rechercher"
@@ -231,16 +290,15 @@ export default function HistorySection() {
       />
 
       {state === "loading" ? (
-        <EmptyState>Chargement de vos opérations…</EmptyState>
+        <EmptyState>{loadingMessage}</EmptyState>
       ) : state === "error" ? (
         <Note tone="danger" role="alert" className="mt-3">
-          Vos opérations n&apos;ont pas pu être chargées. Rechargez la page ; si
-          cela persiste, le serveur ne répond pas.
+          {errorMessage}
         </Note>
       ) : matches.length === 0 ? (
         <EmptyState>
           {entries.length === 0
-            ? "Aucune opération pour l'instant. Votre premier crédit et vos paiements apparaîtront ici."
+            ? emptyMessage
             : "Aucune opération ne correspond à ces filtres. Élargissez la période ou effacez les filtres."}
         </EmptyState>
       ) : (

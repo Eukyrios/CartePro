@@ -140,6 +140,17 @@ ROUTES = [
     ("POST", "/api/admin/partenaires/un-slug/refuser"),
     ("POST", "/api/admin/partenaires/un-slug/suspendre"),
     ("POST", "/api/admin/transactions/1/annuler"),
+    # Les trois domaines ajoutes a l'espace : comptes, tableau de bord,
+    # abondements. Ils portent le meme decorateur et doivent donc echouer de la
+    # meme facon sans jeton et avec un jeton de salarie.
+    ("GET", "/api/admin/comptes"),
+    ("GET", "/api/admin/comptes/1"),
+    ("POST", "/api/admin/comptes/1/activer"),
+    ("POST", "/api/admin/comptes/1/suspendre"),
+    ("POST", "/api/admin/comptes/1/cloturer"),
+    ("GET", "/api/admin/tableau-de-bord"),
+    ("GET", "/api/admin/abondements"),
+    ("POST", "/api/admin/abondements"),
 ]
 
 

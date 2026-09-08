@@ -83,6 +83,7 @@ export default function TransactionsSection({
   accent = ".",
   br = false,
   eyebrow,
+  aside,
   rows: entries,
   state,
   totalLabel,
@@ -115,6 +116,16 @@ export default function TransactionsSection({
   br?: boolean;
   /** La ligne de surtitre, quand l'écran en porte une. */
   eyebrow?: ReactNode;
+  /**
+   * Ce qui se lit **à côté** du titre : l'état du compte et les mesures qu'on
+   * peut prendre dessus.
+   *
+   * À côté et non au-dessus : le titre nomme un compte, et son état comme les
+   * gestes qui s'y appliquent appartiennent à ce nom. Posés dans une bande
+   * séparée en tête de page, ils se lisaient comme un second en-tête — deux
+   * choses à regarder avant d'arriver aux chiffres.
+   */
+  aside?: ReactNode;
   rows: readonly TransactionRow[];
   state: "loading" | "ready" | "error";
   /** « Total encaissé » — ce que le grand chiffre compte. */
@@ -211,8 +222,13 @@ export default function TransactionsSection({
       density="offset"
       long
     >
-      {eyebrow}
-      {/* Le rythme de la fiche d'un partenaire — `espace/PartnerPayment`, le
+      {/* Le titre à gauche, l'état et les mesures à droite, sur la même
+          rangée : ils se replient sous le titre quand la fenêtre est trop
+          étroite pour les deux. */}
+      <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
+        <div className="min-w-0">
+          {eyebrow}
+          {/* Le rythme de la fiche d'un partenaire — `espace/PartnerPayment`, le
           haut d'écran le plus aéré du site : 20px entre la rangée de surtitre
           et le titre, autant sous le titre. Collés, le surtitre en
           micro-capitales et le titre en `leading-[0.86]` se touchaient presque,
@@ -222,19 +238,23 @@ export default function TransactionsSection({
           quelque chose du titre — de quels montants on parle — alors que les
           filtres sont l'outil qui commence. Le même écart des deux côtés les
           aurait donnés pour un seul bloc. */}
-      <Display
-        level={2}
-        accent={accent}
-        br={br}
-        className={eyebrow ? "mt-5 mb-5" : "mb-5"}
-      >
-        {title}
-      </Display>
-      <SimulationNotice className="mb-10 block">
-        Simulation — montants de démonstration
-      </SimulationNotice>
+          <Display
+            level={2}
+            accent={accent}
+            br={br}
+            className={eyebrow ? "mt-5 mb-5" : "mb-5"}
+          >
+            {title}
+          </Display>
+          <SimulationNotice className="block">
+            Simulation — montants de démonstration
+          </SimulationNotice>
+        </div>
 
-      <FilterGrid>
+        {aside}
+      </div>
+
+      <FilterGrid className="mt-10">
         <TextField
           id={`${id}-recherche`}
           label={searchLabel}

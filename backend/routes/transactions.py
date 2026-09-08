@@ -4,9 +4,9 @@ import os
 from decimal import Decimal, InvalidOperation
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-from accounts import compte_depuis_identite, nom_affiche
+from accounts import compte_depuis_identite
+from mouvements import mouvements_du_compte
 from models import (
-    Abondement,
     Partenaire,
     PartnerStatus,
     Salaries,
@@ -152,74 +152,15 @@ def mes_transactions():
     """Les mouvements du compte connecté, du plus récent au plus ancien.
 
     La même route répond aux deux audiences, parce que c'est la même question
-    posée par deux côtés du comptoir : un salarié voit ses mouvements, un
-    partenaire ce qu'il a encaissé. Le `label` suit : chez qui pour l'un, de qui
-    pour l'autre — le nom du salarié, jamais son email.
+    posée des deux côtés du comptoir : un salarié voit ses mouvements, un
+    partenaire ce qu'il a encaissé.
 
-    Pour un salarié, les **abondements** sont du lot. Sans eux l'historique
-    n'aurait que des débits, et la ligne « d'où vient cet argent » manquerait :
-    le solde se lirait comme une donnée tombée du ciel. C'est aussi ce qui
-    permet à l'écran de recalculer le solde après chaque opération sans le
-    demander au serveur ligne par ligne.
-
-    `partnerCategorie` accompagne chaque paiement : l'historique se filtre par
-    catégorie, et la lui faire chercher dans le catalogue demanderait une
-    seconde requête pour une information que celle-ci connaît déjà.
+    Le calcul est dans `mouvements.py`, et non ici : l'administration lit le
+    même historique sur le compte de n'importe quel salarié — voir
+    `GET /api/admin/comptes/<id>/mouvements` — et les deux routes doivent
+    répondre la même chose, abondements compris.
     """
     compte = compte_depuis_identite(get_jwt_identity())
     if not compte:
         return jsonify({"transactions": []}), 200
-    est_partenaire = isinstance(compte, Partenaire)
-
-    query = Transaction.query.filter_by(statut=TransactionStatut.validee)
-    query = query.filter_by(
-        partenaire_id=compte.id
-    ) if est_partenaire else query.filter_by(salarie_id=compte.id)
-
-    lignes = [
-        {
-            "id": str(t.id),
-            "at": t.horodatage.isoformat(),
-            "kind": "credit" if est_partenaire else "debit",
-            "amountCents": round(t.montant * 100),
-            "label": (
-                _libelle_salarie(t.salarie)
-                if est_partenaire
-                else t.partenaire.raison_sociale
-            ),
-            "partnerId": t.partenaire.slug,
-            "partnerCategorie": (
-                t.partenaire.categorie.nom if t.partenaire.categorie else ""
-            ),
-        }
-        for t in query.all()
-    ]
-
-    if not est_partenaire:
-        lignes += [
-            {
-                "id": f"abondement-{a.id}",
-                "at": a.horodatage.isoformat(),
-                "kind": "credit",
-                "amountCents": round(a.montant * 100),
-                "label": f"Crédit employeur — {a.employeur.raison_sociale}",
-                "partnerId": None,
-                "partnerCategorie": "",
-            }
-            for a in Abondement.query.filter_by(salarie_id=compte.id).all()
-        ]
-
-    lignes.sort(key=lambda ligne: ligne["at"], reverse=True)
-    return jsonify({"transactions": lignes}), 200
-
-
-def _libelle_salarie(salarie):
-    """Le salarié tel qu'un partenaire peut le voir : son nom, rien de plus.
-
-    Un encaissement n'a pas à révéler l'adresse email de qui a payé — c'est
-    l'identifiant de connexion de cette personne. Le nom suffit à reconnaître
-    une opération dans une liste, et à défaut il ne reste que le numéro.
-    """
-    if not salarie:
-        return "Salarié"
-    return nom_affiche(salarie) or f"Salarié #{salarie.id}"
+    return jsonify({"transactions": mouvements_du_compte(compte)}), 200

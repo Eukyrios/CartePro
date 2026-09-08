@@ -36,11 +36,13 @@ from models import (
     Abondement,
     Admin,
     Categorie,
+    CompteStatut,
     CoupDeCoeur,
     CoupDeCoeurStatut,
     Decision,
     DecisionSens,
     Employeur,
+    MesureCompte,
     MotifCarte,
     Partenaire,
     PartnerStatus,
@@ -660,6 +662,34 @@ MOTS_ADMINISTRATEUR = {
 }
 
 
+# Les comptes salaries qui ne sont pas actifs, et le motif qui les a fermes.
+#
+# Comme pour les partenaires : les trois etats que le dispositif connait
+# existent dans les donnees, et les deux qui ne sont pas « actif » portent leur
+# motif ecrit. Un ecran de gestion des comptes ou tous les comptes seraient
+# actifs ne montrerait ni la suspension, ni la cloture, ni la trace qu'elles
+# laissent.
+#
+# Le rang est celui du panel (`salarie<N>@administration.example`). Les deux
+# choisis le sont pour que l'histoire tienne : le compte cloture est un compte
+# a solde nul — on ne ferme pas un compte qui porte encore de l'argent sans le
+# dire —, le compte suspendu en garde.
+MESURES_COMPTES = {
+    2: (
+        CompteStatut.cloture,
+        "Fin de contrat au 31 aout 2026. Compte cloture, solde nul au jour de "
+        "la cloture : aucun reliquat a reverser.",
+        100,
+    ),
+    7: (
+        CompteStatut.suspendu,
+        "Suspension conservatoire : piece d'identite non renouvelee au dossier "
+        "RH. La mesure se leve des la piece produite.",
+        102,
+    ),
+}
+
+
 def _categories(session):
     """Une categorie par secteur cite dans le reseau, creee une fois."""
     noms = sorted({entry["secteur"] for entry in NETWORK})
@@ -884,6 +914,24 @@ def run_seed():
 
         db.session.commit()
 
+        # 8 bis. Les mesures sur les comptes salaries.
+        #
+        # Apres les transactions, et datees apres la derniere : un compte
+        # suspendu le 102e jour a pu depenser jusqu'au 89e. Les poser avant
+        # aurait donne des paiements posterieurs a une suspension, ce qui ne
+        # peut pas arriver — `accounts.actif()` ferme la connexion.
+        for rang, (statut, motif, jour) in MESURES_COMPTES.items():
+            salarie = salaries[rang]
+            salarie.statut = statut
+            db.session.add(MesureCompte(
+                salarie_id=salarie.id,
+                agent_id=admin.id,
+                sens=statut,
+                motif_ecrit=motif,
+                horodatage=REFERENCE_DATE + timedelta(days=jour),
+            ))
+        db.session.commit()
+
         # 9. Generation et ecriture du CSV local
         csv_data = generate_transactions_csv()
         with open('transactions.csv', 'w', encoding='utf-8') as f:
@@ -898,6 +946,9 @@ def run_seed():
         print(f"OK {len(NETWORK)} partenaires : {conventionnes} conventionnes, "
               f"{attente} en attente, {refuses} refuses (avec motif ecrit).")
         print(f"OK 50 salaries + 1 salarie de demonstration, {ecrites} transactions ecrites ({refus} operations refusees, non ecrites).")
+        suspendus = sum(1 for v in MESURES_COMPTES.values() if v[0] == CompteStatut.suspendu)
+        clotures = sum(1 for v in MESURES_COMPTES.values() if v[0] == CompteStatut.cloture)
+        print(f"OK Comptes : {51 - len(MESURES_COMPTES)} actifs, {suspendus} suspendu(s), {clotures} cloture(s), chacun avec son motif ecrit.")
         print(f"OK Cas limites : {vides} soldes a zero, {maigres} sous les 5 EUR.")
         print("OK Export local 'transactions.csv' genere a la racine.")
         print()

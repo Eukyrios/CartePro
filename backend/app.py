@@ -21,6 +21,13 @@ from auth import (
 from routes.salaries import salaries_bp
 from routes.partenaires import partenaires_bp
 from routes.admin import admin_bp
+# Trois domaines de l'espace d'administration, dans leurs propres fichiers et
+# montés sous le meme prefixe : comptes salaries, tableau de bord national,
+# abondements employeurs. Blueprints distincts pour que `routes/admin.py` ne
+# devienne pas le fichier ou tout finit par tomber.
+from routes.admin_abondements import admin_abondements_bp
+from routes.admin_comptes import admin_comptes_bp
+from routes.admin_tableau import admin_tableau_bp
 from routes.transactions import transactions_bp
 from routes.sirh import sirh_bp
 from routes.theme import theme_bp
@@ -93,6 +100,9 @@ def create_app():
     app.register_blueprint(salaries_bp, url_prefix='/api/salaries')
     app.register_blueprint(partenaires_bp, url_prefix='/api/partenaires')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(admin_comptes_bp, url_prefix='/api/admin')
+    app.register_blueprint(admin_tableau_bp, url_prefix='/api/admin')
+    app.register_blueprint(admin_abondements_bp, url_prefix='/api/admin')
     app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
     app.register_blueprint(sirh_bp, url_prefix='/api/v1')
     # L'identité visuelle : couleurs, polices, logotype. Voir theme.json.

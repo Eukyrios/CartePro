@@ -11,15 +11,13 @@ import {
   type Partner,
 } from "@/components/data/partners";
 import { api, type ApiPartner } from "@/lib/api";
-import { useArrowKeys } from "@/hooks/useArrowKeys";
-import { MARQUEE_COPIES, useMarquee } from "@/hooks/useMarquee";
 import { useFilters } from "@/hooks/useFilters";
 import Display from "@/components/ui/Display";
 import EmptyState from "@/components/ui/EmptyState";
 import FilterGrid from "@/components/ui/FilterGrid";
+import MarqueeRow from "@/components/ui/MarqueeRow";
 import Micro from "@/components/ui/Micro";
 import Note from "@/components/ui/Note";
-import Pager from "@/components/ui/Pager";
 import PartnerTile from "@/components/ui/PartnerTile";
 import ResultCount from "@/components/ui/ResultCount";
 import Screen from "@/components/ui/Screen";
@@ -83,6 +81,7 @@ export default function PartnerCatalogue({
   keep = estAuReseau,
   last = false,
   hrefOf,
+  frame = "screen",
 }: {
   /** L'ancre de l'écran et l'entrée du rail qui y mène. */
   id?: string;
@@ -114,6 +113,17 @@ export default function PartnerCatalogue({
    * encaissé.
    */
   hrefOf?: (partner: Partner) => string;
+  /**
+   * "block" pour un catalogue qui partage son écran avec un autre.
+   *
+   * L'écran « Les comptes » de l'administration en contient deux — les
+   * établissements, puis les comptes salariés — sous un seul titre. Le
+   * catalogue y perd donc son `Screen` et son grand titre, et garde tout le
+   * reste : sa requête, ses filtres, son rang. Recopier le composant pour lui
+   * enlever son cadre aurait fait deux réseaux à maintenir, ce que ce
+   * paramètre existe précisément pour éviter.
+   */
+  frame?: "screen" | "block";
 } = {}) {
   const [partners, setPartners] = useState<Partner[]>([]);
   /* Trois états et non deux : « en cours », « chargé », « en panne ». Avec un
@@ -164,27 +174,32 @@ export default function PartnerCatalogue({
     [partners, filters],
   );
 
-  const { trackRef, nudge, dragHandlers, hoverHandlers, dragged } =
-    useMarquee(matches);
-  const handleKeyDown = useArrowKeys(nudge);
-
-  return (
-    <Screen
-      id={id}
-      height={last ? "screen-minus-footer" : "screen"}
-      aria-labelledby={`${id}-titre`}
-    >
-      {eyebrow}
-      {/* Titled like the other screens of the space. */}
-      <Display
-        level={2}
-        id={`${id}-titre`}
-        accent="."
-        br={false}
-        className={eyebrow ? "mt-4" : undefined}
-      >
-        {heading}
-      </Display>
+  const contenu = (
+    <>
+      {frame === "screen" ? (
+        <>
+          {eyebrow}
+          {/* Titled like the other screens of the space. */}
+          <Display
+            level={2}
+            id={`${id}-titre`}
+            accent="."
+            br={false}
+            className={eyebrow ? "mt-4" : undefined}
+          >
+            {heading}
+          </Display>
+        </>
+      ) : (
+        /* En bloc, le titre descend d'un cran : l'écran qui l'accueille porte
+           le sien, et deux titres de même taille se disputeraient l'écran. */
+        <h3
+          id={`${id}-titre`}
+          className="text-cp-fg text-[20px] font-black tracking-[-0.04em]"
+        >
+          {heading}
+        </h3>
+      )}
 
       <FilterGrid className="mt-8">
         <TextField
@@ -256,72 +271,57 @@ export default function PartnerCatalogue({
           nom, une autre ville, ou effacez les filtres.
         </EmptyState>
       ) : (
-        <>
-          {/* Clipped viewport for the track. Hovering or focusing inside it
-              stops the drift. */}
-          <div className="relative mt-5 overflow-hidden" {...hoverHandlers}>
-            <ul
-              ref={trackRef}
-              role="group"
-              aria-label="Partenaires — le rang défile, glissez pour le pousser"
-              tabIndex={0}
-              onKeyDown={handleKeyDown}
-              {...dragHandlers}
-              className="focus-visible:outline-cp-accent flex w-max touch-pan-y gap-5 select-none focus-visible:outline-2 focus-visible:outline-offset-4"
+        <MarqueeRow
+          items={matches}
+          keyOf={(partner) => partner.id}
+          label="Partenaires — le rang défile, glissez pour le pousser"
+          prevLabel="Partenaire précédent"
+          nextLabel="Partenaire suivant"
+          render={(partner, chrome) => (
+            <PartnerTile
+              partner={partner}
+              href={hrefOf?.(partner)}
+              tabIndex={chrome.tabIndex}
+              onClick={chrome.onClick}
             >
-              {Array.from({ length: MARQUEE_COPIES }).flatMap((_, copy) =>
-                matches.map((partner) => (
-                  <li
-                    key={`${copy}-${partner.id}`}
-                    className="w-[min(78vw,320px)] shrink-0"
-                    /* Only the first copy is real to a screen reader; the
-                       others are there to make the row look endless. */
-                    aria-hidden={copy > 0 ? "true" : undefined}
-                  >
-                    <PartnerTile
-                      partner={partner}
-                      href={hrefOf?.(partner)}
-                      tabIndex={copy > 0 ? -1 : undefined}
-                      onClick={(event) => {
-                        /* Pushing the row along is not choosing a partner.
-                           `detail === 0` is a keyboard activation, which no
-                           drag precedes: without that check a stale flag from
-                           an earlier gesture would block Enter on the tile. */
-                        if (event.detail !== 0 && dragged.current) {
-                          event.preventDefault();
-                        }
-                      }}
-                    >
-                      <div className="flex flex-1 flex-wrap items-baseline gap-x-4 gap-y-2 p-4">
-                        <Micro tone="accent">
-                          {categoryLabel(partner.categoryId, referentiel)}
-                        </Micro>
-                        <Arrow className="text-cp-accent ms-auto" />
-                        {/* Address, city and postcode: the location, in full,
-                            with no map to open. */}
-                        <address className="text-cp-muted basis-full text-[13px] leading-[1.5] not-italic">
-                          {partner.address}
-                          <br />
-                          {partner.postcode} {partner.city}
-                        </address>
-                      </div>
-                    </PartnerTile>
-                  </li>
-                )),
-              )}
-            </ul>
-          </div>
-
-          <Pager
-            onPrev={() => nudge(-1)}
-            onNext={() => nudge(1)}
-            prevLabel="Partenaire précédent"
-            nextLabel="Partenaire suivant"
-            hint="Le rang défile, glissez-le ou utilisez les flèches"
-            className="mt-6"
-          />
-        </>
+              <div className="flex flex-1 flex-wrap items-baseline gap-x-4 gap-y-2 p-4">
+                <Micro tone="accent">
+                  {categoryLabel(partner.categoryId, referentiel)}
+                </Micro>
+                <Arrow className="text-cp-accent ms-auto" />
+                {/* Address, city and postcode: the location, in full, with no
+                    map to open. */}
+                <address className="text-cp-muted basis-full text-[13px] leading-[1.5] not-italic">
+                  {partner.address}
+                  <br />
+                  {partner.postcode} {partner.city}
+                </address>
+              </div>
+            </PartnerTile>
+          )}
+        />
       )}
+    </>
+  );
+
+  /* En bloc, c'est l'écran d'accueil qui porte l'ancre et le titre : un
+     `Screen` imbriqué dans un autre ajouterait une hauteur de fenêtre et un
+     second point d'accroche au milieu de la section. */
+  if (frame === "block") {
+    return (
+      <section aria-labelledby={`${id}-titre`} className="min-w-0">
+        {contenu}
+      </section>
+    );
+  }
+
+  return (
+    <Screen
+      id={id}
+      height={last ? "screen-minus-footer" : "screen"}
+      aria-labelledby={`${id}-titre`}
+    >
+      {contenu}
     </Screen>
   );
 }

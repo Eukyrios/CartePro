@@ -26,6 +26,24 @@ class DecisionSens(enum.Enum):
     # de mieux, rendait l'historique illisible : « refuse → suspendu → refuse ».
     reexamen = "réexamen demandé"
 
+class CompteStatut(enum.Enum):
+    """L'état d'un compte salarié, décidé par l'administration.
+
+    Le pendant de `PartnerStatus` du côté des salariés, qui n'en avaient pas :
+    `accounts.actif()` répondait « oui » pour tout salarié, sans exception, donc
+    aucun compte ne pouvait être fermé autrement qu'en le supprimant — et le
+    supprimer emporterait ses transactions, que le schéma tient pour immuables.
+
+    « Clôturé » n'est pas « suspendu ». La suspension est une mesure en cours,
+    qui se lève ; la clôture est définitive et ne se rouvre pas par la même
+    porte — l'écran d'administration le dit avant de la prendre. Ni l'une ni
+    l'autre n'efface quoi que ce soit : les abondements reçus et les paiements
+    faits restent, et le solde reste calculable.
+    """
+    actif = "actif"
+    suspendu = "suspendu"
+    cloture = "clôturé"
+
 class TransactionStatut(enum.Enum):
     validee = "validée"
     annulee = "annulée"
@@ -80,11 +98,15 @@ class Salaries(db.Model):
     couleur_texte = db.Column(db.String(7), nullable=False)  # HEX
     motif = db.Column(SQLEnum(MotifCarte), nullable=False, default=MotifCarte.aucun)
     effet_metallise = db.Column(db.Integer, nullable=False, default=0)  # 0–100
+    # L'état du compte. Par défaut actif : une inscription n'a pas à être
+    # activée à la main, c'est la suspension et la clôture qui sont des gestes.
+    statut = db.Column(SQLEnum(CompteStatut), nullable=False, default=CompteStatut.actif)
 
     # Relation
     employeur = db.relationship("Employeur", back_populates="salaries")
     transactions = db.relationship("Transaction", back_populates="salarie", foreign_keys="Transaction.salarie_id", cascade="all, delete-orphan")
     abondements_recus = db.relationship("Abondement", back_populates="salarie", cascade="all, delete-orphan")
+    mesures = db.relationship("MesureCompte", back_populates="salarie", cascade="all, delete-orphan")
 
     # Propriété dérivée : solde courant
     @property
@@ -229,6 +251,12 @@ class Abondement(db.Model):
     montant = db.Column(db.Float, nullable=False)
     horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     agent_admin_id = db.Column(db.Integer, nullable=False)  # ID de l’admin ayant saisi
+    # La clé d'idempotence, comme `Transaction.idempotency_key` et pour la même
+    # raison : créditer est une écriture d'argent, et un double envoi — un
+    # double-clic, un réseau qui repart — ne doit pas créditer deux fois. Le
+    # navigateur en pose une par saisie ; l'unicité fait le reste. Nullable,
+    # parce que le seed et les scripts n'en ont pas besoin.
+    reference = db.Column(db.String(120), unique=True, nullable=True)
 
     # Relations
     employeur = db.relationship("Employeur", back_populates="abondements")
@@ -237,6 +265,37 @@ class Abondement(db.Model):
     __table_args__ = (
         CheckConstraint("montant > 0", name="ck_abondement_montant_positive"),
     )
+
+# -----------------------------------------------------------------------------
+# Mesure sur un compte salarié (activation, suspension, clôture)
+# -----------------------------------------------------------------------------
+class MesureCompte(db.Model):
+    """Une mesure prise sur un compte salarié, et le motif écrit qui la porte.
+
+    Le pendant exact de `Decision` du côté des salariés. Même règle, et pour la
+    même raison : un compte ne change pas d'état sans qu'on sache qui l'a
+    décidé, quand, et pourquoi. Rien n'est effacé — un compte suspendu puis
+    réactivé puis clôturé laisse trois lignes, dans cet ordre.
+
+    Table à part plutôt que colonnes sur `salaries` : un état courant n'est pas
+    un historique, et `Decision` ne peut pas servir ici — son `partenaire_id`
+    est non nul.
+
+    `sens` porte l'état d'arrivée, et non un vocabulaire parallèle : les trois
+    gestes mènent chacun à un état et un seul, donc une seconde énumération
+    n'apprendrait rien et pourrait diverger. C'est la différence avec
+    `Decision`, dont le sens « réexamen demandé » ne correspond à aucun statut.
+    """
+    __tablename__ = "mesures_compte"
+    id = db.Column(db.Integer, primary_key=True)
+    salarie_id = db.Column(db.Integer, db.ForeignKey("salaries.id"), nullable=False)
+    agent_id = db.Column(db.Integer, nullable=False)  # ID de l'administrateur
+    sens = db.Column(SQLEnum(CompteStatut), nullable=False)
+    motif_ecrit = db.Column(db.Text, nullable=False)
+    horodatage = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    # Relation
+    salarie = db.relationship("Salaries", back_populates="mesures")
 
 # -----------------------------------------------------------------------------
 # Coup de cœur de l'administrateur
