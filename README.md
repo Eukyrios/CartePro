@@ -3,7 +3,10 @@
 Démonstrateur du crédit salarié de l'« Administration » : un employeur
 crédite ses salariés, qui dépensent chez des partenaires conventionnés.
 
-Front Next.js 15 (App Router, Tailwind v4), back Flask + SQLite.
+Front Next.js 15 (App Router, Tailwind v4), back Flask + SQLite — et Postgres
+pour le seul écran qui l'exige, le journal d'audit en ajout seul (voir plus
+bas) : un privilège révocable demande un moteur qui ait une notion
+d'utilisateur.
 
 ## Démarrer
 
@@ -135,7 +138,7 @@ jeton c'est 401, avec un jeton de salarié ou de partenaire c'est 403.
 | `PUT /api/theme`                               | L'identité visuelle, enregistrée — écran Style de /parametres  |
 | `GET /api/admin/transactions`                  | Tous les paiements validés, en JSON — l'écran « Les comptes »  |
 | `GET /api/admin/transactions.csv`              | Les mêmes, en CSV, pour l'emporter                             |
-| `POST /api/admin/transactions/<id>/annuler`    | **501** — pas encore écrite, et le dit                         |
+| `POST /api/admin/transactions/<id>/annuler`    | `{ motif }` — écrit une **contre-écriture**, jamais une modification ; refusée si le paiement est déjà annulé |
 
 Les trois domaines de l'espace, chacun dans son fichier de routes plutôt que
 tous dans `routes/admin.py` :
@@ -178,11 +181,57 @@ Trois règles y sont tenues par le serveur, pas par l'écran :
   inconnu et rien n'est écrit.
 
 `backend/test_admin_api.py` vérifie les deux choses séparément : que chaque
-route refuse ce qu'elle doit refuser — sa liste `ROUTES` couvre les huit routes
-ci-dessus —, et qu'une décision change le statut **et** écrit sa ligne dans
-`decisions`. `backend/test_admin_espace.py` couvre ce que les trois domaines
-font : le motif obligatoire, la clôture définitive, l'historique qui ne
-s'efface pas, et la dotation envoyée deux fois qui ne crédite qu'une fois.
+route refuse ce qu'elle doit refuser — sa liste `ROUTES` couvre toutes les
+routes des tableaux ci-dessus, journal d'audit compris —, et qu'une décision
+change le statut **et** écrit sa ligne dans `decisions`.
+`backend/test_admin_espace.py` couvre ce que les trois domaines font : le motif
+obligatoire, la clôture définitive, l'historique qui ne s'efface pas, et la
+dotation envoyée deux fois qui ne crédite qu'une fois.
+`backend/test_audit_couverture.py` couvre ce que le journal consigne de ces
+gestes — et surtout ce qu'il ne consigne pas.
+
+### Le journal d'audit
+
+Chaque opération sensible écrit une ligne dans `audit_log`, en **ajout seul** :
+qui a fait quoi, à qui, quand, depuis quelle adresse. Chaque ligne porte
+l'empreinte SHA-256 de la précédente, si bien qu'une altération ou une
+suppression intercalaire se voit — et la garantie ne tient pas au code mais à
+un `REVOKE UPDATE, DELETE` en base, posé sur l'utilisateur applicatif. C'est ce
+qui exige **Postgres** : SQLite n'a pas de notion d'utilisateur, donc pas de
+privilège à révoquer. `make dev` et `make seed` restent sur SQLite, où le
+chaînage fonctionne mais où le refus ne peut pas être démontré.
+
+Le journal se lit par deux routes, à part des autres : leur préfixe est
+`/api/v1/admin` et non `/api/admin` — c'est celui que la Cour des comptes
+attend, au caractère près. Même `@admin_required`, donc mêmes refus.
+
+| Route                            |                                                                              |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| `GET /api/v1/admin/audit`        | Le journal, filtrable `depuis`/`jusque`/`acteur`/`action`, paginé (200 max)  |
+| `GET /api/v1/admin/audit/export` | Le même en JSON signé (HMAC-SHA256), avec le condensé de la chaîne           |
+
+Le parcours Postgres, depuis la racine :
+
+```bash
+cp backend/.env.example backend/.env   # y mettre les mots de passe et la clé HMAC
+make postgres-up                        # le conteneur postgres:16-alpine
+make provision-postgres                 # les tables, le rôle applicatif, le REVOKE
+make migrate-audit-data                 # recopie la base SQLite, écrit la genèse
+make audit-demo                         # altère une copie jetable, et le prouve
+```
+
+`make provision-postgres` affiche les privilèges **effectifs** du rôle
+applicatif, lus dans `information_schema.role_table_grants` et non affirmés :
+`audit_log : ['INSERT', 'SELECT']`. Un export se vérifie sans toucher à la base
+— c'est le point, puisque c'est la base qui est soupçonnée :
+
+```bash
+cd backend && python verify_audit.py export.json
+```
+
+Codes de sortie : 0 conforme, 1 altéré, 2 erreur. La note technique est dans
+`docs/audit-log/note.md` : ce qu'elle couvre, ce qu'elle ne couvre pas, et les
+limites assumées.
 
 ### Faire évoluer une base déjà en service
 
@@ -230,20 +279,34 @@ d'encaisser plus que le solde disponible.
 ```
 backend/     Flask : app.py, auth.py, accounts.py, models.py, routes/, seed.py
              theme.json  L'identité visuelle : couleurs, polices, logotype
-             instruire.py  Accepter, refuser ou suspendre un partenaire
+             instruire.py  Accepter, refuser, suspendre ou clôturer un partenaire
+             migrer.py  Ajoute à une base en service ce que le schéma a gagné
+             audit_chain.py  Le chaînage SHA-256, partagé par l'écriture et la
+                             vérification — sans Flask ni base, à dessein
+             services/audit_service.py  `record_event`, le point d'écriture
+                             unique du journal
+             verify_audit.py  Vérifie un export sans se connecter à la base
+             provision_postgres.py  Les tables, le rôle applicatif, le REVOKE
+             migrate_sqlite_to_postgres.py  Recopie la base et écrit la genèse
+             demo_audit_tamper.sh  La démonstration d'altération, sur une copie
              `models.py` porte le schéma normalisé (Employeur, Salaries,
-             Partenaire, Transaction, Abondement, CoupDeCoeur, Decision,
-             Admin) ; `accounts.py` traduit ces tables vers le contrat que le
-             front consomme, pour qu'aucune route n'ait à le refaire
+             Partenaire, Transaction, Abondement, MesureCompte, PartenaireLike,
+             Decision, Admin, AuditLog) ; `accounts.py` traduit ces tables vers
+             le contrat que le front consomme, pour qu'aucune route n'ait à le
+             refaire
 frontend/    Next.js — voir frontend/components/README.md pour la répartition
 docs/
+  audit-log/note.md  La note technique du journal d'audit
   brand-book/  Le brand book : sources HTML, captures, et le PDF de 15 pages
   03_Projet_CGU_Ticket_Tout.docx  Le projet de CGU. Document de référence,
                transcrit dans frontend/components/legal/cgu.ts, que la page
                /conditions affiche
 tools/       Les scripts qui produisent le brand book (voir plus bas)
 .github/     La CI : build du front et publication de l'artefact
-Makefile     install / seed / dev / clean
+Makefile     install / seed / dev / clean, et le parcours du journal :
+             postgres-up / postgres-down / provision-postgres /
+             migrate-audit-data / audit-demo
+docker-compose.yml  Le Postgres de développement, sur la boucle locale
 start.sh     Ce que `make dev` exécute
 ```
 
