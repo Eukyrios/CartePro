@@ -80,7 +80,12 @@ def api_login():
             actor_role=role(compte) if compte else "anonyme",
             actor_id=identite(compte) if compte else None,
             target_type="compte",
-            target_id=identite(compte) if compte else email,
+            # Rien quand le compte n'existe pas, et surtout pas l'adresse
+            # envoyée : `target_id` est une colonne bornée, celle-ci vient d'un
+            # client anonyme et n'est bornée par rien. L'adresse reste dans le
+            # `payload`, qui est du JSON sans limite de longueur — c'est là
+            # qu'on la lit, et c'est ce que vérifie `test_audit_log.py`.
+            target_id=identite(compte) if compte else None,
             payload={"email": email},
             ip=request.remote_addr,
             commit=True,

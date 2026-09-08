@@ -380,7 +380,14 @@ class AuditLog(db.Model):
     actor_role = db.Column(db.String(20), nullable=False)
     action = db.Column(db.String(64), nullable=False, index=True)
     target_type = db.Column(db.String(64), nullable=True)
-    target_id = db.Column(db.String(64), nullable=True)
+    # 255 et non 64 : on y ecrit des slugs de partenaire, dont la colonne fait
+    # 120. SQLite ne dit rien d'une chaine trop longue, Postgres refuse — et
+    # c'est Postgres que ce journal vise. La longueur n'entre pas dans le
+    # chainage (`audit_chain.py` hache des valeurs), donc l'elargir n'invalide
+    # aucune ligne deja ecrite ; l'elargir *apres* le provisionnement, en
+    # revanche, demanderait un ALTER TABLE sur une table dont on vient de jurer
+    # qu'elle ne se modifie pas.
+    target_id = db.Column(db.String(255), nullable=True)
     payload = db.Column(db.JSON, nullable=False, default=dict)
     ip = db.Column(db.String(64), nullable=True)
     # L'empreinte du precedent (0000...0 pour la premiere ligne), et la sienne

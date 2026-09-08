@@ -88,10 +88,19 @@ def accorder_privileges(connexion):
 
     # Tables metier : acces complet, l'utilisateur applicatif en a besoin pour
     # fonctionner normalement (CRUD classique).
-    tables_metier = [
-        "employeurs", "categories", "salaries", "partenaires", "admins",
-        "transactions", "abondements", "decisions",
-    ]
+    #
+    # La liste vient du schema et non d'un litteral ecrit a la main. Elle en
+    # etait un, figee a huit noms, et elle avait deja rate les deux tables
+    # ajoutees depuis — `mesures_compte` et `partenaire_likes` : sous Postgres,
+    # `cartepro_app` n'avait alors aucun privilege dessus, donc toute mesure de
+    # compte et tout coup de coeur echouaient en « permission denied » sur une
+    # base pourtant provisionnee sans erreur. Derivee, elle ne peut plus rater
+    # une table ; le journal reste la seule exception, traitee juste apres.
+    from models import AuditLog, db
+
+    tables_metier = sorted(
+        table for table in db.metadata.tables if table != AuditLog.__tablename__
+    )
     for table in tables_metier:
         connexion.execute(text(f"GRANT SELECT, INSERT, UPDATE, DELETE ON {table} TO {APP_ROLE}"))
 

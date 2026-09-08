@@ -154,6 +154,13 @@ ROUTES = [
     ("GET", "/api/admin/tableau-de-bord"),
     ("GET", "/api/admin/abondements"),
     ("POST", "/api/admin/abondements"),
+    # Le journal d'audit. Prefixe `/api/v1/admin` et non `/api/admin` — c'est
+    # celui que la Cour des comptes attend, au caractere pres — mais meme garde
+    # `@admin_required`, donc meme exigence : 401 sans jeton, 403 avec un jeton
+    # de salarie. Une route qui *lit* le journal se refuse aussi fermement que
+    # celle qui l'ecrit : il nomme qui a fait quoi, et a qui.
+    ("GET", "/api/v1/admin/audit"),
+    ("GET", "/api/v1/admin/audit/export"),
 ]
 
 

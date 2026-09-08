@@ -30,6 +30,12 @@ ACTIONS_AUDIT = {
     "accepter": "partenaire_valide",
     "refuser": "partenaire_refuse",
     "suspendre": "partenaire_suspendu",
+    # `cloturer` manquait : le geste a ete ajoute a `GESTES` apres l'ecriture du
+    # journal, et l'indexation ci-dessous levait donc un KeyError — une cloture
+    # d'etablissement echouait en 500 au lieu de s'ecrire. C'est exactement
+    # l'oubli que ces deux tables cote a cote sont censees rendre visible ; il
+    # est desormais tenu par un test (`test_audit_couverture.py`).
+    "cloturer": "partenaire_cloture",
 }
 
 #: Le sens de la decision, et le statut qu'elle laisse au dossier.

@@ -40,14 +40,53 @@ from models import (
     Categorie,
     Decision,
     Employeur,
+    MesureCompte,
     Partenaire,
+    PartenaireLike,
     Salaries,
     Transaction,
+    db,
 )
 
 #: Ordre de copie : chaque table avant celles qui la referencent par cle
 #: etrangere, sans quoi l'insertion echoue sur une contrainte non satisfaite.
-ORDRE = [Employeur, Categorie, Admin, Salaries, Partenaire, Transaction, Abondement, Decision]
+#:
+#: `MesureCompte` et `PartenaireLike` referencent `salaries`, la seconde aussi
+#: `partenaires` : d'ou leur place apres les deux. Elles manquaient — leurs
+#: lignes n'etaient pas copiees et leurs sequences restaient a zero, donc le
+#: premier coup de coeur insere par l'application collisionnait sur la cle
+#: primaire d'une ligne migree.
+ORDRE = [
+    Employeur,
+    Categorie,
+    Admin,
+    Salaries,
+    Partenaire,
+    Transaction,
+    Abondement,
+    MesureCompte,
+    PartenaireLike,
+    Decision,
+]
+
+#: Le garde qui rend l'oubli suivant bruyant.
+#:
+#: Une liste ecrite a la main ne bouge pas toute seule : c'est sa vertu — elle
+#: porte l'ordre des cles etrangeres, qu'aucune introspection ne devine — et
+#: c'est son defaut, puisqu'un modele ajoute ailleurs n'y apparait pas. Le
+#: defaut se paie en silence : la table n'est pas copiee et personne ne le voit.
+#: D'ou ce controle, qui refuse la migration plutot que de la faire a moitie.
+_MODELES_ABSENTS = (
+    {mapper.class_.__tablename__ for mapper in db.Model.registry.mappers}
+    - {modele.__tablename__ for modele in ORDRE}
+    - {AuditLog.__tablename__}
+)
+if _MODELES_ABSENTS:
+    sys.exit(
+        f"Tables absentes d'ORDRE : {sorted(_MODELES_ABSENTS)}. Les ajouter, "
+        "chacune apres celles qu'elle reference par cle etrangere, sinon leurs "
+        "lignes ne seront pas copiees et leurs sequences resteront desalignees."
+    )
 
 
 def _source_uri():
