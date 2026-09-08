@@ -14,6 +14,7 @@ from models import (
     TransactionStatut,
     db,
 )
+from services.audit_service import record_event
 
 transactions_bp = Blueprint('transactions', __name__)
 SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-en-dev")
@@ -82,6 +83,16 @@ def valider_transaction():
         # Le jeton d'authentification appartient au partenaire qui encaisse.
         appelant = compte_depuis_identite(get_jwt_identity())
         if not isinstance(appelant, Partenaire) or appelant.id != partenaire_ref.id:
+            record_event(
+                action="transaction_refusee",
+                actor_role="partenaire" if isinstance(appelant, Partenaire) else "anonyme",
+                actor_id=f"partenaire:{appelant.id}" if isinstance(appelant, Partenaire) else None,
+                target_type="partenaire",
+                target_id=partenaire_ref.slug,
+                payload={"motif": "encaissement_non_autorise", "montant": float(montant)},
+                ip=request.remote_addr,
+                commit=True,
+            )
             return jsonify({"status": "error", "message": "Vous n'êtes pas autorisé à encaisser pour ce partenaire."}), 403
 
         # Et il est conventionné. L'interface barre déjà l'encaissement aux
@@ -90,6 +101,16 @@ def valider_transaction():
         # direct à la route encaissait quand même. Le statut est la décision du
         # administration, donc c'est ici qu'elle s'applique.
         if partenaire_ref.statut != PartnerStatus.valide:
+            record_event(
+                action="transaction_refusee",
+                actor_role="partenaire",
+                actor_id=f"partenaire:{appelant.id}",
+                target_type="partenaire",
+                target_id=partenaire_ref.slug,
+                payload={"motif": "partenaire_non_conventionne", "montant": float(montant)},
+                ip=request.remote_addr,
+                commit=True,
+            )
             return jsonify({
                 "status": "error",
                 "message": "Cet établissement n'est pas conventionné : "
@@ -107,7 +128,16 @@ def valider_transaction():
 
         # Vérification stricte du solde (ne peut jamais devenir négatif)
         if Decimal(str(salarie.solde)) < montant:
-            db.session.rollback()
+            record_event(
+                action="transaction_refusee",
+                actor_role="partenaire",
+                actor_id=f"partenaire:{appelant.id}",
+                target_type="salarie",
+                target_id=salarie.id,
+                payload={"motif": "solde_insuffisant", "montant": float(montant)},
+                ip=request.remote_addr,
+            )
+            db.session.commit()  # écrit l'audit ci-dessus, relâche le verrou FOR UPDATE
             return jsonify({"status": "error", "message": "Solde insuffisant pour effectuer cette transaction."}), 400
 
         # Écriture irréversible. Le solde n'est pas décrémenté : il est calculé
@@ -124,6 +154,20 @@ def valider_transaction():
         )
 
         db.session.add(nouvelle_transaction)
+        db.session.flush()  # assigne l'id avant l'ecriture d'audit
+        record_event(
+            action="transaction_validee",
+            actor_role="partenaire",
+            actor_id=f"partenaire:{appelant.id}",
+            target_type="transaction",
+            target_id=nouvelle_transaction.id,
+            payload={
+                "salarie_id": salarie.id,
+                "partenaire_id": partenaire_ref.id,
+                "montant": float(montant),
+            },
+            ip=request.remote_addr,
+        )
         db.session.commit()  # Relâche les verrous FOR UPDATE
 
         return jsonify({

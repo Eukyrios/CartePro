@@ -1,0 +1,29 @@
+services:
+  # Le serveur SQL réel dont le journal d'audit a besoin : SQLite n'a pas de
+  # notion d'utilisateur ni de GRANT/REVOKE, donc pas de privilège révocable
+  # à démontrer devant le contrôleur. Voir docs/audit-log/note.md, §1.
+  postgres:
+    image: postgres:16-alpine
+    container_name: cartepro-postgres
+    restart: unless-stopped
+    environment:
+      # Le superutilisateur — celui qui a les pleins pouvoirs, et qui sert à
+      # la démonstration d'altération (le mail de Vignal : « vous vous
+      # connectez avec un utilisateur privilégié »). L'application ne se
+      # connecte jamais avec ce compte-là ; elle se connecte avec
+      # cartepro_app, provisionné par backend/provision_postgres.py.
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres-superuser-dev-only
+      POSTGRES_DB: cartepro
+    ports:
+      - "5432:5432"
+    volumes:
+      - cartepro_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cartepro"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  cartepro_pgdata:

@@ -25,6 +25,7 @@ from decorators import admin_required
 from flask_jwt_extended import get_jwt_identity
 from instruction import GESTES, MotifManquant, instruire
 from models import Partenaire, PartnerStatus, Transaction, TransactionStatut, db
+from services.audit_service import record_event
 from services.csv_service import generate_transactions_csv
 
 admin_bp = Blueprint('admin', __name__)
@@ -172,7 +173,10 @@ def _instruire_par_slug(slug, geste, motif):
         }), 409
 
     try:
-        avant, nouveau = instruire(partenaire, geste, motif, agent_id=_agent_courant())
+        avant, nouveau = instruire(
+            partenaire, geste, motif,
+            agent_id=_agent_courant(), ip=request.remote_addr,
+        )
     except MotifManquant as manque:
         # 422 et non 400 : la requete est bien formee, c'est son contenu qui ne
         # permet pas de decider. Une decision sans motif n'est pas une decision.
@@ -304,6 +308,17 @@ def export_transactions_csv():
     maintenant du decorateur, comme partout ailleurs dans ce fichier.
     """
     csv_data = generate_transactions_csv()
+
+    record_event(
+        action="admin_export_transactions_csv",
+        actor_role="admin",
+        actor_id=f"admin:{_agent_courant()}",
+        target_type="export",
+        target_id=None,
+        payload={"format": "csv"},
+        ip=request.remote_addr,
+        commit=True,
+    )
 
     return Response(
         csv_data,

@@ -24,6 +24,7 @@ from routes.admin import admin_bp
 from routes.transactions import transactions_bp
 from routes.sirh import sirh_bp
 from routes.theme import theme_bp
+from routes.audit import audit_bp
 from flask import jsonify
 from flasgger import Swagger
 
@@ -97,6 +98,10 @@ def create_app():
     app.register_blueprint(sirh_bp, url_prefix='/api/v1')
     # L'identité visuelle : couleurs, polices, logotype. Voir theme.json.
     app.register_blueprint(theme_bp, url_prefix='/api/theme')
+    # Journal d'audit — GET /api/v1/admin/audit, exigé par le courriel Vignal
+    # du 8 septembre. Préfixe distinct de `/api/admin` (admin_bp) : c'est
+    # celui que la Cour des comptes attend au premier caractère près.
+    app.register_blueprint(audit_bp, url_prefix='/api/v1/admin')
 
     # Création automatique des tables SQLite si elles n'existent pas.
     #

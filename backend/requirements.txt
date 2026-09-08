@@ -12,3 +12,4 @@ flasgger
 Flask-SQLAlchemy
 Flask-Login
 Werkzeug
+psycopg2-binary

@@ -262,4 +262,45 @@ class Decision(db.Model):
 
     # Relation
     partenaire = db.relationship("Partenaire", back_populates="decisions")
+
+# -----------------------------------------------------------------------------
+# Journal d'audit (exige par la Cour des comptes, courriel Vignal du 8 septembre)
+# -----------------------------------------------------------------------------
+class AuditLog(db.Model):
+    """Une ecriture immuable pour chaque operation sensible.
+
+    Ajout seul. La garantie ne tient pas a ce fichier — un developpeur presse
+    contourne du code, pas un droit refuse en base — mais au `REVOKE UPDATE,
+    DELETE` pose sur l'utilisateur applicatif par
+    `provision_postgres.py`. Les deux ecouteurs ci-dessous sont une seconde
+    ligne de defense, pas la premiere : ils bloquent l'ORM, pas un client SQL
+    direct avec les memes droits que l'application.
+
+    Le chainage (`prev_hash`, `hash`) rend une suppression intercalaire
+    detectable : voir `audit_chain.py` pour l'ordre exact des champs et
+    `verify_audit.py` pour la verification, qui ne se connecte jamais a cette
+    table.
+    """
+    __tablename__ = "audit_log"
+    id = db.Column(db.Integer, primary_key=True)
+    occurred_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+    actor_id = db.Column(db.String(64), nullable=True)
+    actor_role = db.Column(db.String(20), nullable=False)
+    action = db.Column(db.String(64), nullable=False, index=True)
+    target_type = db.Column(db.String(64), nullable=True)
+    target_id = db.Column(db.String(64), nullable=True)
+    payload = db.Column(db.JSON, nullable=False, default=dict)
+    ip = db.Column(db.String(64), nullable=True)
+    # L'empreinte du precedent (0000...0 pour la premiere ligne), et la sienne
+    # propre, que la ligne suivante portera comme prev_hash.
+    prev_hash = db.Column(db.String(64), nullable=True)
+    hash = db.Column(db.String(64), nullable=False, unique=True)
+
+@event.listens_for(AuditLog, 'before_update')
+def block_audit_log_update(mapper, connection, target):
+    raise Exception("Journal d'audit : ajout seul. Les UPDATE sont interdits.")
+
+@event.listens_for(AuditLog, 'before_delete')
+def block_audit_log_delete(mapper, connection, target):
+    raise Exception("Journal d'audit : ajout seul. Les DELETE sont interdits.")
     
