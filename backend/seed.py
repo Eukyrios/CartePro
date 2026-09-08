@@ -25,12 +25,14 @@ Attention : ce script commence par un db.drop_all(). Tout compte créé depuis
 l'interface est effacé. Il se lance avant de se créer un compte, pas après.
 """
 
+import os
 import random
 from datetime import datetime, timedelta, timezone
 
 from faker import Faker
 
 from app import create_app
+from db_uri import uri_ddl
 from accounts import PATTERNS, couleur_tiree
 from models import (
     Abondement,
@@ -613,8 +615,56 @@ def make_salarie(email, prenom, nom, employeur):
     return salarie
 
 
+def _uri_de_travail():
+    """L'adresse a prendre pour semer : celle du superutilisateur si elle existe.
+
+    Le seed commence par un `drop_all()`, donc il fait du DDL. Sous Postgres, le
+    role applicatif n'en a pas le droit — et ne doit pas l'avoir : le
+    proprietaire d'une table garde tous ses droits dessus quoi que dise un
+    REVOKE, donc l'application ne peut pas etre proprietaire du journal qu'elle
+    ecrit. Voir `db_uri.py`.
+
+    Sous SQLite, les deux adresses sont la meme chose et rien ne change.
+    """
+    return uri_ddl()
+
+
+def _rendre_les_privileges():
+    """Reaccorde a `cartepro_app` ce que le `drop_all()` vient d'emporter.
+
+    Supprimer une table supprime les privileges accordes dessus. Sans ce
+    rattrapage, un `make seed` laissait une base parfaitement peuplee sur
+    laquelle l'application n'avait plus aucun droit — et l'erreur ne serait
+    apparue qu'a la premiere requete, loin d'ici.
+
+    Sans Postgres configure, il n'y a rien a rendre.
+    """
+    if not os.environ.get("AUDIT_DB_SUPERUSER_URI"):
+        return
+
+    from sqlalchemy import create_engine
+
+    from provision_postgres import accorder_privileges, verifier
+
+    moteur = create_engine(os.environ["AUDIT_DB_SUPERUSER_URI"])
+    with moteur.connect() as connexion:
+        with connexion.begin():
+            accorder_privileges(connexion)
+        with connexion.begin():
+            verifier(connexion)
+
+
 def run_seed():
-    app = create_app()
+    ancienne_uri = os.environ.get("TICKET_TOUT_DATABASE_URI")
+    os.environ["TICKET_TOUT_DATABASE_URI"] = _uri_de_travail()
+    try:
+        app = create_app()
+    finally:
+        if ancienne_uri is None:
+            os.environ.pop("TICKET_TOUT_DATABASE_URI", None)
+        else:
+            os.environ["TICKET_TOUT_DATABASE_URI"] = ancienne_uri
+
     with app.app_context():
         db.drop_all()
         db.create_all()
@@ -806,6 +856,10 @@ def run_seed():
         print(f"  partenaire  contact@{non_conv['slug']}.fr  ({non_conv['nom']}, en attente)")
         print(f"  admin       {DEMO_ADMIN_EMAIL}")
         print("  (les 50 salaries du panel : salarie0@administration.example ... salarie49@, meme mot de passe)")
+
+    # Les tables viennent d'etre refaites : elles sont neuves, donc sans
+    # privileges. On les rend avant de rendre la main.
+    _rendre_les_privileges()
 
 
 if __name__ == "__main__":

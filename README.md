@@ -3,25 +3,48 @@
 Démonstrateur du crédit salarié de l'« Administration » : un employeur
 crédite ses salariés, qui dépensent chez des partenaires conventionnés.
 
-Front Next.js 15 (App Router, Tailwind v4), back Flask + SQLite — et Postgres
-pour le seul écran qui l'exige, le journal d'audit en ajout seul (voir plus
-bas) : un privilège révocable demande un moteur qui ait une notion
-d'utilisateur.
+Front Next.js 15 (App Router, Tailwind v4), back Flask + **Postgres**. Le
+moteur n'est pas un détail d'hébergement : le journal d'audit ne tient sa
+garantie d'ajout seul que d'un privilège refusé en base, et SQLite n'a ni
+utilisateur ni privilège — c'est un fichier, pas un serveur. Voir
+« Le journal d'audit » plus bas. La suite de tests, elle, reste sur SQLite : un
+chaînage d'empreintes se vérifie sans serveur, et `pytest` ne doit pas exiger
+Docker.
 
 ## Démarrer
 
 ```bash
-make install   # environnement Python du back, dépendances du front — une fois
-make seed      # jeu de données déterministe (⚠ efface la base)
-make dev       # back sur :5000, front sur :3000
+make install            # environnement Python du back, dépendances du front — une fois
+cp backend/.env.example backend/.env   # y mettre les mots de passe et la clé HMAC
+make postgres-up        # le conteneur Postgres (docker-compose.yml)
+make provision-postgres # les tables, le rôle applicatif, le REVOKE sur audit_log
+make seed               # jeu de données déterministe (⚠ efface la base)
+make dev                # back sur :5000, front sur :3000
 ```
 
-`make dev` lance les deux et les arrête ensemble avec Ctrl+C. Sans `make install`
-au préalable, le script s'arrête avec un message plutôt que de démarrer un
-backend sans Flask.
+**L'ordre n'est pas indifférent.** `provision-postgres` crée les tables en
+superutilisateur, pour qu'il en reste le propriétaire : sous Postgres, le
+propriétaire d'une table garde tous ses droits dessus quoi que dise un REVOKE,
+donc l'application ne doit surtout pas être propriétaire du journal qu'elle
+écrit. L'application se connecte avec `cartepro_app`, qui ne peut ni créer ni
+supprimer une table — voir `backend/db_uri.py`, qui explique les deux adresses.
+
+`make seed` fait du DDL (il commence par un `drop_all()`), donc il se connecte
+en superutilisateur et **rend les privilèges** en repartant : sans ce
+rattrapage, il laissait une base parfaitement peuplée sur laquelle
+l'application n'avait plus aucun droit.
+
+`make dev` lance les deux serveurs et les arrête ensemble avec Ctrl+C. Sans
+`make install` au préalable, le script s'arrête avec un message plutôt que de
+démarrer un backend sans Flask.
 
 `make seed` n'est pas optionnel après le passage au schéma normalisé : une base
 née avant lui n'a pas les mêmes tables, et `db.create_all()` ne migre rien.
+
+**Sans Docker**, le dépôt reste utilisable : sans `TICKET_TOUT_DATABASE_URI`
+configurée, tout retombe sur SQLite (`backend/instance/app.db`) et l'ensemble
+fonctionne — sauf la démonstration du privilège refusé, qui n'a alors plus
+d'objet.
 
 ### Comptes de démonstration
 
@@ -197,9 +220,10 @@ qui a fait quoi, à qui, quand, depuis quelle adresse. Chaque ligne porte
 l'empreinte SHA-256 de la précédente, si bien qu'une altération ou une
 suppression intercalaire se voit — et la garantie ne tient pas au code mais à
 un `REVOKE UPDATE, DELETE` en base, posé sur l'utilisateur applicatif. C'est ce
-qui exige **Postgres** : SQLite n'a pas de notion d'utilisateur, donc pas de
-privilège à révoquer. `make dev` et `make seed` restent sur SQLite, où le
-chaînage fonctionne mais où le refus ne peut pas être démontré.
+qui exige **Postgres**, et pourquoi c'est le moteur du dispositif et non une
+option : SQLite n'a pas de notion d'utilisateur, donc pas de privilège à
+révoquer. Seule la suite de tests reste sur SQLite — le chaînage s'y vérifie
+tout aussi bien, et `pytest` ne doit pas exiger un serveur.
 
 Le journal se lit par deux routes, à part des autres : leur préfixe est
 `/api/v1/admin` et non `/api/admin` — c'est celui que la Cour des comptes
@@ -280,6 +304,8 @@ d'encaisser plus que le solde disponible.
 backend/     Flask : app.py, auth.py, accounts.py, models.py, routes/, seed.py
              theme.json  L'identité visuelle : couleurs, polices, logotype
              instruire.py  Accepter, refuser, suspendre ou clôturer un partenaire
+             db_uri.py  Quelle base, lue où : l'adresse de l'application et
+                        celle du superutilisateur, et pourquoi il y en a deux
              migrer.py  Ajoute à une base en service ce que le schéma a gagné
              audit_chain.py  Le chaînage SHA-256, partagé par l'écriture et la
                              vérification — sans Flask ni base, à dessein

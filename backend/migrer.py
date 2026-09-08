@@ -23,11 +23,13 @@ contrainte.
     python migrer.py --controle # dit ce qui manque, n'écrit rien
 """
 
+import os
 import sys
 
 from sqlalchemy import inspect, text
 
 from app import create_app
+from db_uri import uri_ddl
 from models import db
 
 #: Les colonnes à ajouter, par table. Le type est écrit en SQL portable — un
@@ -91,6 +93,12 @@ def manquants(inspecteur):
 
 
 def run_migration(controle=False):
+    # En superutilisateur : migrer, c'est creer des tables et ajouter des
+    # colonnes, et le role applicatif n'a pas ce droit sous Postgres — il ne
+    # doit pas l'avoir, sinon le REVOKE sur `audit_log` ne voudrait plus rien
+    # dire (le proprietaire garde tous ses droits). Voir `db_uri.py`. Sous
+    # SQLite, les deux adresses sont la meme.
+    os.environ["TICKET_TOUT_DATABASE_URI"] = uri_ddl()
     app = create_app()
     with app.app_context():
         inspecteur = inspect(db.engine)

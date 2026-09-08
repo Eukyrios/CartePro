@@ -6,6 +6,7 @@ import os
 
 
 # 1. Importations de la base de données et de l'authentification (Partie de ton mate)
+from db_uri import uri_application
 from models import db
 from auth import (
     api_change_password,
@@ -56,17 +57,19 @@ def create_app():
     # Configuration globale (Fusion de vos deux environnements)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-en-dev")
     app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "change-me-en-dev")
-    # La base, choisie par l'environnement plutôt qu'écrite en dur.
+    # La base, choisie par l'environnement plutôt qu'écrite en dur, et lue par
+    # `db_uri.py` — qui charge `.env` au passage. C'est de là que vient le
+    # Postgres du journal d'audit : sans ce chargement, un `.env` annonçait
+    # Postgres pendant que l'application tournait sur SQLite.
     #
     # Ce n'est pas de la configurabilité pour le plaisir : les tests avaient
     # besoin d'une base à eux, ils la posaient *après* `create_app()`, et
     # Flask-SQLAlchemy avait déjà construit son moteur sur `app.db`. Leur
     # `drop_all()` effaçait donc la démonstration semée, à chaque exécution.
     # Ici l'URI est lue avant que le moteur existe, et un test qui pose
-    # TICKET_TOUT_DATABASE_URI ne peut plus se tromper de base.
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-        "TICKET_TOUT_DATABASE_URI", "sqlite:///app.db"
-    )
+    # TICKET_TOUT_DATABASE_URI ne peut plus se tromper de base — `load_dotenv`
+    # n'écrase pas une variable déjà posée, donc la suite reste sur SQLite.
+    app.config["SQLALCHEMY_DATABASE_URI"] = uri_application()
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -113,7 +116,17 @@ def create_app():
     # celui que la Cour des comptes attend au premier caractère près.
     app.register_blueprint(audit_bp, url_prefix='/api/v1/admin')
 
-    # Création automatique des tables SQLite si elles n'existent pas.
+    # Création automatique des tables si elles n'existent pas.
+    #
+    # Sous Postgres, ce n'est plus l'application qui les crée : elle se connecte
+    # avec `cartepro_app`, qui n'a que `USAGE` sur le schéma. Toutes les tables
+    # existant déjà, SQLAlchemy inspecte et n'émet aucun CREATE — donc rien
+    # n'échoue. Mais si une table manquait, l'échec en « permission denied »
+    # serait le bon signal : c'est `make provision-postgres` qui crée les
+    # tables, en superutilisateur, pour qu'il en reste le propriétaire et que le
+    # REVOKE sur `audit_log` ait un sens.
+    #
+    # Sous SQLite, rien ne change : la base se crée au premier démarrage.
     #
     # Plus de rattrapage de colonnes en place : il visait la table `users`, que
     # la refonte du schéma a supprimée. Un schéma normalisé ne se rattrape pas
