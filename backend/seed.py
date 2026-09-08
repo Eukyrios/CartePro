@@ -322,7 +322,7 @@ DEMO_EMPLOYEE_EMAIL = "camille.durand@administration.example"
 # donc il faut qu'il y ait quelque chose a lire.
 DEMO_EMPLOYEE_CREDIT = 50.00
 DEMO_EMPLOYEE_PAIEMENTS = [
-    {"slug": "creperie-armor", "montant": 5.00, "jour": 95},
+    {"slug": "epicerie-sainte-claire", "montant": 5.00, "jour": 95},
     {"slug": "comptoir-du-midi", "montant": 12.50, "jour": 89},
 ]
 DEMO_EMPLOYEE_BALANCE = DEMO_EMPLOYEE_CREDIT - sum(
@@ -641,10 +641,7 @@ def run_seed():
 
         # 5. Les comptes de demonstration nommes. Le partenaire de
         # demonstration est le premier du reseau, deja cree.
-        DEMO_EMPLOYEE_PAIEMENTS = [
-            {"slug": "epicerie-sainte-claire", "montant": 5.00, "jour": 95},
-            {"slug": "comptoir-du-midi", "montant": 12.50, "jour": 89},
-        ]
+        demo_employee = make_salarie(DEMO_EMPLOYEE_EMAIL, "Camille", "Durand", employeur)
         db.session.add(demo_employee)
 
         admin = Admin(email=DEMO_ADMIN_EMAIL, nom="Agent de l'administration")

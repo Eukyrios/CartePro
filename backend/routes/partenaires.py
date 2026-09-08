@@ -8,8 +8,6 @@ from models import (
     Categorie,
     Decision,
     DecisionSens,
-    CoupDeCoeur,
-    CoupDeCoeurStatut,
     Partenaire,
     PartnerStatus,
     db,
