@@ -135,3 +135,38 @@ export async function instruire(
   );
   return data.message;
 }
+
+/**
+ * Annule un paiement validé, avec le motif que la décision gardera.
+ *
+ *   POST /api/admin/transactions/<id>/annuler
+ *   { motif }
+ *   → 200  l'annulation est écrite
+ *   → 404  paiement introuvable
+ *   → 409  déjà annulé
+ *   → 422  motif vide
+ *   → 501  **aujourd'hui** : la route existe, gardée, mais son corps n'est pas
+ *          écrit — voir `backend/routes/admin.py`.
+ *
+ * L'écran ne simule rien en attendant. Le message du serveur remonte tel quel,
+ * 501 comprise : une annulation qui n'a pas eu lieu ne doit pas s'afficher
+ * comme faite, et retirer la ligne du tableau « pour voir » aurait menti sur
+ * l'état de la base. Le jour où le corps est écrit, cet appel n'a pas à bouger.
+ *
+ * Ce que la route devra faire, et qui explique le 501 : une transaction validée
+ * est immuable — `models.py` bloque tout UPDATE et tout DELETE dessus — donc
+ * annuler n'y touche pas. Il faut **une écriture inverse** : une ligne qui
+ * recrédite le salarié et reprend au partenaire, qui référence l'originale, et
+ * que les deux historiques affichent. La colonne de liaison manque encore au
+ * schéma ; c'est une migration, pas un correctif.
+ */
+export async function annulerPaiement(
+  id: string,
+  motif: string,
+): Promise<string> {
+  const data = await api<{ message?: string }>(
+    `/api/admin/transactions/${encodeURIComponent(id)}/annuler`,
+    { method: "POST", body: JSON.stringify({ motif }) },
+  );
+  return data.message ?? "Paiement annulé.";
+}

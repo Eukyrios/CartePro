@@ -64,8 +64,10 @@ export type TransactionRow = {
  * scopée au jeton, l'autre réservée au rôle — et un composant qui aurait choisi
  * la route aurait dû connaître l'audience.
  *
- * Lecture seule, et c'est le point : un encaissement est irréversible de ce
- * côté du comptoir, donc rien ici ne permet de le défaire.
+ * Lecture seule par défaut, et c'est le point : un encaissement est
+ * irréversible du côté du comptoir, donc l'espace partenaire n'offre rien pour
+ * le défaire. Seule l'administration en a le pouvoir, et elle le demande par
+ * `onCancel` — sans quoi la colonne n'existe pas.
  *
  * Le total est posé juste au-dessus des lignes qu'il additionne et porte sur ce
  * qui est listé — un chiffre qui ignorerait le filtre au-dessus de la liste qui
@@ -95,6 +97,7 @@ export default function TransactionsSection({
   errorMessage,
   emptyMessage,
   noMatchMessage = "Aucune ligne ne correspond à ces filtres. Élargissez la période ou effacez-les.",
+  onCancel,
 }: {
   /** L'ancre de l'écran, celle que vise le rail. */
   id: string;
@@ -135,6 +138,17 @@ export default function TransactionsSection({
   /** Quand il n'y a aucune ligne du tout — pas quand les filtres n'en gardent aucune. */
   emptyMessage: string;
   noMatchMessage?: string;
+  /**
+   * L'annulation d'un paiement, quand l'appelant en autorise une.
+   *
+   * Absente, la colonne n'est pas dessinée du tout — et c'est le cas de
+   * l'espace partenaire : un encaissement est irréversible de ce côté du
+   * comptoir. Seule l'administration peut défaire un paiement, et seul l'écran
+   * réservé passe donc ce rappel. Ce composant ne demande rien, n'ouvre rien et
+   * ne sait pas ce qu'il advient de la ligne : il signale le clic, l'appelant
+   * s'occupe du motif et de la requête.
+   */
+  onCancel?: (row: TransactionRow) => void;
 }) {
   const [page, setPage] = useState(1);
   const { filters, setFilter, reset, dirty } = useFilters<Filters>(
@@ -336,6 +350,23 @@ export default function TransactionsSection({
                 >
                   Référence
                 </th>
+                {onCancel && (
+                  /* L'action passe **avant** le montant, et n'a l'air de rien
+                     là où on l'attendrait — en fin de ligne. C'est le montant
+                     qui a besoin du bord droit : le total au-dessus s'y aligne
+                     (voir le bloc du total), et une colonne d'actions posée
+                     après lui décalait tous les chiffres vers l'intérieur
+                     tandis que le total restait au bord. Les deux ne se
+                     répondaient plus.
+
+                     En-tête vide à l'œil, nommée pour les lecteurs d'écran :
+                     « Action » au-dessus d'une colonne de boutons n'apprend
+                     rien à qui la voit, et son absence laisse la colonne sans
+                     nom à qui l'écoute. */
+                  <th scope="col" className="py-3 text-right font-black">
+                    <span className="sr-only">Action</span>
+                  </th>
+                )}
                 {/* Le montant ferme la ligne. C'est la colonne qu'on vient
                     lire, et la seule dont les chiffres se comparent d'une
                     ligne à l'autre : au bord droit du tableau, ils forment une
@@ -364,6 +395,26 @@ export default function TransactionsSection({
                   <td className="text-cp-muted hidden py-4 pr-4 text-right text-[13px] tabular-nums sm:table-cell">
                     n° {entry.id}
                   </td>
+                  {onCancel && (
+                    <td className="py-4 pr-6 text-right">
+                      <button
+                        type="button"
+                        onClick={() => onCancel(entry)}
+                        className={`text-cp-alert decoration-cp-alert cursor-pointer underline underline-offset-4 hover:decoration-2 ${MICRO}`}
+                      >
+                        Annuler
+                        {/* Le montant et le salarié dans le nom accessible :
+                            une colonne de « Annuler » identiques ne dit pas
+                            lequel on active. */}
+                        <span className="sr-only">
+                          {" "}
+                          le paiement de {formatEuros(
+                            entry.amountCents,
+                          )} par {entry.label}
+                        </span>
+                      </button>
+                    </td>
+                  )}
                   <td className="text-cp-positive py-4 text-right text-[15px] font-black tabular-nums">
                     +{formatEuros(entry.amountCents)}
                   </td>

@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAccount } from "@/components/account/AccountProvider";
 import { useCataloguePartner } from "@/components/data/useCataloguePartner";
 import TransactionsSection, {
   type TransactionRow,
 } from "@/components/transactions/TransactionsSection";
+import { annulerPaiement } from "./api";
+import { formatEuros } from "@/components/data/ledger";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import Button from "@/components/ui/Button";
+import Micro from "@/components/ui/Micro";
+import Modal from "@/components/ui/Modal";
+import TextArea from "@/components/ui/TextArea";
 import EmptyState from "@/components/ui/EmptyState";
 import Note from "@/components/ui/Note";
 import PageMain from "@/components/ui/PageMain";
@@ -47,11 +53,21 @@ export default function PartnerReceipts({ slug }: { slug: string }) {
   const { entry, loaded } = useCataloguePartner(slug);
   const [rows, setRows] = useState<readonly TransactionRow[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  /* Le paiement dont on est en train de décider, et le motif qu'on écrit.
+     Un seul à la fois : le dialogue est modal. */
+  const [aAnnuler, setAAnnuler] = useState<TransactionRow | null>(null);
+  const [motif, setMotif] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [fait, setFait] = useState<string | null>(null);
 
   const admin = ready && profile?.role === "admin";
 
-  useEffect(() => {
-    if (!admin) return;
+  /* Extrait de l'effet pour être rappelable : après une annulation, la liste et
+     le total se relisent du serveur plutôt que d'être rafistolés de mémoire —
+     l'écriture inverse crée une ligne que le client n'a pas vue. */
+  const charger = useCallback(() => {
+    if (!admin) return () => undefined;
     let cancelled = false;
     api<{ transactions: AdminTransaction[] }>(
       `/api/admin/transactions?partenaire=${encodeURIComponent(slug)}`,
@@ -66,6 +82,42 @@ export default function PartnerReceipts({ slug }: { slug: string }) {
       cancelled = true;
     };
   }, [slug, admin]);
+
+  useEffect(charger, [charger]);
+
+  function fermer() {
+    setAAnnuler(null);
+    setMotif("");
+    setErreur(null);
+  }
+
+  async function annuler() {
+    if (!aAnnuler) return;
+    const propre = motif.trim();
+    /* Le motif est exigé ici comme il l'est pour un refus de dossier : c'est
+       la trace de la décision, et « annulé » sans raison n'explique rien à qui
+       relira l'historique. */
+    if (!propre) {
+      setErreur("Le motif de l’annulation est obligatoire.");
+      return;
+    }
+    setBusy(true);
+    setErreur(null);
+    try {
+      const message = await annulerPaiement(aAnnuler.id, propre);
+      setFait(message);
+      fermer();
+      charger();
+    } catch (cause) {
+      setErreur(
+        cause instanceof Error
+          ? cause.message
+          : "L’annulation n’a pas pu être enregistrée.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
 
   if (!ready) {
     return (
@@ -131,7 +183,80 @@ export default function PartnerReceipts({ slug }: { slug: string }) {
         errorMessage="Les encaissements n’ont pas pu être chargés. Rechargez la page ; si cela persiste, le serveur ne répond pas."
         emptyMessage="Aucun encaissement pour cet établissement. Le premier code encaissé apparaîtra ici."
         noMatchMessage="Aucun encaissement ne correspond à ces filtres. Élargissez la période ou effacez-les."
+        /* L'annulation n'existe que sur cet écran : le partenaire lit les mêmes
+           lignes par le même composant, sans cette colonne. */
+        onCancel={setAAnnuler}
       />
+
+      {/* Le résultat de la dernière annulation, hors du dialogue : le dialogue
+          se ferme en réussissant, donc un message posé dedans partirait avec
+          lui. */}
+      {fait && (
+        <Note tone="positive" role="status" as="div" className="mt-6">
+          {fait}
+        </Note>
+      )}
+
+      {/* Un `<dialog>`, comme les autres recouvrements du site : Échap, le
+          piège de focus et le retour du focus au déclencheur viennent de
+          `showModal()`. Le montant et le salarié sont dans le sous-titre —
+          annuler un paiement se confirme sur ce qu'on annule, pas sur une
+          formule générale. */}
+      <Modal
+        open={aAnnuler !== null}
+        onClose={fermer}
+        size="sm"
+        title="Annuler"
+        accent="ce paiement."
+        meta={
+          aAnnuler ? (
+            <>
+              {formatEuros(aAnnuler.amountCents)} — {aAnnuler.label}
+              {" · "}n° {aAnnuler.id}
+            </>
+          ) : undefined
+        }
+      >
+        <p className="text-cp-fg text-[15px] leading-[1.55]">
+          Le montant est recrédité au salarié et repris à l’établissement. Le
+          paiement d’origine n’est pas effacé&nbsp;: l’annulation s’écrit comme
+          une opération inverse, et les deux restent lisibles dans les deux
+          historiques.
+        </p>
+
+        <TextArea
+          id="motif-annulation"
+          label="Motif de l’annulation"
+          value={motif}
+          onChange={setMotif}
+          rows={4}
+          className="mt-6"
+          hint="Obligatoire. Il reste attaché à l’opération."
+        />
+
+        {erreur && (
+          <Note tone="danger" role="alert" className="mt-5">
+            {erreur}
+          </Note>
+        )}
+
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          <Button variant="danger" onClick={annuler} disabled={busy}>
+            {busy ? "Envoi…" : "Annuler le paiement"}
+          </Button>
+          <button
+            type="button"
+            onClick={fermer}
+            className="text-cp-fg cursor-pointer text-[15px] underline underline-offset-4"
+          >
+            Revenir
+          </button>
+        </div>
+
+        <Micro as="p" tone="muted" className="mt-5">
+          Cette opération est tracée et ne peut pas être défaite.
+        </Micro>
+      </Modal>
     </PageMain>
   );
 }
