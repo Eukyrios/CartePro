@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { partage } from "@/lib/partage";
 
 /**
  * Les catégories du réseau, telles que la base les porte.
@@ -29,7 +30,12 @@ export function useCategories(): {
 
   useEffect(() => {
     let cancelled = false;
-    api<PartnerCategory[]>("/api/partenaires/categories")
+    /* Partagé : le référentiel est demandé par tout écran qui affiche un
+       secteur, et plusieurs cohabitent sur une même page. Les appels
+       simultanés se rabattent sur une seule requête — voir `lib/partage.ts`. */
+    partage("categories", () =>
+      api<PartnerCategory[]>("/api/partenaires/categories"),
+    )
       .then((liste) => !cancelled && setCategories(liste))
       .catch(() => undefined)
       .finally(() => !cancelled && setLoaded(true));

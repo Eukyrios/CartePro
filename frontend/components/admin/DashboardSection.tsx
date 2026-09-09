@@ -200,12 +200,17 @@ export default function DashboardSection() {
                 La géographie a repris son écran, elle ne la partage plus. */}
               <div className="mt-8">
                 <section aria-labelledby="volume-titre">
-                  <h3
+                  {/* `h2` et non `h3` : ce titre suit directement le `h1`
+                      de l'écran, et les autres sections de la page sont des
+                      `h2`. En `h3` il sautait un niveau et arrivait avant le
+                      premier `h2` du document — un plan qu'un lecteur d'écran
+                      annonce alors dans le désordre. */}
+                  <h2
                     id="volume-titre"
                     className="text-cp-fg text-[20px] font-black tracking-[-0.04em]"
                   >
                     Volume mois par mois
-                  </h3>
+                  </h2>
                   <p className="text-cp-muted mt-1 text-[13px]">
                     Nombre de paiements validés sur l’année. Le montant du mois
                     apparaît au survol du point.

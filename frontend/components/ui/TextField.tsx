@@ -15,8 +15,21 @@ import type { ComponentProps } from "react";
    donc le libellé prenait la serif dans tout élément qui l'hérite. */
 export const LABEL_CLASS = `text-cp-fg mb-2 block ${MICRO}`;
 
+/**
+ * Le champ lui-même — et son bord tient à `--cp-field`, non à `--cp-border`.
+ *
+ * Les deux étaient la même couleur. Le filet décoratif fait 1,44:1 sur la
+ * page, ce qui est tolérable pour un trait de séparation, qui ne porte aucune
+ * information ; mais le cadre d'un champ **est** ce qui dit où l'on écrit, et
+ * le WCAG 1.4.11 lui demande 3:1. Ce cadre-là passe désormais à 3,27:1 en
+ * clair et 3,24:1 en sombre, sans que les filets du reste de l'interface
+ * s'alourdissent — c'est tout l'intérêt d'avoir deux jetons.
+ *
+ * `INPUT_CLASS` sert les trois contrôles de saisie — champ, liste déroulante,
+ * zone de texte —, donc la correction vaut pour tous d'un coup.
+ */
 export const INPUT_CLASS =
-  "bg-cp-page border-cp-border text-cp-fg placeholder:text-cp-muted focus:border-cp-fg focus:ring-cp-fg block w-full rounded-none border px-3.5 py-3 text-sm outline-none focus:ring-1";
+  "bg-cp-page border-cp-field text-cp-fg placeholder:text-cp-muted focus:border-cp-fg focus:ring-cp-fg block w-full rounded-none border px-3.5 py-3 text-sm outline-none focus:ring-1";
 
 export const ERROR_CLASS =
   "text-fg-danger mt-2 block text-[10px] font-black tracking-[0.1em] uppercase";

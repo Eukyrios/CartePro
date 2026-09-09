@@ -14,7 +14,10 @@ export default function AuthButtons({ onLoginClick, onSignupClick }: Props) {
       <button
         type="button"
         onClick={onLoginClick}
-        className={`text-cp-fg hidden hover:underline sm:block ${MICRO}`}
+        /* `py-2` pour la cible, pas pour l'allure : le libellé fait 14 px de
+           haut, sous le minimum de 24. La barre haute a la place, et le texte
+           reste exactement où il était — c'est la zone cliquable qui grandit. */
+        className={`text-cp-fg hidden py-2 hover:underline sm:block ${MICRO}`}
       >
         Se connecter
       </button>

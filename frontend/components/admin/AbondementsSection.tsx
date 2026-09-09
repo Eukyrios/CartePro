@@ -281,7 +281,10 @@ export default function AbondementsSection() {
                   type="button"
                   onClick={toutBasculer}
                   disabled={visibles.length === 0}
-                  className={`${MICRO} text-cp-accent decoration-cp-accent mb-3 underline underline-offset-4 hover:decoration-2 disabled:opacity-30`}
+                  /* `py-1.5` porte la cible de 14 à 26 px ; `mb-3` devient
+                     `mb-1.5` pour que le bouton reste aligné sur le bas du
+                     champ voisin, la marge intérieure ayant pris le relais. */
+                  className={`${MICRO} text-cp-accent decoration-cp-accent mb-1.5 inline-block py-1.5 underline underline-offset-4 hover:decoration-2 disabled:opacity-30`}
                 >
                   {choisis.size === visibles.length && visibles.length > 0
                     ? "Tout décocher"

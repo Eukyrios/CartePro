@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@/lib/api";
+import { partage } from "@/lib/partage";
 import type { Movement } from "@/components/espace/movements";
 
 /**
@@ -245,10 +246,18 @@ export type Compte = {
  *
  *   GET /api/admin/comptes[?statut=…]
  *   → { "comptes": Compte[] }
+ *
+ * Passé par `partage` : trois composants de l'espace d'administration
+ * demandent cette liste au montage, et elle est lourde — cinquante et un
+ * comptes avec tout leur historique de mesures. Les appels simultanés se
+ * partagent une requête ; un appel plus tard, après une mesure, en refait bien
+ * une neuve. Voir `lib/partage.ts`.
  */
 export async function getComptes(statut = ""): Promise<Compte[]> {
   const query = statut ? `?statut=${encodeURIComponent(statut)}` : "";
-  const data = await api<{ comptes: Compte[] }>(`/api/admin/comptes${query}`);
+  const data = await partage(`comptes${query}`, () =>
+    api<{ comptes: Compte[] }>(`/api/admin/comptes${query}`),
+  );
   return data.comptes;
 }
 

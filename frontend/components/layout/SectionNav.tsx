@@ -142,7 +142,12 @@ export default function SectionNav({
           type="button"
           onClick={() => goTo(id)}
           aria-current={active === id ? "true" : undefined}
-          className="rail-item group relative flex h-4 cursor-pointer items-center justify-end"
+          /* La cible tactile est étendue par un pseudo-élément et non par la
+             taille du bouton : le trait fait 16 px de haut et c'est le dessin,
+             mais 16×16 est sous le minimum de 24×24 du WCAG 2.5.8. Le
+             `before` porte la zone cliquable à 32×24 sans déplacer un pixel,
+             et sans toucher au rythme des traits du rail. */
+          className="rail-item group relative flex h-4 cursor-pointer items-center justify-end before:absolute before:-inset-x-2 before:-inset-y-1 before:content-['']"
         >
           {/* Absolute and click-through so the label neither widens the hit
                 area nor sits over the page content it overhangs. */}

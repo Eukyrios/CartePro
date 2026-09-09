@@ -225,7 +225,10 @@ export default function PartnerRequestsSection({
                             `<tr onClick>` ne fait aucun des trois. */}
                       <Link
                         href={`/dossier/${dossier.id}`}
-                        className="focus-visible:outline-cp-accent block underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+                        /* `py-0.5` : la ligne du nom mesurait 23 px, un
+                           pixel sous le minimum de 24×24. Rien ne bouge à
+                           l'œil, la cible passe le seuil. */
+                        className="focus-visible:outline-cp-accent block py-0.5 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
                       >
                         {dossier.nom}
                       </Link>
@@ -242,7 +245,12 @@ export default function PartnerRequestsSection({
                     <td className="py-4 text-right">
                       <Link
                         href={`/dossier/${dossier.id}`}
-                        className={`text-cp-accent decoration-cp-accent underline underline-offset-4 hover:decoration-2 ${MICRO}`}
+                        /* `inline-block py-2` : le libellé fait 10 px de
+                           haut, très en dessous des 24 px minimum d'une
+                           cible. L'`inline-block` est ce qui permet à la
+                           marge intérieure verticale de compter — sur un
+                           `inline`, elle ne pousse pas la boîte. */
+                        className={`text-cp-accent decoration-cp-accent inline-block py-2 underline underline-offset-4 hover:decoration-2 ${MICRO}`}
                       >
                         Instruire
                       </Link>

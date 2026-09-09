@@ -1,4 +1,4 @@
-.PHONY: dev install seed clean postgres-up postgres-down provision-postgres migrate-audit-data audit-demo
+.PHONY: dev prod prod-demo install seed clean postgres-up postgres-down provision-postgres migrate-audit-data audit-demo
 
 # L'interpréteur du backend : celui du venv s'il existe, appelé par son chemin.
 # Pas de `source` ici — make exécute ses recettes avec /bin/sh, qui ne connaît
@@ -12,6 +12,48 @@ BACKEND_PY := $(firstword $(wildcard \
 # Lance le front et le back en même temps
 dev:
 	@bash start.sh
+
+# --- Production ------------------------------------------------------------
+#
+# Construit le front et le sert tel qu'il sera livré. La différence avec
+# `make dev` qui compte : **les identifiants de démonstration n'apparaissent
+# plus** sous le formulaire de connexion. Le dialogue proposait trois comptes
+# avec leur adresse et le mot de passe commun en clair — utile pour montrer le
+# dispositif, inacceptable sur une page publique, puisque l'espace
+# d'administration qu'on ouvre avec est le vrai.
+#
+# Deux protections, et il faut les deux :
+#
+# 1. Le bloc ne s'affiche pas dès que la construction est une construction de
+#    production (`NODE_ENV`). Acquis sans rien poser, donc vrai aussi sur Vercel
+#    et partout ailleurs, même si personne n'y pense.
+# 2. `NEXT_PUBLIC_COMPTES_DEMO=0`, posé ici, **retire les chaînes du paquet**.
+#    Sans lui, une variable `NEXT_PUBLIC_*` absente se compile en lecture à
+#    l'exécution et non en constante : le minifieur ne peut pas supprimer la
+#    branche morte, et les trois adresses et le mot de passe restaient lisibles
+#    dans les sources du navigateur alors que le bloc avait disparu de l'écran.
+#    Mesuré des deux façons — voir `frontend/components/account/demoAccounts.ts`.
+#
+# Conséquence pour un hébergeur : poser `NEXT_PUBLIC_COMPTES_DEMO=0` dans sa
+# configuration. Sans elle, l'écran est propre mais le paquet contient encore
+# les identifiants.
+#
+# Le backend n'est pas lancé ici : en production il est servi ailleurs, et
+# `NEXT_PUBLIC_API_URL` dit où (voir frontend/next.config.ts).
+prod:
+	@echo "🏗  Construction de production du front..."
+	@cd frontend && NEXT_PUBLIC_COMPTES_DEMO=0 npm run build
+	@echo "🚀 http://localhost:3000 — identifiants de démonstration retirés du paquet"
+	@cd frontend && NEXT_PUBLIC_COMPTES_DEMO=0 npm start
+
+# La même chose, mais avec les identifiants de démonstration affichés : pour
+# une démonstration hébergée que l'on veut cliquable. C'est un choix explicite,
+# et il se voit dans la commande.
+prod-demo:
+	@echo "🏗  Construction de production, comptes de démonstration AFFICHÉS..."
+	@cd frontend && NEXT_PUBLIC_COMPTES_DEMO=1 npm run build
+	@echo "🚀 http://localhost:3000 — ⚠ identifiants visibles publiquement"
+	@cd frontend && NEXT_PUBLIC_COMPTES_DEMO=1 npm start
 
 # Prépare le dépôt après un clone : l'environnement Python du backend et les
 # dépendances du front. À lancer une fois, avant `make dev`.

@@ -1,10 +1,5 @@
 import Link from "next/link";
-import {
-  Footer as FlowbiteFooter,
-  FooterCopyright,
-  FooterLink,
-  FooterLinkGroup,
-} from "flowbite-react";
+import { Footer as FlowbiteFooter, FooterCopyright } from "flowbite-react";
 import BrandLogo from "@/components/brand/BrandLogo";
 import { MENTION_DEMONSTRATEUR } from "@/components/legal/mention";
 import { MICRO } from "@/components/ui/surfaces";
@@ -54,21 +49,29 @@ export default function Footer() {
             par `gap` et non par des marges, pour qu'il ne reste pas une marge
             basse orpheline quand la colonne devient une ligne. */}
         <div className="flex max-w-[250px] flex-col gap-3 text-[11px] leading-[1.5] lg:max-w-none lg:flex-row lg:items-end lg:gap-8">
-          <FooterLinkGroup className="text-[11px] lg:shrink-0">
+          {/* Des `Link` nus, et non le `FooterLink` de Flowbite.
+              
+              Son thème remplaçait la classe passée au lieu de s'y ajouter : le
+              rendu ne portait que `hover:underline`, ni la couleur ni l'écart
+              demandés ici. On ne s'en apercevait pas parce que le texte hérite
+              d'un blanc voisin — jusqu'à ce qu'il faille agrandir la cible
+              tactile, où la marge intérieure a disparu sans bruit.
+              
+              `inline-block py-1.5` : le libellé fait 17 px de haut, sous les
+              24 px minimum du WCAG 2.5.8. Le pied de page est ce qu'on vise au
+              pouce, donc c'est là que la cible compte le plus. */}
+          <ul className="flex flex-wrap items-center gap-x-6 text-[11px] lg:shrink-0">
             {FOOTER_LINKS.map((link) => (
-              <FooterLink
-                key={link.label}
-                /* `as={Link}` pour que /conditions se charge sans recharger la
-                   page, comme partout ailleurs — Flowbite rend une ancre nue
-                   sinon. Même traitement que NavbarBrand dans TopBar. */
-                as={Link}
-                href={link.href}
-                className="me-4 text-white/70 hover:text-white"
-              >
-                {link.label}
-              </FooterLink>
+              <li key={link.label}>
+                <Link
+                  href={link.href}
+                  className="inline-block py-1.5 text-white/70 hover:text-white hover:underline"
+                >
+                  {link.label}
+                </Link>
+              </li>
             ))}
-          </FooterLinkGroup>
+          </ul>
           {/* La mention de démonstrateur ferme le bloc : le pied de page est
               monté une fois dans le gabarit racine, donc cette ligne est le
               seul endroit d'où elle atteint réellement « toutes les pages ».

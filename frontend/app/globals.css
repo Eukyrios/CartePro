@@ -252,6 +252,7 @@
   --color-cp-page: var(--cp-page);
   --color-cp-surface: var(--cp-surface);
   --color-cp-border: var(--cp-border);
+  --color-cp-field: var(--cp-field);
   --color-cp-fg: var(--cp-fg);
   --color-cp-muted: var(--cp-muted);
   --color-cp-ink: var(--cp-ink);
@@ -301,6 +302,20 @@
   --cp-page: #ffffff;
   --cp-surface: #f4f4f2;
   --cp-border: #d7d7d9;
+  /*
+   * Le bord d'un champ, plus soutenu que le filet décoratif.
+   *
+   * Les deux étaient la même couleur, et c'était une faute mesurable : le
+   * filet de `--cp-border` fait 1,44:1 sur la page, quand le WCAG en demande
+   * 3 pour le **contour d'un composant** (1.4.11). Un trait de séparation a le
+   * droit d'être discret — il ne porte aucune information —, mais le cadre
+   * d'un champ de saisie, lui, est ce qui dit où l'on écrit. Les séparer était
+   * la seule façon de corriger l'un sans alourdir tous les autres.
+   *
+   * 3,27:1 sur le blanc : la marge est prise à dessein, pour qu'un futur
+   * ajustement de la palette ne repasse pas sous le seuil sans qu'on le voie.
+   */
+  --cp-field: #8e8e91;
   --cp-fg: #0a0a0b;
   --cp-muted: #555555;
   --cp-ink: #0a0a0b;
@@ -364,6 +379,8 @@
   --cp-page: #140a1b;
   --cp-surface: #23132e;
   --cp-border: #3a224c;
+  /* 3,24:1 sur le fond sombre — même raison, même marge qu'en clair. */
+  --cp-field: #725a88;
   --cp-fg: #f4eafb;
   --cp-muted: #b097c2;
   /* The footer stays the deepest step, below the page itself. */

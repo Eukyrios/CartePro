@@ -82,6 +82,41 @@ Sans être connecté : la vitrine, le coup de cœur de l'administrateur, et la
 fiche publique d'un partenaire — où la carte est barrée et invite à se
 connecter. Les cinquante salariés du panel vont de `salarie0` à `salarie49`.
 
+### Mettre en ligne sans les identifiants
+
+Le panneau ci-dessus est commode en démonstration et n'a rien à faire sur un
+site ouvert. Deux constructions de production, selon ce qu'on veut montrer :
+
+```bash
+make prod        # construit et sert le front, identifiants retirés du paquet
+make prod-demo   # la même chose, identifiants affichés — c'est un choix explicite
+```
+
+`make prod` pose `NEXT_PUBLIC_COMPTES_DEMO=0`. Cette variable fait deux choses
+qu'il vaut la peine de ne pas confondre :
+
+|                                 | Bloc à l'écran | Chaînes dans le JavaScript livré |
+| ------------------------------- | -------------- | -------------------------------- |
+| `make dev`                      | affiché        | présentes                        |
+| `make prod`                     | absent         | **absentes**                     |
+| `make prod-demo`                | affiché        | présentes                        |
+| production **sans** la variable | absent         | **présentes**                    |
+
+La dernière ligne est le piège. Le bloc disparaît de lui-même dès que la
+construction est une construction de production, mais une variable
+`NEXT_PUBLIC_*` non définie se compile en lecture à l'exécution et non en
+constante : le minifieur ne peut donc pas supprimer la branche morte, et les
+trois adresses et le mot de passe restent lisibles dans les sources du
+navigateur alors que l'écran, lui, est propre. Mesuré des deux façons.
+
+**Un hébergeur — Vercel compris — doit donc poser `NEXT_PUBLIC_COMPTES_DEMO=0`
+dans sa configuration**, sinon le site est présentable mais le paquet contient
+encore les identifiants. Le drapeau et son explication tiennent dans
+`frontend/components/account/demoAccounts.ts`.
+
+Ces deux cibles ne lancent que le front : en production le backend est servi
+ailleurs, et `NEXT_PUBLIC_API_URL` dit où (voir `frontend/next.config.ts`).
+
 ### Changer l'identité visuelle
 
 Couleurs, polices et logotype vivent dans **`backend/theme.json`**. On ouvre le

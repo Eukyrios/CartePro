@@ -1,7 +1,10 @@
 "use client";
 
 import type React from "react";
-import { DEMO_ACCOUNTS } from "@/components/account/demoAccounts";
+import {
+  COMPTES_DEMO_VISIBLES,
+  DEMO_ACCOUNTS,
+} from "@/components/account/demoAccounts";
 import Button from "@/components/ui/Button";
 import Display from "@/components/ui/Display";
 import Micro from "@/components/ui/Micro";
@@ -60,8 +63,14 @@ export default function AuthForm({
   /* Les comptes de démonstration, à la connexion seulement — s'inscrire n'en
      a pas besoin. Les trois sont offerts ensemble depuis que la connexion tient
      sur un écran : c'est l'endroit d'où l'on peut entrer dans les trois
-     espaces, et le seul où l'on apprend que le troisième existe. */
-  const demos = mode === "login" ? DEMO_ACCOUNTS : [];
+     espaces, et le seul où l'on apprend que le troisième existe.
+
+     Et seulement là où on les veut : une construction de production les masque
+     d'elle-même, parce qu'afficher des identifiants valides sur une page
+     publique est une porte ouverte. Voir `demoAccounts` — la constante est figée à
+     la compilation, donc le bloc n'est pas rendu et les adresses ne sont pas
+     dans le HTML livré. */
+  const demos = mode === "login" && COMPTES_DEMO_VISIBLES ? DEMO_ACCOUNTS : [];
 
   return (
     <form onSubmit={onSubmit}>

@@ -69,7 +69,8 @@ PAIRS = [
     ("Alerte prune sur panneau", "--cp-alert", "--cp-surface", "refus dans un encart", "AA"),
     ("Blanc sur violet de marque", "--color-white", "--color-primary-700", "bloc « Confiance », carte", "AA"),
     ("Blanc sur violet foncé", "--color-white", "--color-primary-600", "bloc « Confiance » en thème sombre", "AA"),
-    ("Bordure d'interface sur la page", "--cp-border", "--cp-page", "règles et cadres", "3:1"),
+    ("Bordure d'interface sur la page", "--cp-border", "--cp-page", "filets et séparateurs", "3:1"),
+    ("Bord d'un champ de saisie", "--cp-field", "--cp-page", "champs et listes déroulantes", "3:1"),
     ("Texte sur pied de page", "--color-white", "--cp-ink", "pied de page", "AA"),
 ]
 
