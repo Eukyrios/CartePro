@@ -92,6 +92,13 @@ make prod        # construit et sert le front, identifiants retirés du paquet
 make prod-demo   # la même chose, identifiants affichés — c'est un choix explicite
 ```
 
+Les deux cibles **refusent de démarrer tant que le port 3000 est pris** :
+arrêtez `make dev` avant. Ce n'est pas une politesse envers le port — une
+construction de production efface `frontend/.next`, que le serveur de
+développement lit au même moment, et `next build` échoue alors en
+`MODULE_NOT_FOUND` (« Cannot find module './611.js' ») **en laissant le serveur
+de développement en erreur 500** jusqu'au prochain redémarrage.
+
 `make prod` pose `NEXT_PUBLIC_COMPTES_DEMO=0`. Cette variable fait deux choses
 qu'il vaut la peine de ne pas confondre :
 

@@ -1,4 +1,4 @@
-.PHONY: dev prod prod-demo install seed clean postgres-up postgres-down provision-postgres migrate-audit-data audit-demo
+.PHONY: dev prod prod-demo port-libre install seed clean postgres-up postgres-down provision-postgres migrate-audit-data audit-demo
 
 # L'interpréteur du backend : celui du venv s'il existe, appelé par son chemin.
 # Pas de `source` ici — make exécute ses recettes avec /bin/sh, qui ne connaît
@@ -40,8 +40,27 @@ dev:
 #
 # Le backend n'est pas lancé ici : en production il est servi ailleurs, et
 # `NEXT_PUBLIC_API_URL` dit où (voir frontend/next.config.ts).
-prod:
+# Refuse de construire tant qu'un serveur tient le port 3000.
+#
+# Deux raisons, et la premiere est la moins evidente : une construction de
+# production **efface** `frontend/.next`, que `make dev` utilise au meme moment
+# — un `next build` lance par-dessus un `.next` de developpement echoue en
+# `MODULE_NOT_FOUND` (« Cannot find module './611.js' »), et laisse le serveur
+# de developpement avec un dossier sans `BUILD_ID`, donc en erreur 500 jusqu'au
+# prochain redemarrage. La seconde : `next start` ne prendrait de toute facon
+# pas un port deja pris. Mieux vaut refuser en une seconde que casser les deux.
+port-libre:
+	@if (ss -ltn 2>/dev/null || lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null) | grep -q ':3000 '; then \
+		echo "⛔ Le port 3000 est déjà pris — sans doute « make dev »."; \
+		echo "   Arrêtez-le avant : la construction de production efface"; \
+		echo "   frontend/.next, que le serveur de développement lit en même"; \
+		echo "   temps, et « next start » ne pourrait pas prendre le port."; \
+		exit 1; \
+	fi
+
+prod: port-libre
 	@echo "🏗  Construction de production du front..."
+	@rm -rf frontend/.next
 	@cd frontend && NEXT_PUBLIC_COMPTES_DEMO=0 npm run build
 	@echo "🚀 http://localhost:3000 — identifiants de démonstration retirés du paquet"
 	@cd frontend && NEXT_PUBLIC_COMPTES_DEMO=0 npm start
@@ -49,8 +68,9 @@ prod:
 # La même chose, mais avec les identifiants de démonstration affichés : pour
 # une démonstration hébergée que l'on veut cliquable. C'est un choix explicite,
 # et il se voit dans la commande.
-prod-demo:
+prod-demo: port-libre
 	@echo "🏗  Construction de production, comptes de démonstration AFFICHÉS..."
+	@rm -rf frontend/.next
 	@cd frontend && NEXT_PUBLIC_COMPTES_DEMO=1 npm run build
 	@echo "🚀 http://localhost:3000 — ⚠ identifiants visibles publiquement"
 	@cd frontend && NEXT_PUBLIC_COMPTES_DEMO=1 npm start
