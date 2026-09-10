@@ -1,0 +1,329 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>CartePro — planches réseaux sociaux et mise en situation (embargo)</title>
+<!--
+  Planches sources des visuels demandés par le cabinet le 9 septembre 2026,
+  sous embargo jusqu'à accord écrit. Chaque bloc [data-shot] est photographié
+  par tools/shots.js et exporté sous le nom du bloc :
+
+      node tools/shots.js media/embargo/planches.html media/embargo 1
+
+  L'échelle 1 est obligatoire, pas un détail : shots.js double par défaut, et
+  le format demandé est 1080x1350 au pixel près, pas 2160x2700.
+
+  Identité neutre : le logotype produit, la palette de theme.json, aucun
+  bloc-marque, aucune Marianne, aucune mention d'un ministère. Les polices et
+  les images viennent du dépôt — rien n'est chargé en ligne.
+-->
+<style>
+  @font-face { font-family: "Archivo"; font-weight: 400; src: url("../../frontend/public/fonts/Archivo-400-normal-latin.woff2") format("woff2"); }
+  @font-face { font-family: "Archivo"; font-weight: 500; src: url("../../frontend/public/fonts/Archivo-500-normal-latin.woff2") format("woff2"); }
+  @font-face { font-family: "Archivo"; font-weight: 700; src: url("../../frontend/public/fonts/Archivo-700-normal-latin.woff2") format("woff2"); }
+  @font-face { font-family: "Spectral"; font-weight: 400; src: url("../../frontend/public/fonts/Spectral-400-normal-latin.woff2") format("woff2"); }
+  @font-face { font-family: "Spectral"; font-weight: 400; font-style: italic; src: url("../../frontend/public/fonts/Spectral-400-italic-latin.woff2") format("woff2"); }
+  @font-face { font-family: "Spectral"; font-weight: 600; src: url("../../frontend/public/fonts/Spectral-600-normal-latin.woff2") format("woff2"); }
+
+  :root {
+    /* backend/theme.json, thème clair. Aucun bleu institutionnel. */
+    --accent: #4a1b6b;
+    --accent-800: #3b1555;
+    --accent-950: #12091b;
+    --accent-300: #c186e8;
+    --ochre: #7a571f;
+    --teal: #1b6b67;
+    --prune: #7c1d54;
+    --papier: #f4f4f2;
+    --encre: #0a0a0b;
+    --gris: #555555;
+    --bord: #d7d7d9;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #cfcfcb; font-family: "Archivo", system-ui, sans-serif; padding: 48px; display: grid; gap: 48px; justify-items: start; }
+  [data-shot] { position: relative; overflow: hidden; }
+
+  /* ---------- système commun aux trois visuels sociaux ---------- */
+  .post {
+    width: 1080px; height: 1350px; background: var(--papier); color: var(--encre);
+    padding: 76px 78px 66px; display: flex; flex-direction: column;
+  }
+  .haut { display: flex; justify-content: space-between; align-items: flex-start; }
+  .haut img { height: 52px; }
+  .badge {
+    font-size: 19px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ochre); border: 2px solid var(--ochre); padding: 9px 14px;
+  }
+  .message {
+    font-size: 108px; line-height: 0.9; letter-spacing: -0.045em; font-weight: 700;
+    margin-top: 78px;
+  }
+  .message em { font-family: "Spectral", serif; font-weight: 400; font-style: italic; color: var(--accent); letter-spacing: -0.02em; }
+  .corps { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .bas { border-top: 3px solid var(--encre); padding-top: 22px; display: flex; justify-content: space-between; align-items: baseline; gap: 24px; }
+  /* Le pied réglementaire. 25px sur 1080 de large : petit, et lu sans effort
+     sur un téléphone — c'est la taille d'un corps de texte de presse. */
+  .mention { font-size: 25px; line-height: 1.25; color: var(--gris); max-width: 40ch; }
+  .site { font-size: 22px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gris); white-space: nowrap; }
+  .micro { font-size: 21px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+
+  /* ---------- la carte, artwork commun ---------- */
+  .carte {
+    width: 1000px; height: 630px; border-radius: 44px; position: relative; overflow: hidden;
+    background-color: var(--accent);
+    background-image:
+      radial-gradient(circle at bottom left, rgba(255,255,255,0.10) 35%, transparent 36%),
+      radial-gradient(circle at top right, rgba(255,255,255,0.10) 35%, transparent 36%);
+    background-size: 158px 158px;
+    color: #fff; padding: 60px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 40px 80px rgba(10,15,27,0.35);
+  }
+  /* Le reflet, réglable. À 0.45 la carte brille comme du métal poli et le
+     lettrage passe dessous ; sur une mise en situation, c'est le « reflet
+     bizarre » qu'on remarque avant l'objet. Une seule bande douce suffit à
+     dire « plastique mat ». */
+  .carte::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(102deg, rgba(0,0,0,0.10) 12%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.34) 44%, rgba(255,255,255,0.10) 56%, rgba(0,0,0,0.10) 84%);
+    opacity: var(--reflet, 0.45);
+  }
+  .carte > * { position: relative; z-index: 2; }
+  .carte .marque { height: 54px; }
+  .carte .etiquette { font-size: 15px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.78; }
+  .montant { font-family: "Spectral", serif; font-size: 104px; line-height: 0.9; letter-spacing: -0.03em; }
+  .numero { font-family: "Spectral", serif; font-size: 40px; letter-spacing: 0.12em; opacity: 0.55; }
+  .pied { display: flex; justify-content: space-between; align-items: flex-end; font-family: "Spectral", serif; font-size: 30px; }
+  .puce { width: 92px; height: 68px; border-radius: 10px; background: linear-gradient(150deg, #d9c9a3, #b39a63 55%, #efe4c6); opacity: 0.9; }
+
+  /* ---------- 01 : le solde et l'historique ---------- */
+  /* 56px sous le message : la carte est posee au sommet de cette boite,
+     et les jambages de « dépense. » descendent sous leur ligne — sans
+     cet ecart, le bord haut de la carte coupe le mot. */
+  .scene-solde { position: relative; height: 640px; margin-top: 56px; }
+  .scene-solde .carte { position: absolute; left: -34px; top: 0; transform-origin: 0 0; transform: scale(0.58) rotate(-2deg); }
+  .releve {
+    position: absolute; right: 0; bottom: 0; width: 560px; background: #fff;
+    border: 3px solid var(--encre); padding: 30px 34px 26px;
+    box-shadow: 0 28px 50px rgba(10,15,27,0.18);
+  }
+  .releve h3 { font-size: 21px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gris); margin-bottom: 20px; }
+  .ligne { display: flex; justify-content: space-between; align-items: baseline; gap: 18px; padding: 15px 0; border-top: 1px solid var(--bord); }
+  .ligne:first-of-type { border-top: 0; }
+  .ligne b { font-weight: 500; font-size: 27px; }
+  .ligne span { font-family: "Spectral", serif; font-size: 30px; white-space: nowrap; }
+  .ligne .jour { display: block; font-size: 18px; color: var(--gris); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+  .credit { color: var(--teal); }
+  .debit { color: var(--encre); }
+
+  /* ---------- 02 : le paiement chez un partenaire ---------- */
+  .scene-paiement { display: grid; grid-template-columns: 430px 1fr; gap: 46px; align-items: center; }
+  .ticket { background: #fff; border: 3px solid var(--encre); padding: 34px 34px 30px; text-align: center; box-shadow: 0 28px 50px rgba(10,15,27,0.18); }
+  .ticket img { width: 300px; height: 300px; display: block; margin: 0 auto 24px; image-rendering: pixelated; }
+  .ticket .somme { font-family: "Spectral", serif; font-size: 62px; line-height: 1; color: var(--accent); }
+  .ticket .chez { font-size: 24px; font-weight: 500; margin-top: 10px; }
+  .etapes { display: flex; flex-direction: column; gap: 26px; }
+  .etape { display: grid; grid-template-columns: 62px 1fr; gap: 22px; align-items: start; }
+  .etape i { width: 62px; height: 62px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 30px; }
+  .etape p { font-size: 30px; line-height: 1.28; }
+  .etape p small { display: block; font-size: 22px; color: var(--gris); margin-top: 6px; }
+
+  /* ---------- 03 : le réseau ---------- */
+  /*
+   * Les vignettes partenaires passent en duotone prune.
+   *
+   * Deux des cinq artworks du dépôt sont bleu nuit : posés tels quels, ils
+   * faisaient du visuel une image bleue, ce que la commande écarte
+   * explicitement. Désaturer puis multiplier par l'accent les ramène dans la
+   * palette sans les remplacer par des aplats — l'illustration reste, sa
+   * teinte non.
+   *
+   * Les hauteurs sont calculées pour que le pied réglementaire tienne dans le
+   * cadre : 1350 - 76 - 66 = 1208 de contenu, moins 52 d'en-tête, 194 de
+   * message et 90 de pied, il reste 800 pour la grille. Trois rangs de 215 et
+   * deux gouttières de 24 font 693. La version précédente débordait, et
+   * `overflow: hidden` coupait la mention : un visuel non conforme.
+   */
+  .reseau { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .tuile { border: 3px solid var(--encre); background: #fff; overflow: hidden; }
+  .vignette { position: relative; isolation: isolate; }
+  .vignette img { display: block; width: 100%; height: 130px; object-fit: cover; filter: grayscale(1) brightness(1.62) contrast(0.78); }
+  .vignette::after { content: ""; position: absolute; inset: 0; background: var(--accent); mix-blend-mode: color; opacity: 1; }
+  .tuile div.nom { padding: 14px 18px 16px; }
+  .tuile b { display: block; font-size: 25px; font-weight: 700; line-height: 1.12; }
+  .tuile span { display: block; font-size: 18px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gris); margin-top: 6px; }
+  .tuile.large { grid-column: span 2; }
+  .tuile.large .vignette img { height: 110px; }
+
+  /* ---------- 04 : la carte en main, devant un comptoir ---------- */
+  .situation { width: 1600px; height: 1200px; position: relative; background: #e7e4dd; }
+  .mur { position: absolute; inset: 0 0 58% 0; background: linear-gradient(170deg, #efece5, #ddd9d0); }
+  .mur::after {
+    content: ""; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(90deg, rgba(74,27,107,0.06) 0 1px, transparent 1px 46px), repeating-linear-gradient(0deg, rgba(74,27,107,0.06) 0 1px, transparent 1px 46px);
+  }
+  .comptoir { position: absolute; inset: 42% 0 0 0; background: linear-gradient(180deg, #6a5044, #43322a 62%, #35271f); }
+  /* La tranche du plateau : 22px de bois clair, la seule chose qui distingue
+     un comptoir d'un aplat brun. */
+  .plateau { position: absolute; left: 0; right: 0; top: 42%; height: 22px; transform: translateY(-22px); background: linear-gradient(180deg, #a1806a, #7d6151); }
+  .plateau::after { content: ""; position: absolute; inset: auto 0 -10px 0; height: 10px; background: linear-gradient(180deg, rgba(0,0,0,0.28), transparent); }
+  .ombre-mur { position: absolute; left: 0; right: 0; top: 42%; height: 150px; transform: translateY(-172px); background: linear-gradient(180deg, transparent, rgba(58,42,32,0.20)); }
+  .terminal { position: absolute; right: 150px; top: 42%; transform: translateY(-330px); width: 260px; height: 330px; border-radius: 26px; background: linear-gradient(170deg, #2b2f36, #14161c); padding: 20px; box-shadow: 0 26px 44px rgba(0,0,0,0.34); display: flex; flex-direction: column; gap: 16px; }
+  .terminal .ecran { flex: 1; border-radius: 12px; background: var(--papier); display: grid; place-content: center; text-align: center; gap: 8px; padding: 12px; }
+  .terminal .ecran b { font-family: "Spectral", serif; font-size: 34px; color: var(--accent); }
+  .terminal .ecran i { font-style: normal; font-size: 15px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gris); }
+  .terminal .clavier { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .terminal .clavier span { height: 30px; border-radius: 7px; background: #343941; }
+  /* La carte posée. `transform-origin: 0 0` comme toujours : `scale()` ne
+     change pas la boîte de mise en page, donc sans lui `left`/`top` ne
+     désignent pas ce qu'on voit. */
+  .carte-posee { position: absolute; left: 250px; top: 566px; width: 1000px; height: 630px; transform-origin: 0 0; transform: perspective(2200px) rotateX(34deg) rotateZ(-9deg) scale(0.80); }
+  .carte-posee .carte { box-shadow: none; }
+  /* L'ombre de contact : serrée, sombre, juste sous la tranche. C'est elle qui
+     pose l'objet ; la grande ombre douce ne fait que l'ancrer dans la scène. */
+  .ombre-contact { position: absolute; left: 280px; top: 862px; width: 860px; height: 140px; border-radius: 50%; background: radial-gradient(closest-side, rgba(28,18,12,0.55), rgba(28,18,12,0.16) 62%, transparent); filter: blur(14px); transform: rotate(-9deg); }
+  .pied-situation { position: absolute; left: 54px; bottom: 42px; right: 54px; display: flex; justify-content: space-between; align-items: flex-end; gap: 30px; color: #f0ece4; }
+  .pied-situation .mention { color: #d8d2c6; max-width: 42ch; }
+  .pied-situation .site { color: #d8d2c6; }
+</style>
+
+<!-- ==================== 01 — LE SOLDE ET L'HISTORIQUE ==================== -->
+<div data-shot="cartepro_social_01" class="post">
+  <div class="haut">
+    <img src="../../frontend/public/logo/wordmark-purple.svg" alt="CartePro" />
+    <div class="badge">Simulation</div>
+  </div>
+  <div class="corps">
+    <div class="message" style="font-size:100px">Votre solde,<br /><em>et chaque dépense.</em></div>
+    <div class="scene-solde">
+      <div class="carte" style="--reflet: 0.32">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <img class="marque" src="../../frontend/public/logo/wordmark-white.svg" alt="" />
+          <div class="puce"></div>
+        </div>
+        <div><div class="etiquette">Simulation</div><div class="montant">32,50 €</div></div>
+        <div>
+          <div class="numero">0210 8820 1150 0222</div>
+          <div class="pied" style="margin-top:26px">
+            <div><div class="etiquette" style="font-size:13px">Titulaire</div>Camille Durand</div>
+            <div style="text-align:right"><div class="etiquette" style="font-size:13px">Expire le</div>29/08</div>
+          </div>
+        </div>
+      </div>
+      <div class="releve">
+        <h3>Historique</h3>
+        <div class="ligne"><b>Librairie Vasseur<span class="jour">23 août</span></b><span class="debit">− 22,00 €</span></div>
+        <div class="ligne"><b>Épicerie Sainte-Claire<span class="jour">21 juillet</span></b><span class="debit">− 4,50 €</span></div>
+        <div class="ligne"><b>Crédit employeur<span class="jour">1<sup>er</sup> juin</span></b><span class="credit">+ 50,00 €</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="bas">
+    <div class="mention">Démonstrateur technique, ne constitue pas un service public en exploitation.</div>
+    <div class="site">cartepro.example</div>
+  </div>
+</div>
+
+<!-- ==================== 02 — LE PAIEMENT CHEZ UN PARTENAIRE ==================== -->
+<div data-shot="cartepro_social_02" class="post">
+  <div class="haut">
+    <img src="../../frontend/public/logo/wordmark-purple.svg" alt="CartePro" />
+    <div class="badge">Simulation</div>
+  </div>
+  <div class="corps">
+    <div class="message">Un code<br />à présenter.<br /><em>Cinq minutes.</em></div>
+    <div class="scene-paiement" style="margin-top:64px">
+      <div class="ticket">
+        <img src="../../docs/brand-book/captures/qr-materialise.png" alt="" />
+        <div class="somme">4,50 €</div>
+        <div class="chez">Épicerie Sainte-Claire</div>
+      </div>
+      <div class="etapes">
+        <div class="etape"><i>1</i><p>Vous générez le code<small>Depuis votre espace, en un geste</small></p></div>
+        <div class="etape"><i>2</i><p>Le partenaire le lit<small>Ou le saisit à la main</small></p></div>
+        <div class="etape"><i>3</i><p>Le solde se met à jour<small>Et l'opération ne se rejoue pas</small></p></div>
+      </div>
+    </div>
+  </div>
+  <div class="bas">
+    <div class="mention">Démonstrateur technique, ne constitue pas un service public en exploitation.</div>
+    <div class="site">cartepro.example</div>
+  </div>
+</div>
+
+<!-- ==================== 03 — LE RÉSEAU ==================== -->
+<div data-shot="cartepro_social_03" class="post">
+  <div class="haut">
+    <img src="../../frontend/public/logo/wordmark-purple.svg" alt="CartePro" />
+    <div class="badge">Simulation</div>
+  </div>
+  <div class="corps">
+    <div class="message" style="font-size:98px">Des commerces<br /><em>près de chez vous.</em></div>
+    <div class="reseau" style="margin-top:60px">
+      <div class="tuile">
+        <div class="vignette"><img src="../../frontend/public/partenaires/epicerie-sainte-claire.svg" alt="" /></div>
+        <div class="nom"><b>Épicerie Sainte-Claire</b><span>Grenoble · Alimentation</span></div>
+      </div>
+      <div class="tuile">
+        <div class="vignette"><img src="../../frontend/public/partenaires/librairie-vasseur.svg" alt="" /></div>
+        <div class="nom"><b>Librairie Vasseur</b><span>Amiens · Culture</span></div>
+      </div>
+      <div class="tuile">
+        <div class="vignette"><img src="../../frontend/public/partenaires/comptoir-du-midi.svg" alt="" /></div>
+        <div class="nom"><b>Le Comptoir du Midi</b><span>Marseille · Restauration</span></div>
+      </div>
+      <div class="tuile">
+        <div class="vignette"><img src="../../frontend/public/partenaires/pharmacie-du-parc.svg" alt="" /></div>
+        <div class="nom"><b>Pharmacie du Parc</b><span>Vincennes · Santé</span></div>
+      </div>
+      <div class="tuile large">
+        <div class="vignette"><img src="../../frontend/public/partenaires/transports-regionaux-unifies.svg" alt="" /></div>
+        <div class="nom"><b>Transports Régionaux Unifiés</b><span>Lyon · Mobilité</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="bas">
+    <div class="mention">Démonstrateur technique, ne constitue pas un service public en exploitation. Établissements fictifs.</div>
+    <div class="site">cartepro.example</div>
+  </div>
+</div>
+
+<!-- ==================== 04 — LA CARTE EN SITUATION, SUR LE COMPTOIR ==================== -->
+<div data-shot="cartepro_mockup_01" class="situation">
+  <div class="mur"></div>
+  <div class="ombre-mur"></div>
+  <div class="comptoir"></div>
+  <div class="plateau"></div>
+  <div class="terminal">
+    <div class="ecran"><i>Simulation</i><b>4,50 €</b><i style="opacity:0.7">En attente</i></div>
+    <div class="clavier"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <!--
+    La carte posee sur le plateau, sans main.
+
+    Le contact au bois est tout ce qui rend l'objet credible : une ombre de
+    contact serree sous la carte, une ombre portee plus large et plus douce
+    derriere elle, et une perspective qui reste lisible — 34deg de bascule
+    laissent le montant et le logotype lisibles, la carte se lit encore comme
+    une carte et non comme un aplat.
+  -->
+  <div class="ombre-contact"></div>
+  <div class="carte-posee">
+    <div class="carte" style="--reflet: 0.26">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <img class="marque" src="../../frontend/public/logo/wordmark-white.svg" alt="" />
+        <div class="puce"></div>
+      </div>
+      <div><div class="etiquette">Simulation</div><div class="montant">32,50 €</div></div>
+      <div>
+        <div class="numero">0210 8820 1150 0222</div>
+        <div class="pied" style="margin-top:26px">
+          <div><div class="etiquette" style="font-size:13px">Titulaire</div>Camille Durand</div>
+          <div style="text-align:right"><div class="etiquette" style="font-size:13px">Expire le</div>29/08</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pied-situation">
+    <div class="mention">Démonstrateur technique, ne constitue pas un service public en exploitation. Rendu graphique, non photographique.</div>
+    <div class="site">cartepro.example</div>
+  </div>
+</div>
